@@ -8,11 +8,13 @@
     <img src="assets/images/taxi.gif" height="100"/>
 </p>
 
-*TaxiTap* - A mobile application that connects commuters with taxi services, offering real-time tracking, secure payment options, and trip history.
+*TaxiTap* - is a mobile platform designed to revolutionise South Africa’s minibus taxi industry by digitising route information, eliminating the need for constant hooting, and creating a semi-structured booking system while preserving the flexibility that makes taxis an essential transport mode.
+The system connects passengers and taxi operators through a location-aware mobile application that facilitates taxi requests, communicates passenger locations, manages payments, and provides real-time vehicle tracking – all without fundamentally changing the existing system's multi-passenger, flexible route nature.
+
 
 ## Team: Git It Done
 <p align="center">
-  <img src="assets/images/Logo_nobg.png" alt="Git It Done Logo" width="200"/>
+  <a href ="http://gititdone2025.site"><img src="assets/images/Logo_nobg.png" alt="Git It Done Logo" width="200"/></a>
 </p>
 
 ## Technology Stack
