@@ -5,7 +5,7 @@
 ## Project Description
 
 <p align="center">
-    <img src="assets/images/taxi.gif"/>
+    <img src="assets/images/taxi.gif" height="100"/>
 </p>
 
 *TaxiTap* - A mobile application that connects commuters with taxi services, offering real-time tracking, secure payment options, and trip history.
