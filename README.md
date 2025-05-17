@@ -91,3 +91,18 @@ The system connects passengers and taxi operators through a location-aware mobil
 
 ## Getting Started
 Coming soon
+
+
+## make sure you have cli amplify installed
+npm install -g @aws-amplify/cli
+
+## how to get the front end running
+cd frontend
+npm install
+npx expo start
+
+
+## how to get the backend running
+cd backend
+npm install
+amplify pull --appId d3kpb7azavimoh --envName dev
