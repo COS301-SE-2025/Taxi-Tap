@@ -10,6 +10,11 @@
       "StackName": "amplify-taxitap-dev-771ec",
       "StackId": "arn:aws:cloudformation:us-east-1:339712973246:stack/amplify-taxitap-dev-771ec/c5c3af80-3358-11f0-866a-0afff3df4c43",
       "AmplifyAppId": "d3kpb7azavimoh"
+    },
+    "categories": {
+      "auth": {
+        "taxitapa2a78cd4": {}
+      }
     }
   }
 }
