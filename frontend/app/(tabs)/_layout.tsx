@@ -61,11 +61,14 @@
 import React from 'react';
 import { View } from 'react-native';
 import Login from './Login';
+import SignUp from './SignUp';
+
 
 const App: React.FC = () => {
   return (
     <View className="flex-1">
-      <Login />
+      {/* <Login /> */}
+      <SignUp />
     </View>
   );
 };
