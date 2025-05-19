@@ -1,17 +1,18 @@
 import { Tabs } from 'expo-router';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        // Tab bar styling
-        tabBarActiveTintColor: '#FF9900', // Amazon orange
-        tabBarInactiveTintColor: '#6B7280', // Gray for inactive tabs
+        // Tab Bar Styling
+        tabBarActiveTintColor: '#FF9900',
+        tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
           height: 60,
           paddingBottom: 5,
-          backgroundColor: '#FFFFFF', // White background
+          backgroundColor: '#FFFFFF',
         },
         tabBarLabelStyle: {
           fontFamily: 'AmazonEmber-Medium',
@@ -19,20 +20,26 @@ export default function TabLayout() {
           marginBottom: 4,
         },
         
-        // Header styling (for screens within tabs)
-        headerTitleStyle: {
-          fontFamily: 'AmazonEmber-Medium',
-          fontSize: 18,
-          color: '#131A22', // Amazon dark text
-        },
+        // Header Styling with Centered Logo
+        headerTitle: () => (
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={{ 
+              width: 150,
+              height: 40,
+              resizeMode: 'contain' 
+            }}
+          />
+        ),
+        headerTitleAlign: 'center',
         headerStyle: {
-          backgroundColor: '#FFFFFF', // White header
-          shadowOpacity: 0.1, // Subtle shadow
+          backgroundColor: '#FFFFFF',
+          shadowOpacity: 0.1,
           elevation: 2,
         },
-        headerTitleAlign: 'center',
       }}
     >
+      {/* Home Tab */}
       <Tabs.Screen
         name="index"
         options={{
@@ -42,6 +49,8 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* Rides Tab */}
       <Tabs.Screen
         name="rides"
         options={{
@@ -49,13 +58,10 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="directions-car" size={24} color={color} />
           ),
-          // Override header title style if needed
-          headerTitleStyle: {
-            fontFamily: 'AmazonEmber-Bold', // Special case for Rides header
-            fontSize: 20,
-          }
         }}
       />
+
+      {/* Profile Tab */}
       <Tabs.Screen
         name="profile"
         options={{
