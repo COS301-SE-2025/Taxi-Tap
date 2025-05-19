@@ -1,4 +1,20 @@
 {
+  "api": {
+    "testapi": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "testConnection"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    }
+  },
   "auth": {
     "taxitapa2a78cd4": {
       "customAuth": false,
@@ -23,6 +39,31 @@
       },
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
+    }
+  },
+  "function": {
+    "testConnection": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_testConnection_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "testConnection"
+        }
+      ]
+    },
+    "AMPLIFY_function_testConnection_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "testConnection"
+        }
+      ]
     }
   },
   "storage": {

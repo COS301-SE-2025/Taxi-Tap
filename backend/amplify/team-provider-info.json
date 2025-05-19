@@ -17,6 +17,15 @@
       },
       "storage": {
         "TaxiTapDatabase": {}
+      },
+      "function": {
+        "testConnection": {
+          "deploymentBucketName": "amplify-taxitap-dev-771ec-deployment",
+          "s3Key": "amplify-builds/testConnection-49317173466d476e594b-build.zip"
+        }
+      },
+      "api": {
+        "testapi": {}
       }
     }
   }

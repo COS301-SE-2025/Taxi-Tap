@@ -26,7 +26,7 @@ export default function TabLayout() {
             source={require('../../assets/images/icon.png')}
             style={{ 
               width: 150,
-              height: 40,
+              height: 150,
               resizeMode: 'contain' 
             }}
           />
