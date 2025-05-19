@@ -60,8 +60,8 @@
 // }
 import React from 'react';
 import { View } from 'react-native';
-import Login from './Login';
-import SignUp from './SignUp';
+import Login from '../../components/Login';
+import SignUp from '../../components/SignUp';
 
 
 const App: React.FC = () => {
