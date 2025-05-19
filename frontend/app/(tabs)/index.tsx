@@ -16,7 +16,7 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       <Image
-        source={require('../assets/images/icon.png')}
+        source={require('../../assets/images/icon.png')}
         style={styles.taxiImage}
       />
     </View>

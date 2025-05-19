@@ -23,7 +23,7 @@ export default function TabLayout() {
         // Header Styling with Centered Logo
         headerTitle: () => (
           <Image
-            source={require('../../assets/images/logo.png')}
+            source={require('../../assets/images/icon.png')}
             style={{ 
               width: 150,
               height: 40,
