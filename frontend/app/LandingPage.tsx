@@ -17,11 +17,11 @@ export default function LandingPage() {
       }}
     >
       {/* Logo */}
-      <View style={{ width: '100%', maxWidth: 500, marginBottom: 40 }}>
+      <View style={{ width: '100%', marginBottom: 0, marginTop: 50 }}>
         <Image
-          source={require('../assets/images/icon.png')}
+          source={require('../assets/images/3.png')}
           resizeMode="contain"
-          style={{ width: '100%', height: 160 }}
+          style={{ width: '100%', height: 400 }}
         />
       </View>
 
