@@ -82,7 +82,7 @@ function RootLayoutNav() {
               headerShown: false,
             }} 
           />
-          <Stack.Screen 
+          {/* <Stack.Screen 
             name="modal" 
             options={{ 
               presentation: 'modal',
@@ -90,6 +90,12 @@ function RootLayoutNav() {
               headerBackTitleStyle: {
                 fontFamily: 'AmazonEmber-Light',
               }
+            }} 
+          /> */}
+          <Stack.Screen 
+            name="LandingPage" 
+            options={{ 
+              headerShown: false  // 👈 Hide header
             }} 
           />
         </Stack>
