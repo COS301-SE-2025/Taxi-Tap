@@ -8,6 +8,9 @@ import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { api } from '../convex/_generated/api'; // Adjust path if needed
+
 import { useColorScheme } from '@/components/useColorScheme';
 
 export { ErrorBoundary } from 'expo-router';
@@ -18,14 +21,15 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
+// Initialize Convex client with your deployment URL
+const convex = new ConvexReactClient('https://affable-goose-538.convex.cloud'); // Replace this URL with your actual deployment
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    // Amazon Ember Display variants
     'AmazonEmber-Regular': require('../assets/fonts/Amazon_Ember_Display.otf'),
     'AmazonEmber-Bold': require('../assets/fonts/Amazon_Ember_Display_Bold_Italic.ttf'),
     'AmazonEmber-Medium': require('../assets/fonts/Amazon_Ember_Display_Medium.ttf'),
     'AmazonEmber-Light': require('../assets/fonts/Amazon_Ember_Display_Light.ttf'),
-    // Fallback for icons
     ...FontAwesome.font,
   });
 
@@ -43,7 +47,11 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <ConvexProvider client={convex}>
+      <RootLayoutNav />
+    </ConvexProvider>
+  );
 }
 
 function RootLayoutNav() {
@@ -52,10 +60,10 @@ function RootLayoutNav() {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      primary: '#FF9900', // Amazon orange accent color
+      primary: '#FF9900',
       background: '#f5f5f5',
       card: '#ffffff',
-      text: '#131A22', // Amazon dark blue text color
+      text: '#131A22',
     },
   };
 

@@ -16,6 +16,7 @@
     "@expo/vector-icons": "^14.1.0",
     "@react-native-community/geolocation": "^3.4.0",
     "@react-navigation/native": "^7.1.6",
+    "convex": "^1.24.1",
     "expo": "~53.0.9",
     "expo-av": "~15.1.4",
     "expo-font": "~13.3.1",
