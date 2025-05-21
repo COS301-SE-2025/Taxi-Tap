@@ -21,7 +21,7 @@ The system connects passengers and taxi operators through a location-aware mobil
 
 ### Frontend:
 - **Expo (React Native with TypeScript)**  
-  For cross-platform mobile development (Android + iOS).  
+  For cross-platform web and mobile development (Android + iOS).  
   Fast iteration with Expo Go. Supports native features like GPS, camera, push notifications, and QR scanning.
 
 ### Backend:
