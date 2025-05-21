@@ -20,16 +20,28 @@ The system connects passengers and taxi operators through a location-aware mobil
 ## Technology Stack
 
 ### Frontend:
-- To be determined
+- **Expo (React Native with TypeScript)**  
+  For cross-platform mobile development (Android + iOS).  
+  Fast iteration with Expo Go. Supports native features like GPS, camera, push notifications, and QR scanning.
 
 ### Backend:
-- To be determined
+- **Convex (TypeScript Serverless Backend)**  
+  Real-time reactive backend with built-in functions, scheduling, authentication, and automatic data syncing.  
+  Supports business logic like ride requests, GPS updates, seat tracking, and notifications.
 
 ### Database:
-- To be determined
+- **Convex Document-Oriented Database**  
+  Schema-defined collections (e.g. `users`, `rides`, `taxis`, `clusters`).  
+  Supports relations via `v.id()` references and real-time subscriptions for live data updates.
 
 ### Hosting:
-- To be determined
+- **Convex Cloud (Managed)**  
+  Backend and database are deployed to Convex’s cloud infrastructure.  
+  No need for containers, VMs, or Kubernetes. Built-in CI/CD with `convex deploy`.
+
+  Frontend hosted via:
+  - **Expo Cloud** for over-the-air updates
+  - **Play Store & App Store** for production builds
 
 ## Branching Strategy: `GitFlow`
 - `main`: Production code
