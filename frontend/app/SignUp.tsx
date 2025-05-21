@@ -1,78 +1,220 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  Alert,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
-const SignUp: React.FC = () => {
-    const [name, setName] = useState<string>('');
-    const [surname, setSurname] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [passwordConfirm, setPasswordConfrim] = useState<string>('');
+export default function Login() {
+  const [nameSurname, setNameSurname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfrimPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
 
-    const handlesignup = () => {
-        if (!email || !password || !name || !surname || !passwordConfirm) {
-            Alert.alert('Error', 'Please fill all fields');
-            return;
-        }
+  const handleSignup = () => {
+    if (!email || !password || !nameSurname || !confirmPassword) {
+      Alert.alert('Error', 'Please fill all fields');
+      return;
+    }
+    Alert.alert('Login Successful', `Welcome, ${email}`);
+    // router.push('/Home');
+  };
 
-        Alert.alert('Sign Up Successful', `Welcome, ${email}`);
-    };
+  return (
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      {/* Top Section */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          backgroundColor: '#fff',
+        }}
+      >
+        {/* <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={28} color="#232f3e" />
+        </TouchableOpacity> */}
 
-    return (
-        <View className="flex-1 justify-center bg-white px-6">
-            <Text className="text-3xl font-bold text-center mb-8">Sign Up</Text>
-            
-            <Text className="text-3xl font-bold text-center mb-8">Name</Text>
-
-            <TextInput 
-                className="border border-gray-300 rounded-lg px-4 py-3 mb-4"
-                placeholder="Name"
-                value={name}
-                onChangeText={setName}
-            />
-
-            <Text className="text-3xl font-bold text-center mb-8">Surname</Text>
-
-            <TextInput 
-                className="border border-gray-300 rounded-lg px-4 py-3 mb-4"
-                placeholder="Surname"
-                value={surname}
-                onChangeText={setSurname}
-            />
-
-            <Text className="text-3xl font-bold text-center mb-8">Email</Text>
-
-            <TextInput 
-                className="border border-gray-300 rounded-lg px-4 py-3 mb-4"
-                placeholder="Email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-            />
-
-            <Text className="text-3xl font-bold text-center mb-8">Password</Text>
-
-            <TextInput 
-                className="border border-gray-300 rounded-lg px-4 py-3 mb-6"
-                placeholder="Password"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
-
-            <Text className="text-3xl font-bold text-center mb-8">Confirm Password</Text>
-
-            <TextInput 
-                className="border border-gray-300 rounded-lg px-4 py-3 mb-6"
-                placeholder="Confirm Password"
-                secureTextEntry
-                value={passwordConfirm}
-                onChangeText={setPasswordConfrim}
-            />
-
-            <Button title="Sign Up" onPress={handlesignup} />
+        <View style={{ alignItems: 'center' }}>
+          <Image
+            source={require('../assets/images/icon.png')}
+            style={{ width: '100%', height: 200 }}
+          />
         </View>
-    );
-};
+      </View>
 
-export default SignUp;
+      {/* Bottom Section */}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: '#1d2939',
+          borderTopLeftRadius: 50,
+          borderTopRightRadius: 50,
+          padding: 20,
+          paddingTop: 40,
+        }}
+      >
+        {/* Name and surname */}
+        <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
+            Name and Surname
+        </Text>
+
+        <TextInput
+          value={nameSurname}
+          onChangeText={setNameSurname}
+          placeholder="Name and Surname"
+          placeholderTextColor="#999"
+          style={{
+            backgroundColor: '#fff',
+            borderRadius: 10,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            marginBottom: 15,
+            fontSize: 16,
+          }}
+        />
+
+        {/* Username */}
+        <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
+            Email
+        </Text>
+
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          placeholderTextColor="#999"
+          style={{
+            backgroundColor: '#fff',
+            borderRadius: 10,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            marginBottom: 15,
+            fontSize: 16,
+          }}
+        />
+
+        {/* Password */}
+        <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
+            Password
+        </Text>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#fff',
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            height: 44,
+            marginBottom: 15,
+          }}
+        >
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            placeholderTextColor="#999"
+            secureTextEntry={!showPassword}
+            style={{
+                flex: 1,
+                // paddingVertical: 12,
+                fontSize: 16,
+            }}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Ionicons
+              name={showPassword ? 'eye-off' : 'eye'}
+              size={20}
+              color="#999"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Confirm Password */}
+        <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
+            Confirm Password
+        </Text>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#fff',
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            height: 44,
+            marginBottom: 20,
+          }}
+        >
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Password"
+            placeholderTextColor="#999"
+            secureTextEntry={!showConfrimPassword}
+            style={{
+                flex: 1,
+                // paddingVertical: 12,
+                fontSize: 16,
+            }}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfrimPassword)}>
+            <Ionicons
+              name={showConfrimPassword ? 'eye-off' : 'eye'}
+              size={20}
+              color="#999"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* SignUp Button */}
+        <Pressable
+          onPress={handleSignup}
+          style={{
+            height: 50,
+            backgroundColor: '#f90',
+            borderRadius: 10,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 20,
+          }}
+        >
+          <Text style={{ color: '#232f3e', fontWeight: '700', fontSize: 26 }}>
+            Sign Up
+          </Text>
+        </Pressable>
+
+        {/* Or Divider */}
+        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+          <Text style={{ color: '#fff', fontSize: 18 }}>Or</Text>
+        </View>
+
+        {/* Google Sign-In Button */}
+        <Pressable
+          style={{
+            backgroundColor: '#f90',
+            width: 45,
+            height: 45,
+            borderRadius: 10,
+            alignSelf: 'center',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Image
+            source={require('../assets/images/google5.png')}
+            style={{ width: 24, height: 24 }}
+          />
+        </Pressable>
+      </View>
+    </View>
+  );
+}

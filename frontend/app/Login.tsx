@@ -23,7 +23,7 @@ export default function Login() {
       return;
     }
     Alert.alert('Login Successful', `Welcome, ${email}`);
-    // router.push('/Home');
+    router.push('/HomeScreen');
   };
 
   return (
@@ -155,7 +155,7 @@ export default function Login() {
           }}
         >
           <Image
-            source={require('../assets/images/google4.webp')}
+            source={require('../assets/images/google5.png')}
             style={{ width: 24, height: 24 }}
           />
         </Pressable>
