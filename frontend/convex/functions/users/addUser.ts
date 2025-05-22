@@ -1,5 +1,5 @@
 // convex/addUser.ts
-import { mutation } from "./_generated/server";
+import { mutation } from "../../_generated/server";
 
 import { v } from "convex/values";
 
