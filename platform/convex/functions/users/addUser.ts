@@ -1,7 +1,7 @@
-// convex/addUser.ts
-import { mutation } from "../../_generated/server";
-
-import { v } from "convex/values";
+// convex/functions/users/addUser.ts
+import { mutation } from '../../_generated/server';
+import { v } from 'convex/values';
+import { addUserHandler } from '../users/addUserHandler';
 
 export const addUser = mutation({
   args: {
@@ -9,12 +9,5 @@ export const addUser = mutation({
     email: v.string(),
     age: v.number(),
   },
-  handler: async (ctx, args) => {
-    const id = await ctx.db.insert("users", {
-      name: args.name,
-      email: args.email,
-      age: args.age,
-    });
-    return id;
-  },
+  handler: addUserHandler,
 });
