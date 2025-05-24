@@ -22,6 +22,11 @@ export default function Login() {
       Alert.alert('Error', 'Please enter both email and password');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
     Alert.alert('Login Successful', `Welcome, ${email}`);
     router.push('/HomeScreen');
   };
@@ -35,10 +40,6 @@ export default function Login() {
           backgroundColor: '#fff',
         }}
       >
-        {/* <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#232f3e" />
-        </TouchableOpacity> */}
-
         <View style={{ alignItems: 'center' }}>
           <Image
             source={require('../assets/images/icon.png')}
