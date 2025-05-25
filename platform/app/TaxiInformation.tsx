@@ -1,13 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import { SafeAreaView, View, ScrollView, ImageBackground, Image, Text, TouchableOpacity, } from "react-native";
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 
 export default () => {
 	const [selectedVehicle, setSelectedVehicle] = useState(null);
 	const params = useLocalSearchParams();
+	const navigation = useNavigation();
+
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			headerShown: false,
+		});
+	});
 	
 	// Parse location data from params
 	const currentLocation = {
@@ -67,6 +74,7 @@ export default () => {
 
 	const handleReserveSeat = () => {
 		if (selectedVehicle) {
+			const selected = vehicles.find(vehicle => vehicle.id === selectedVehicle);
 			router.push({
 				pathname: './SeatReserved',
 				params: {
@@ -76,7 +84,14 @@ export default () => {
 					currentName: currentLocation.name,
 					currentLat: currentLocation.latitude.toString(),
 					currentLng: currentLocation.longitude.toString(),
-					selectedVehicleId: selectedVehicle.toString(),
+
+					// Vehicle details
+					selectedVehicleId: selected.id.toString(),
+					plate: selected.plate,
+					time: selected.time,
+					seats: selected.seats,
+					price: selected.price,
+					image: selected.id.toString(),
 				}
 			});
 		} else {
@@ -88,12 +103,12 @@ export default () => {
 		<SafeAreaView 
 			style={{
 				flex: 1,
-				backgroundColor: "#FFFFFF",
+				backgroundColor: "#f8f9fa",
 			}}>
 			<ScrollView  
 				style={{
 					flex: 1,
-					backgroundColor: "#F5F5F5",
+					backgroundColor: "#f8f9fa",
 				}}>
 				<View>
 					{/* Map Section */}
@@ -109,37 +124,15 @@ export default () => {
 						>
 							<Marker
 								coordinate={currentLocation}
-								title="Your Location"
+								title="You are here"
+                				pinColor="blue"
 							>
-								<View style={{
-									width: 40,
-									height: 40,
-									backgroundColor: '#4A90E2',
-									borderRadius: 20,
-									justifyContent: 'center',
-									alignItems: 'center',
-									borderWidth: 3,
-									borderColor: '#FFFFFF'
-								}}>
-									<Icon name="person" size={20} color="#FFFFFF" />
-								</View>
 							</Marker>
 							<Marker
 								coordinate={destination}
 								title={destination.name}
+								pinColor="orange"
 							>
-								<View style={{
-									width: 40,
-									height: 40,
-									backgroundColor: '#FF9900',
-									borderRadius: 20,
-									justifyContent: 'center',
-									alignItems: 'center',
-									borderWidth: 3,
-									borderColor: '#FFFFFF'
-								}}>
-									<Icon name="navigate" size={20} color="#FFFFFF" />
-								</View>
 							</Marker>
 							<Polyline
 								coordinates={[currentLocation, destination]}
