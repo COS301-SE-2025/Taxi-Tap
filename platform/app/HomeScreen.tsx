@@ -10,6 +10,7 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
+import { router } from 'expo-router';
 
 export default function HomeScreen() {
   const [currentLocation, setCurrentLocation] = useState<{
@@ -63,6 +64,42 @@ export default function HomeScreen() {
       );
     })();
   }, []);
+
+  // Navigate to TaxiInformation after destination selection
+  const handleDestinationSelect = (route) => {
+    const newDestination = {
+      latitude: route.coords.latitude,
+      longitude: route.coords.longitude,
+      name: route.title,
+    };
+
+    setDestination(newDestination);
+
+    mapRef.current?.animateToRegion(
+      {
+        latitude: newDestination.latitude,
+        longitude: newDestination.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      },
+      1000
+    );
+
+    // Navigate to TaxiInformation after a short delay to show the map animation
+    setTimeout(() => {
+      router.push({
+        pathname: './TaxiInformation',
+        params: {
+          destinationName: newDestination.name,
+          destinationLat: newDestination.latitude.toString(),
+          destinationLng: newDestination.longitude.toString(),
+          currentName: currentLocation?.name || '',
+          currentLat: currentLocation?.latitude.toString() || '',
+          currentLng: currentLocation?.longitude.toString() || '',
+        }
+      });
+    }, 1500);
+  };
 
   return (
     <View style={styles.container}>
@@ -148,25 +185,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={index}
               style={styles.routeCard}
-              onPress={() => {
-                const newDestination = {
-                  latitude: route.coords.latitude,
-                  longitude: route.coords.longitude,
-                  name: route.title,
-                };
-
-                setDestination(newDestination);
-
-                mapRef.current?.animateToRegion(
-                  {
-                    latitude: newDestination.latitude,
-                    longitude: newDestination.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  },
-                  1000
-                );
-              }}
+              onPress={() => handleDestinationSelect(route)}
             >
               <Icon name="location-sharp" size={20} color="#ff9f43" style={{ marginRight: 12 }} />
               <View style={{ flex: 1 }}>
