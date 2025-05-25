@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import validator from 'validator';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -23,7 +24,11 @@ export default function Login() {
       Alert.alert('Error', 'Please enter both email and password');
       return;
     }
-    Alert.alert('Login Successful', `Welcome, ${email}`);
+    if (!validator.isEmail(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
+    // Alert.alert('Login Successful', `Welcome, ${email}`);
     router.push('/HomeScreen');
   };
 
@@ -37,10 +42,6 @@ export default function Login() {
             backgroundColor: '#fff',
           }}
         >
-          {/* <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={28} color="#232f3e" />
-          </TouchableOpacity> */}
-
           <View style={{ alignItems: 'center' }}>
             <Image
               source={require('../assets/images/icon.png')}

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import validator from 'validator';
 
 export default function Login() {
   const [nameSurname, setNameSurname] = useState('');
@@ -26,12 +27,15 @@ export default function Login() {
       Alert.alert('Error', 'Please fill all fields');
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!validator.isEmail(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
-    Alert.alert('Login Successful', `Welcome, ${email}`);
+    if (password !== confirmPassword) {
+      Alert.alert('Password Mismatch', 'Passwords do not match');
+      return;
+    }
+    // Alert.alert('Login Successful', `Welcome, ${email}`);
     router.push('/HomeScreen');
   };
 
