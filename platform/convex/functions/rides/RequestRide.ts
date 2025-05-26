@@ -40,7 +40,7 @@ export const requestRide = mutation({
     return {
       _id: ride,
       rideId,
-      message: "Ride requested successfully",
+      message: `Ride requested successfully from ${args.startLocation.address} to ${args.endLocation.address}`,
     };
   },
 });
