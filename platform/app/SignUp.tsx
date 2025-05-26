@@ -45,10 +45,10 @@ export default function Login() {
     }
     try {
       await signUpWithEmail({ email, name: nameSurname, password });
-      alert("Signed up successfully!");
+      alert(`Welcome!`);
       router.push('/HomeScreen');
     } catch (err) {
-      alert((err as Error).message);
+      alert("");
     }
     // Alert.alert('Login Successful', `Welcome, ${email}`);
     
