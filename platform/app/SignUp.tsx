@@ -21,7 +21,7 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react';
 const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
 export default function Login() {
-  const signUpWithEmail = useMutation(api.users.UserManagement.signUpWithEmail);
+  const signUpWithEmail = useMutation(api.functions.users.UserManagement.signUpWithEmail.signUp);
   const [nameSurname, setNameSurname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
