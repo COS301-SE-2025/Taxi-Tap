@@ -131,7 +131,7 @@ export default function DriverProfile() {
 
             <View style={{ width: '100%' }}>
                 <Image
-                    source={require('../assets/images/taxi.png')}
+                    source={require('../../assets/images/taxi.png')}
                     resizeMode="contain"
                     style={{ width: '100%', height: 200 }}
                 />

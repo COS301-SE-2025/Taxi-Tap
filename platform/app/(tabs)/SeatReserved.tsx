@@ -1,13 +1,20 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { SafeAreaView, View, ScrollView, ImageBackground, Image, Text, TouchableOpacity, } from "react-native";
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 
 export default () => {
 	const params = useLocalSearchParams();
+	const navigation = useNavigation();
 	
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			headerShown: false,
+		});
+	});
+
 	// Parse location data from params
 	const currentLocation = {
 		latitude: parseFloat(params.currentLat as string) || -25.7479,
@@ -19,6 +26,14 @@ export default () => {
 		latitude: parseFloat(params.destinationLat as string) || -25.7824,
 		longitude: parseFloat(params.destinationLng as string) || 28.2753,
 		name: params.destinationName || 'Menlyn Taxi Rank'
+	};
+
+	const vehicleInfo = {
+		plate: params.plate || 'Unknown',
+		time: params.time || 'Unknown',
+		seats: params.seats || '0',
+		price: params.price || '0',
+		selectedVehicleId: params.selectedVehicleId || ''
 	};
 
 	const handleCancelReservation = () => {
@@ -39,12 +54,12 @@ export default () => {
 		<SafeAreaView 
 			style={{
 				flex: 1,
-				backgroundColor: "#FFFFFF",
+				backgroundColor: "#f8f9fa",
 			}}>
 			<ScrollView  
 				style={{
 					flex: 1,
-					backgroundColor: "#F5F5F5",
+					backgroundColor: "#f8f9fa",
 				}}>
 				<View>
 					{/* Map Section with Route */}
@@ -60,37 +75,15 @@ export default () => {
 						>
 							<Marker
 								coordinate={currentLocation}
-								title="Your Location"
+								title="You are here"
+								pinColor="blue"
 							>
-								<View style={{
-									width: 40,
-									height: 40,
-									backgroundColor: '#4A90E2',
-									borderRadius: 20,
-									justifyContent: 'center',
-									alignItems: 'center',
-									borderWidth: 3,
-									borderColor: '#FFFFFF'
-								}}>
-									<Icon name="person" size={20} color="#FFFFFF" />
-								</View>
 							</Marker>
 							<Marker
 								coordinate={destination}
 								title={destination.name}
+								pinColor="orange"
 							>
-								<View style={{
-									width: 40,
-									height: 40,
-									backgroundColor: '#FF9900',
-									borderRadius: 20,
-									justifyContent: 'center',
-									alignItems: 'center',
-									borderWidth: 3,
-									borderColor: '#FFFFFF'
-								}}>
-									<Icon name="navigate" size={20} color="#FFFFFF" />
-								</View>
 							</Marker>
 							<Polyline
 								coordinates={[currentLocation, destination]}
@@ -122,7 +115,7 @@ export default () => {
 										fontWeight: "bold",
 										textAlign: "center",
 									}}>
-									{"Arriving in 4 minutes"}
+									{vehicleInfo.time}
 								</Text>
 							</View>
 						</View>
@@ -135,7 +128,6 @@ export default () => {
 							borderRadius: 30,
 							paddingTop: 47,
 							paddingBottom: 60,
-							paddingHorizontal: 20,
 						}}>
 						<View 
 							style={{
@@ -143,7 +135,6 @@ export default () => {
 								alignItems: "center",
 								marginBottom: 33,
 								width: '100%',
-								paddingHorizontal: 12,
 							}}>
 							<View 
 								style={{
@@ -181,6 +172,7 @@ export default () => {
 									borderRadius: 17.5,
 									justifyContent: "center",
 									alignItems: "center",
+									marginRight: 10,
 								}}>
 								<Icon name="chatbubble" size={18} color="#FF9900" />
 							</View>
@@ -191,7 +183,7 @@ export default () => {
 								alignItems: "center",
 								marginBottom: 36,
 								width: '100%',
-								paddingHorizontal: 32,
+								paddingHorizontal: 15,
 							}}>
 							<View 
 								style={{
@@ -262,7 +254,7 @@ export default () => {
 									fontSize: 13,
 									fontWeight: "bold",
 								}}>
-								{"YY 87 89 GP"}
+								{vehicleInfo.plate}
 							</Text>
 						</View>
 						<View 
@@ -276,7 +268,7 @@ export default () => {
 								paddingVertical: 11,
 								paddingHorizontal: 13,
 								marginBottom: 36,
-								width: '100%',
+								width: '90%',
 								alignSelf: 'center',
 								shadowColor: "#00000040",
 								shadowOpacity: 0.3,
@@ -286,9 +278,10 @@ export default () => {
 								},
 								shadowRadius: 4,
 								elevation: 4,
+								marginHorizontal: 100,
 							}}>
 							{/* Current Location and Destination indicators */}
-							<View style={{ marginRight: 10, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 5 }}>
+							<View style={{ marginRight: 10, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 5, }}>
 								{/* Current Location Circle */}
 								<View style={{
 									width: 20,
