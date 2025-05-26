@@ -115,7 +115,7 @@ export default function HomeScreen() {
       {!currentLocation ? (
         <View style={[styles.map, { justifyContent: 'center', alignItems: 'center' }]}>
           <Image
-            source={require('../assets/images/loading4.png')}
+            source={require('../../assets/images/loading4.png')}
             style={{ width: 120, height: 120 }}
             resizeMode="contain"
            />
@@ -288,13 +288,6 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       </View>
-
-      {/* Bottom Tab Bar */}
-      {/* <View style={styles.tabBar}>
-        <Icon name="home" size={24} color="orange" />
-        <Icon name="navigate" size={24} color="#999" />
-        <Icon name="person" size={24} color="#999" />
-      </View> */}
     </View>
   );
 }

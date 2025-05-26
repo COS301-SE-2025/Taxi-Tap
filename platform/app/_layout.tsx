@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { api } from '../convex/_generated/api'; // Adjust path if needed
@@ -16,7 +16,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  initialRouteName: 'LandingPage',
 };
 
 SplashScreen.preventAutoHideAsync();
@@ -85,16 +85,16 @@ function RootLayoutNav() {
           }}
         >
           <Stack.Screen 
-            name="(tabs)" 
-            options={{ 
-              headerShown: false,
-            }} 
-          />
-          
-          <Stack.Screen 
             name="LandingPage" 
             options={{ 
               headerShown: false
+            }} 
+          />
+
+          <Stack.Screen 
+            name="(tabs)" 
+            options={{ 
+              headerShown: false,
             }} 
           />
         </Stack>

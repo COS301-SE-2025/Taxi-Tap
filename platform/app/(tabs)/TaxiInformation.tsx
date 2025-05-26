@@ -33,7 +33,7 @@ export default () => {
 		{
 			id: 1,
 			plate: "VV 87 89 GP",
-			image: require('../assets/images/Siyaya-Taxi-Avatar.jpg'),
+			image: require('../../assets/images/Siyaya-Taxi-Avatar.jpg'),
 			time: "8 min away",
 			seats: "2 seats left",
 			price: "R12"
@@ -41,7 +41,7 @@ export default () => {
 		{
 			id: 2,
 			plate: "YY 87 89 GP", 
-			image: require('../assets/images/Quantum.png'),
+			image: require('../../assets/images/Quantum.png'),
 			time: "3 min away",
 			seats: "1 seat left",
 			price: "R12"
@@ -49,7 +49,7 @@ export default () => {
 		{
 			id: 3,
 			plate: "YTV 567 GP",
-			image: require('../assets/images/Siyaya-Taxi-Avatar.jpg'),
+			image: require('../../assets/images/Siyaya-Taxi-Avatar.jpg'),
 			time: "8 min away",
 			seats: "5 seats left",
 			price: "R12"
@@ -57,7 +57,7 @@ export default () => {
         {
 			id: 5,
 			plate: "XYZ 879 GP", 
-			image: require('../assets/images/Quantum.png'),
+			image: require('../../assets/images/Quantum.png'),
 			time: "4 min away",
 			seats: "4 seat left",
 			price: "R12"

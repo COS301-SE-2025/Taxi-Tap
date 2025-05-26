@@ -268,7 +268,7 @@ export default () => {
 								paddingVertical: 11,
 								paddingHorizontal: 13,
 								marginBottom: 36,
-								width: '100%',
+								width: '90%',
 								alignSelf: 'center',
 								shadowColor: "#00000040",
 								shadowOpacity: 0.3,
