@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
 import type * as functions_users_addUser from "../functions/users/addUser.js";
 
 /**
@@ -24,6 +25,7 @@ import type * as functions_users_addUser from "../functions/users/addUser.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "functions/rides/RequestRide": typeof functions_rides_RequestRide;
   "functions/users/addUser": typeof functions_users_addUser;
 }>;
 export declare const api: FilterApi<
