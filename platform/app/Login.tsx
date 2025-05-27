@@ -49,7 +49,6 @@ export default function Login() {
 
   return (
     <ConvexProvider client={convex}>
-    // <ScrollView>
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {/* Top Section */}
         <View
@@ -180,7 +179,6 @@ export default function Login() {
           </Pressable>
         </View>
       </View>
-    // </ScrollView>
     </ConvexProvider>
   );
 }
