@@ -48,8 +48,17 @@ export default function Login() {
       alert(`Welcome!`);
       router.push('/HomeScreen');
     } catch (err) {
-      alert("");
+      const message =
+        (err as any)?.data?.message || (err as any)?.message || "Something went wrong";
+
+      if (message.includes("Email already exists")) {
+        Alert.alert("Email In Use", "This email is already registered. Try logging in or use a different email.");
+      } else {
+        Alert.alert("Signup Error", message);
+      }
     }
+
+
     // Alert.alert('Login Successful', `Welcome, ${email}`);
     
   };
