@@ -1,5 +1,6 @@
+// app/_layout.tsx
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,6 +13,7 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { api } from '../convex/_generated/api'; // Adjust path if needed
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -49,39 +51,46 @@ export default function RootLayout() {
 
   return (
     <ConvexProvider client={convex}>
-      <RootLayoutNav />
+      <ThemeProvider>
+        <RootLayoutNav />
+      </ThemeProvider>
     </ConvexProvider>
   );
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-  const customTheme = {
-    ...DefaultTheme,
+  const { theme, isDark } = useTheme();
+  
+  // Create navigation theme based on our custom theme
+  const navigationTheme = {
+    dark: isDark,
     colors: {
-      ...DefaultTheme.colors,
-      primary: '#FF9900',
-      background: '#f5f5f5',
-      card: '#ffffff',
-      text: '#131A22',
+      primary: theme.primary,
+      background: theme.background,
+      card: theme.card,
+      text: theme.text,
+      border: theme.border,
+      notification: theme.primary,
     },
+    fonts: DefaultTheme.fonts, // Add the missing fonts property
   };
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : customTheme}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <View style={{ flex: 1, backgroundColor: customTheme.colors.background }}>
+    <NavigationThemeProvider value={navigationTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
         <Stack
           screenOptions={{
             headerStyle: {
-              backgroundColor: customTheme.colors.card,
+              backgroundColor: theme.headerBackground,
             },
             headerTitleStyle: {
               fontFamily: 'AmazonEmber-Medium',
               fontSize: 18,
-              color: customTheme.colors.text,
+              color: theme.text,
             },
             headerTitleAlign: 'center',
+            headerTintColor: theme.text,
           }}
         >
           <Stack.Screen 
@@ -91,6 +100,7 @@ function RootLayoutNav() {
             }} 
           />
 
+          
           <Stack.Screen 
             name="(tabs)" 
             options={{ 
@@ -99,6 +109,6 @@ function RootLayoutNav() {
           />
         </Stack>
       </View>
-    </ThemeProvider>
+    </NavigationThemeProvider>
   );
 }
