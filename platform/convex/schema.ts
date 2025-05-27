@@ -25,7 +25,7 @@ export default defineSchema({
     email: v.string(),
     password: v.string(),
     age: v.number(),
-  }),
+  }).index("by_email", ["email"]),
   rides: defineTable({
     rideId: v.string(),
     passengerId: v.id("users"),

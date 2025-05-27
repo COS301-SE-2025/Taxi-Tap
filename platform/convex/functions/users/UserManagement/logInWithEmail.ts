@@ -9,7 +9,8 @@ export const login = query({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("taxiTap_users")
-      .filter((q) => q.eq(q.field("email"), args.email))
+      //.filter((q) => q.eq(q.field("email"), args.email))
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
     if (!user) {

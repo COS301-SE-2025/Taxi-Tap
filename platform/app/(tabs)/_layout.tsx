@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   return (
+    <SafeAreaProvider>
     <Tabs
       screenOptions={{
         // Tab Bar Styling
@@ -11,7 +13,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
           height: 60,
-          paddingBottom: 5,
+          paddingBottom: 10,
           backgroundColor: '#FFFFFF',
         },
         tabBarLabelStyle: {
@@ -41,7 +43,7 @@ export default function TabLayout() {
     >
       {/* Home Tab */}
       <Tabs.Screen
-        name="index"
+        name="HomeScreen"
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
@@ -50,20 +52,18 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Rides Tab */}
       <Tabs.Screen
-        name="rides"
+        name="Feedback"
         options={{
-          title: 'Rides',
+          title: 'Feedback',
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="directions-car" size={24} color={color} />
+            <MaterialIcons name="feedback" size={24} color={color} />
           ),
         }}
       />
 
-      {/* Profile Tab */}
       <Tabs.Screen
-        name="profile"
+        name="PassengerProfile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => (
@@ -71,6 +71,42 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="DriverProfile"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="SeatReserved"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="TaxiInfoPage"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="TaxiInformation"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
+    </SafeAreaProvider>
   );
 }

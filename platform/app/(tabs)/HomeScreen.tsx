@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,11 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
+import { router, useNavigation  } from 'expo-router';
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
+
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -25,6 +28,12 @@ export default function HomeScreen() {
   } | null>(null);
 
   const mapRef = useRef<MapView | null>(null);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: "Home",
+    });
+  });
 
   // Get current location on mount
   useEffect(() => {
@@ -64,13 +73,49 @@ export default function HomeScreen() {
     })();
   }, []);
 
+  // Navigate to TaxiInformation after destination selection
+  const handleDestinationSelect = (route) => {
+    const newDestination = {
+      latitude: route.coords.latitude,
+      longitude: route.coords.longitude,
+      name: route.title,
+    };
+
+    setDestination(newDestination);
+
+    mapRef.current?.animateToRegion(
+      {
+        latitude: newDestination.latitude,
+        longitude: newDestination.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      },
+      1000
+    );
+
+    // Navigate to TaxiInformation after a short delay to show the map animation
+    setTimeout(() => {
+      router.push({
+        pathname: './TaxiInformation',
+        params: {
+          destinationName: newDestination.name,
+          destinationLat: newDestination.latitude.toString(),
+          destinationLng: newDestination.longitude.toString(),
+          currentName: currentLocation?.name || '',
+          currentLat: currentLocation?.latitude.toString() || '',
+          currentLng: currentLocation?.longitude.toString() || '',
+        }
+      });
+    }, 1500);
+  };
+
   return (
     <View style={styles.container}>
       {/* Map Section */}
       {!currentLocation ? (
         <View style={[styles.map, { justifyContent: 'center', alignItems: 'center' }]}>
           <Image
-            source={require('../assets/images/loading4.png')}
+            source={require('../../assets/images/loading4.png')}
             style={{ width: 120, height: 120 }}
             resizeMode="contain"
            />
@@ -110,16 +155,100 @@ export default function HomeScreen() {
       {/* Bottom Section */}
       <View style={styles.bottomSheet}>
         {/* Location Box */}
-        <View style={styles.locationBox}>
-          <View style={styles.locationRow}>
-            <Icon name="locate" size={20} color="#ff9f43" />
-            <Text style={styles.currentText}>
+        <View 
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#ECD9C3",
+            borderColor: "#D4A57D",
+            borderRadius: 20,
+            borderWidth: 1,
+            paddingVertical: 11,
+            paddingHorizontal: 13,
+            marginBottom: 36,
+            width: '100%',
+            alignSelf: 'center',
+            shadowColor: "#00000040",
+            shadowOpacity: 0.3,
+            shadowOffset: {
+                width: 0,
+                height: 4
+            },
+            shadowRadius: 4,
+            elevation: 4,
+          }}>
+          {/* Current Location and Destination indicators */}
+          <View style={{ marginRight: 10, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 5 }}>
+            {/* Current Location Circle */}
+            <View style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: '#FF9900',
+              borderWidth: 2,
+              borderColor: '#FFB84D',
+              marginBottom: 8,
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              <View style={{
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: '#FF9900'
+              }} />
+            </View>
+            
+            {/* Dotted Line Container */}
+            <View style={{
+              height: 35,
+              width: 1,
+              marginBottom: 8,
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              {[...Array(8)].map((_, index) => (
+                <View key={index} style={{
+                  width: 2,
+                  height: 3,
+                  backgroundColor: '#FF9900',
+                  borderRadius: 1
+                }} />
+              ))}
+            </View>
+            
+            {/* Destination Pin */}
+            <Icon name="location" size={18} color="#121212" />
+          </View>
+          
+          <View 
+            style={{
+              flex: 1,
+            }}>
+            <Text 
+              style={{
+                color: "#A66400",
+                fontSize: 14,
+                fontWeight: "bold",
+                marginBottom: 17,
+              }}>
               {currentLocation ? currentLocation.name : 'Getting current location...'}
             </Text>
-          </View>
-          <View style={styles.locationRow}>
-            <Icon name="pin" size={18} color="#999" />
-            <Text style={styles.destinationText}>
+            <View 
+              style={{
+                height: 1,
+                backgroundColor: "#D4A57D",
+                marginBottom: 19,
+                marginHorizontal: 2,
+              }}>
+            </View>
+            <Text 
+              style={{
+                color: "#232F3E",
+                fontSize: 14,
+                fontWeight: "bold",
+                marginLeft: 2,
+              }}>
               {destination ? destination.name : 'No destination selected'}
             </Text>
           </View>
@@ -148,25 +277,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={index}
               style={styles.routeCard}
-              onPress={() => {
-                const newDestination = {
-                  latitude: route.coords.latitude,
-                  longitude: route.coords.longitude,
-                  name: route.title,
-                };
-
-                setDestination(newDestination);
-
-                mapRef.current?.animateToRegion(
-                  {
-                    latitude: newDestination.latitude,
-                    longitude: newDestination.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  },
-                  1000
-                );
-              }}
+              onPress={() => handleDestinationSelect(route)}
             >
               <Icon name="location-sharp" size={20} color="#ff9f43" style={{ marginRight: 12 }} />
               <View style={{ flex: 1 }}>
@@ -177,13 +288,6 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       </View>
-
-      {/* Bottom Tab Bar */}
-      <View style={styles.tabBar}>
-        <Icon name="home" size={24} color="orange" />
-        <Icon name="navigate" size={24} color="#999" />
-        <Icon name="person" size={24} color="#999" />
-      </View>
     </View>
   );
 }
@@ -191,6 +295,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8f9fa',
   },
   map: {
     height: '40%',
