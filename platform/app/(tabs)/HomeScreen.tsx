@@ -10,10 +10,12 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import { router, useNavigation  } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  const { theme, isDark } = useTheme();
 
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
@@ -109,36 +111,169 @@ export default function HomeScreen() {
     }, 1500);
   };
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    map: {
+      height: '40%',
+    },
+    bottomSheet: {
+      flex: 1,
+      backgroundColor: theme.background,
+      borderTopLeftRadius: 25,
+      borderTopRightRadius: 25,
+      padding: 16,
+      paddingTop: 24,
+    },
+    locationBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: isDark ? theme.surface : "#ECD9C3",
+      borderColor: isDark ? theme.border : "#D4A57D",
+      borderRadius: 20,
+      borderWidth: 1,
+      paddingVertical: 11,
+      paddingHorizontal: 13,
+      marginBottom: 36,
+      width: '100%',
+      alignSelf: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: {
+        width: 0,
+        height: 4
+      },
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    locationIndicator: {
+      marginRight: 10,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingTop: 5
+    },
+    currentLocationCircle: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: theme.primary,
+      borderWidth: 2,
+      borderColor: isDark ? '#FFB84D' : '#FFB84D',
+      marginBottom: 8,
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    currentLocationDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.primary
+    },
+    dottedLineContainer: {
+      height: 35,
+      width: 1,
+      marginBottom: 8,
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    dottedLineDot: {
+      width: 2,
+      height: 3,
+      backgroundColor: theme.primary,
+      borderRadius: 1
+    },
+    locationTextContainer: {
+      flex: 1,
+    },
+    currentLocationText: {
+      color: isDark ? theme.primary : "#A66400",
+      fontSize: 14,
+      fontWeight: "bold",
+      marginBottom: 17,
+    },
+    locationSeparator: {
+      height: 1,
+      backgroundColor: isDark ? theme.border : "#D4A57D",
+      marginBottom: 19,
+      marginHorizontal: 2,
+    },
+    destinationText: {
+      color: theme.text,
+      fontSize: 14,
+      fontWeight: "bold",
+      marginLeft: 2,
+    },
+    savedRoutesTitle: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      marginBottom: 8,
+      color: theme.text,
+    },
+    routeCard: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      marginBottom: 12,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    routeTitle: {
+      fontWeight: 'bold',
+      fontSize: 14,
+      color: theme.text,
+    },
+    routeSubtitle: {
+      fontSize: 12,
+      color: theme.textSecondary,
+    },
+    loadingContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.background,
+    }
+  });
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {/* Map Section */}
       {!currentLocation ? (
-        <View style={[styles.map, { justifyContent: 'center', alignItems: 'center' }]}>
+        <View style={[dynamicStyles.map, dynamicStyles.loadingContainer]}>
           <Image
             source={require('../../assets/images/loading4.png')}
             style={{ width: 120, height: 120 }}
             resizeMode="contain"
-           />
+          />
         </View>
       ) : (
         <MapView
           ref={mapRef}
-          style={styles.map}
+          style={dynamicStyles.map}
           initialRegion={{
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
+          // Use dark map style when in dark mode
+          customMapStyle={isDark ? darkMapStyle : []}
         >
-            <Marker
-                coordinate={{
-                latitude: currentLocation.latitude,
-                longitude: currentLocation.longitude,
-                }}
-                title="You are here"
-                pinColor="blue"
-            />
+          <Marker
+            coordinate={{
+              latitude: currentLocation.latitude,
+              longitude: currentLocation.longitude,
+            }}
+            title="You are here"
+            pinColor="blue"
+          />
           {destination && (
             <Marker
               coordinate={{
@@ -153,109 +288,44 @@ export default function HomeScreen() {
       )}
 
       {/* Bottom Section */}
-      <View style={styles.bottomSheet}>
+      <View style={dynamicStyles.bottomSheet}>
         {/* Location Box */}
-        <View 
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: "#ECD9C3",
-            borderColor: "#D4A57D",
-            borderRadius: 20,
-            borderWidth: 1,
-            paddingVertical: 11,
-            paddingHorizontal: 13,
-            marginBottom: 36,
-            width: '100%',
-            alignSelf: 'center',
-            shadowColor: "#00000040",
-            shadowOpacity: 0.3,
-            shadowOffset: {
-                width: 0,
-                height: 4
-            },
-            shadowRadius: 4,
-            elevation: 4,
-          }}>
+        <View style={dynamicStyles.locationBox}>
           {/* Current Location and Destination indicators */}
-          <View style={{ marginRight: 10, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 5 }}>
+          <View style={dynamicStyles.locationIndicator}>
             {/* Current Location Circle */}
-            <View style={{
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              backgroundColor: '#FF9900',
-              borderWidth: 2,
-              borderColor: '#FFB84D',
-              marginBottom: 8,
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}>
-              <View style={{
-                width: 10,
-                height: 10,
-                borderRadius: 5,
-                backgroundColor: '#FF9900'
-              }} />
+            <View style={dynamicStyles.currentLocationCircle}>
+              <View style={dynamicStyles.currentLocationDot} />
             </View>
             
             {/* Dotted Line Container */}
-            <View style={{
-              height: 35,
-              width: 1,
-              marginBottom: 8,
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
+            <View style={dynamicStyles.dottedLineContainer}>
               {[...Array(8)].map((_, index) => (
-                <View key={index} style={{
-                  width: 2,
-                  height: 3,
-                  backgroundColor: '#FF9900',
-                  borderRadius: 1
-                }} />
+                <View key={index} style={dynamicStyles.dottedLineDot} />
               ))}
             </View>
             
             {/* Destination Pin */}
-            <Icon name="location" size={18} color="#121212" />
+            <Icon 
+              name="location" 
+              size={18} 
+              color={isDark ? theme.text : "#121212"} 
+            />
           </View>
           
-          <View 
-            style={{
-              flex: 1,
-            }}>
-            <Text 
-              style={{
-                color: "#A66400",
-                fontSize: 14,
-                fontWeight: "bold",
-                marginBottom: 17,
-              }}>
+          <View style={dynamicStyles.locationTextContainer}>
+            <Text style={dynamicStyles.currentLocationText}>
               {currentLocation ? currentLocation.name : 'Getting current location...'}
             </Text>
-            <View 
-              style={{
-                height: 1,
-                backgroundColor: "#D4A57D",
-                marginBottom: 19,
-                marginHorizontal: 2,
-              }}>
-            </View>
-            <Text 
-              style={{
-                color: "#232F3E",
-                fontSize: 14,
-                fontWeight: "bold",
-                marginLeft: 2,
-              }}>
+            <View style={dynamicStyles.locationSeparator} />
+            <Text style={dynamicStyles.destinationText}>
               {destination ? destination.name : 'No destination selected'}
             </Text>
           </View>
         </View>
 
         {/* Saved Routes */}
-        <Text style={styles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
+        <Text style={dynamicStyles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
         <ScrollView style={{ marginTop: 10 }}>
           {[
             {
@@ -276,13 +346,18 @@ export default function HomeScreen() {
           ].map((route, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.routeCard}
+              style={dynamicStyles.routeCard}
               onPress={() => handleDestinationSelect(route)}
             >
-              <Icon name="location-sharp" size={20} color="#ff9f43" style={{ marginRight: 12 }} />
+              <Icon 
+                name="location-sharp" 
+                size={20} 
+                color={theme.primary} 
+                style={{ marginRight: 12 }} 
+              />
               <View style={{ flex: 1 }}>
-                <Text style={styles.routeTitle}>{route.title}</Text>
-                <Text style={styles.routeSubtitle}>{route.subtitle}</Text>
+                <Text style={dynamicStyles.routeTitle}>{route.title}</Text>
+                <Text style={dynamicStyles.routeSubtitle}>{route.subtitle}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -292,76 +367,190 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+// Dark map style for better dark mode experience
+const darkMapStyle = [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#212121"
+      }
+    ]
   },
-  map: {
-    height: '40%',
+  {
+    "elementType": "labels.icon",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
   },
-  bottomSheet: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    padding: 16,
-    paddingTop: 24,
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
   },
-  locationBox: {
-    backgroundColor: '#fcd9b8',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#212121"
+      }
+    ]
   },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
   },
-  currentText: {
-    color: '#000',
-    fontWeight: 'bold',
-    marginLeft: 8,
+  {
+    "featureType": "administrative.country",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#9e9e9e"
+      }
+    ]
   },
-  destinationText: {
-    color: '#555',
-    marginLeft: 8,
+  {
+    "featureType": "administrative.land_parcel",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
   },
-  savedRoutesTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 8,
+  {
+    "featureType": "administrative.locality",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#bdbdbd"
+      }
+    ]
   },
-  routeCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
   },
-  routeTitle: {
-    fontWeight: 'bold',
-    fontSize: 14,
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#181818"
+      }
+    ]
   },
-  routeSubtitle: {
-    fontSize: 12,
-    color: '#666',
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#616161"
+      }
+    ]
   },
-  tabBar: {
-    height: 60,
-    backgroundColor: '#ddd',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#1b1b1b"
+      }
+    ]
   },
-});
+  {
+    "featureType": "road",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#2c2c2c"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#8a8a8a"
+      }
+    ]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#373737"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#3c3c3c"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway.controlled_access",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#4e4e4e"
+      }
+    ]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#616161"
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#757575"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#000000"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#3d3d3d"
+      }
+    ]
+  }
+];
