@@ -12,14 +12,20 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import validator from 'validator';
+import 'react-native-url-polyfill/auto';
+import 'react-native-get-random-values';
+import { useConvex  } from "convex/react";
+import { api } from "../convex/_generated/api";
+import { ConvexProvider } from 'convex/react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const convex = useConvex();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter both email and password');
       return;
@@ -28,11 +34,21 @@ export default function Login() {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
+    try {
+      const result = await convex.query(api.functions.users.UserManagement.logInWithEmail.login, {
+        email,
+        password,
+      });
+      alert(`Welcome back ${result.name}!`);
+      router.push('/HomeScreen');
+    } catch (err) {
+      alert("Email or password is incorrect");
+    }
     // Alert.alert('Login Successful', `Welcome, ${email}`);
-    router.push('/HomeScreen');
   };
 
   return (
+    <ConvexProvider client={convex}>
     // <ScrollView>
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {/* Top Section */}
@@ -165,5 +181,6 @@ export default function Login() {
         </View>
       </View>
     // </ScrollView>
+    </ConvexProvider>
   );
 }
