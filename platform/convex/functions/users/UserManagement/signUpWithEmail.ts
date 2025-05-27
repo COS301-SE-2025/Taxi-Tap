@@ -2,7 +2,6 @@ import { mutation } from "../../../_generated/server";
 import { v } from "convex/values";
 import * as utils from "@noble/hashes/utils";
 
-
 export const signUp = mutation({
   args: {
     email: v.string(),
@@ -11,8 +10,8 @@ export const signUp = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query("users")
-      .filter((q) => q.eq(q.field("email"), args.email))
+      .query("taxiTap_users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
     if (existing) {
@@ -21,12 +20,24 @@ export const signUp = mutation({
 
     //const passwordHash = utils.hexEncode(sha256(new TextEncoder().encode(args.password)));
 
-    await ctx.db.insert("taxiTap_users", {
+    try {
+      await ctx.db.insert("taxiTap_users", {
         email: args.email,
         name: args.name,
         password: args.password,
-        age: 0
-    });
+        age: 0,
+      });
+    } catch (e) {
+      // Optional: Check again if the failure was due to race condition
+      const exists = await ctx.db
+        .query("taxiTap_users")
+        .withIndex("by_email", (q) => q.eq("email", args.email))
+        .first();
+
+      if (exists) {
+        throw new Error("Email already exists (raced)");
+      }
+      throw e;
+    }
   },
 });
-

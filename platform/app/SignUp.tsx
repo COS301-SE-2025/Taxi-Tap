@@ -12,8 +12,16 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import validator from 'validator';
+import 'react-native-url-polyfill/auto';
+import 'react-native-get-random-values';
+import { useMutation } from "convex/react";
+import { api } from "../convex/_generated/api";
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
+
+const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
 export default function Login() {
+  const signUpWithEmail = useMutation(api.functions.users.UserManagement.signUpWithEmail.signUp);
   const [nameSurname, setNameSurname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +30,7 @@ export default function Login() {
   const [showConfrimPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!email || !password || !nameSurname || !confirmPassword) {
       Alert.alert('Error', 'Please fill all fields');
       return;
@@ -35,11 +43,28 @@ export default function Login() {
       Alert.alert('Password Mismatch', 'Passwords do not match');
       return;
     }
+    try {
+      await signUpWithEmail({ email, name: nameSurname, password });
+      alert(`Welcome!`);
+      router.push('/HomeScreen');
+    } catch (err) {
+      const message =
+        (err as any)?.data?.message || (err as any)?.message || "Something went wrong";
+
+      if (message.includes("Email already exists")) {
+        Alert.alert("Email In Use", "This email is already registered. Try logging in or use a different email.");
+      } else {
+        Alert.alert("Signup Error", message);
+      }
+    }
+
+
     // Alert.alert('Login Successful', `Welcome, ${email}`);
-    router.push('/HomeScreen');
+    
   };
 
   return (
+    <ConvexProvider client={convex}>
     <ScrollView>
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {/* Top Section */}
@@ -224,5 +249,6 @@ export default function Login() {
         </View>
       </View>
     </ScrollView>
+    </ConvexProvider>
   );
 }
