@@ -1,16 +1,20 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  preset: 'ts-jest',
+  preset: 'jest-expo',
   testEnvironment: 'jsdom',
-  // Only look for tests in tests/unit/frontend (matching backend pattern)
   roots: ['<rootDir>/tests/unit/frontend'],
-  
-  // Only match .test.ts/.test.tsx files (matching backend pattern)
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
-  transform: {
-    '^.+\\.[jt]sx?$': 'ts-jest'
-  },
-  moduleFileExtensions: ['ts','tsx','js','jsx','json','node'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.setup.ts'],
-  transformIgnorePatterns: ['/node_modules/']
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg))'
+  ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  setupFilesAfterEnv: [
+    '@testing-library/jest-native/extend-expect',
+    '<rootDir>/tests/setup/jest.setup.ts'
+  ],
+  globals: {
+    'ts-jest': {
+      babelConfig: true
+    }
+  }
 };
