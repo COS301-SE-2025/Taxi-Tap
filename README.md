@@ -51,7 +51,7 @@ The system connects passengers and taxi operators through a location-aware mobil
 
 ### Hosting:
 - **Convex Cloud (Managed)**  
-  Backend and database are deployed to Convex's cloud infrastructure.  
+  Backend and database are deployed to Convex’s cloud infrastructure.  
   No need for containers, VMs, or Kubernetes. Built-in CI/CD with `convex deploy`.
 
   Frontend hosted via:
