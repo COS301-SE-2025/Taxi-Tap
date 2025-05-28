@@ -35,9 +35,11 @@ The system connects passengers and taxi operators through a location-aware mobil
 ## Demo 1
 
 ### Presentation:
-[Watch the Presentation Video]([https://www.youtube.com/watch?v=VIDEO_ID](https://drive.google.com/file/d/1ARU9fvIyPMoXSzPPKUsij37qSIwM2xVQ/view?usp=drive_link))
+[Watch the Presentation Video](https://drive.google.com/file/d/1ARU9fvIyPMoXSzPPKUsij37qSIwM2xVQ/view?usp=drive_link)
+
 ### Live Demo:
-[Watch the Live Demo Video]([https://www.youtube.com/watch?v=VIDEO_ID](https://drive.google.com/file/d/1LZjudVO8O2SHSQI3N5NrFANh6n-567mr/view?usp=drive_link))
+[Watch the Live Demo Video](https://drive.google.com/file/d/1LZjudVO8O2SHSQI3N5NrFANh6n-567mr/view?usp=drive_link)
+
 
 ## Technology Stack
 
