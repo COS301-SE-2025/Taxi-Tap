@@ -1,6 +1,16 @@
 # TaxiTap
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap/issues)
+[![codecov](https://codecov.io/gh/COS301-SE-2025/Taxi-Tap/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/Taxi-Tap)
+[![Dependencies](https://img.shields.io/librariesio/github/COS301-SE-2025/Taxi-Tap)](https://libraries.io/github/COS301-SE-2025/Taxi-Tap)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/COS301-SE-2025/Taxi-Tap/ci.yml?branch=main)](https://github.com/COS301-SE-2025/Taxi-Tap/actions)
+[![Languages](https://img.shields.io/github/languages/count/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
+[![Top Language](https://img.shields.io/github/languages/top/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
+[![Repo Size](https://img.shields.io/github/repo-size/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
+[![Pull Requests](https://img.shields.io/github/issues-pr/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap/commits)
+[![Commit Activity](https://img.shields.io/github/commit-activity/m/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap/graphs/commit-activity)
 
 ## Project Description
 
@@ -8,14 +18,19 @@
     <img src="assets/images/taxi.gif" height="100"/>
 </p>
 
-*TaxiTap* - is a mobile platform designed to revolutionise South Africa’s minibus taxi industry by digitising route information, eliminating the need for constant hooting, and creating a semi-structured booking system while preserving the flexibility that makes taxis an essential transport mode.
+*TaxiTap* - is a mobile platform designed to revolutionise South Africa's minibus taxi industry by digitising route information, eliminating the need for constant hooting, and creating a semi-structured booking system while preserving the flexibility that makes taxis an essential transport mode.  
 The system connects passengers and taxi operators through a location-aware mobile application that facilitates taxi requests, communicates passenger locations, manages payments, and provides real-time vehicle tracking – all without fundamentally changing the existing system's multi-passenger, flexible route nature.
 
-
 ## Team: Git It Done
+
 <p align="center">
-  <a href ="http://gititdone2025.site"><img src="assets/images/Logo_nobg.png" alt="Git It Done Logo" width="200"/></a>
+  <a href="http://gititdone2025.site">
+    <img src="assets/images/Logo_nobg.png" alt="Git It Done Logo" width="200"/>
+  </a>
 </p>
+
+- [Functional Requirements (SRS)](docs/SRS.pdf)
+- [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/137/views/1)
 
 ## Technology Stack
 
@@ -44,62 +59,27 @@ The system connects passengers and taxi operators through a location-aware mobil
   - **Play Store & App Store** for production builds
 
 ## Branching Strategy: `GitFlow`
-- `main`: Production code
-- `develop`: Development code
-- `feature/*`: New features
-- `hotfix/*`: Urgent fixes
+- `main`: Production code  
+- `develop`: Development code  
+- `feature/*`: New features  
+- `hotfix/*`: Urgent fixes  
 - `release/*`: Release preparation
 
 ## Team Members & Roles
 
-<table>
-  <tr>
-    <td>
-      <img src="assets/images/annie.jpeg" height="80" width="80" alt="Ann-Marí Oberholzer"/>
-      <p><b>Ann-Marí Oberholzer</b></p>
-      <p>Project Manager</p>
-      <a href="https://github.com/Ann-Mari-Oberholzer"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
-      <a href="https://linkedin.com/ann-mari-oberholzer-967982354/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
-    </td>
-    <td>
-      <img src="assets/images/unathi.jpeg" height="80" width="80" alt="Unathi Dlamini"/>
-      <p><b>Unathi Dlamini</b></p>
-      <p>Backend Engineer</p>
-      <a href="https://github.com/un4thi"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
-      <a href="https://linkedin.com/unathi-dlamini-237007224/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
-    </td>
-    <td>
-      <img src="assets/images/tebogo.jpg" height="80" width="80" alt="Moyahabo Hamese"/>
-      <p><b>Moyahabo Hamese</b></p>
-      <p>Frontend Engineer</p>
-      <a href="https://github.com/habohamese"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
-      <a href="https://www.linkedin.com/in/moyahabo-hamese/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <img src="assets/images/ati.jpeg" height="80" width="80" alt="Atidaishe Mupanemunda"/>
-      <p><b>Atidaishe Mupanemunda</b></p>
-      <p>Backend Engineer</p>
-      <a href="https://github.com/WillyDoo428"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
-      <a href="https://www.linkedin.com/in/atidaishe-mupanemunda-87ba721b7/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
-    </td>
-    <td>
-      <img src="assets/images/nev.jpg" height="80" width="80" alt="Nevan Rahman"/>
-      <p><b>Nevan Rahman</b></p>
-      <p>Fullstack Engineer</p>
-      <a href="https://github.com/rsnevan"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
-      <a href="https://linkedin.com/in/nevanrahman"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
-    </td>
-    <td></td>
-  </tr>
-</table>
+| Photo | Name | Role | GitHub | LinkedIn | Description |
+|-------|------|------|--------|----------|-------------|
+| ![](assets/images/annie.jpeg) | **Ann-Marí Oberholzer** | Project Manager | [GitHub](https://github.com/Ann-Mari-Oberholzer) | [LinkedIn](https://linkedin.com/ann-mari-oberholzer-967982354/) | As a third-year Computer Science student, I have gained a strong foundation in the various areas of the field through both coursework and hands-on experience. I have experience in programming languages such as Java and C++, allowing me to tackle backend development. In addition to the previously mentioned, I also know of web technologies - including HTML, CSS, JavaScript, PHP and React. Having served as a team leader in previous projects, I was assigned the leadership role for this project as well. I'm excited to further develop my leadership abilities while guiding the team toward success. Throughout my studies, various team projects have allowed me to enhance my teamwork and communication skills. This has also given me the chance to adapt in diverse group settings. I am eager to expand my programming knowledge further and believe my mindset makes me a good asset to the team. |
+| ![](assets/images/unathi.jpeg) | **Unathi Dlamini** | Backend Engineer | [GitHub](https://github.com/un4thi) | [LinkedIn](https://linkedin.com/unathi-dlamini-237007224/) | A third-year Computer Science student at the University of Pretoria with a strong passion for programming, web design, and continuous learning. I enjoy working in teams, tackling challenges collaboratively, and expanding my skill set through hands-on projects. Currently exploring areas like cybersecurity and software engineering, I'm always eager to take on new technologies and improve both my technical and problem-solving abilities. |
+| ![](assets/images/tebogo.jpg) | **Moyahabo Hamese** | Frontend Engineer | [GitHub](https://github.com/habohamese) | [LinkedIn](https://www.linkedin.com/in/moyahabo-hamese/) | I am a Computer Science student interested in front-end development and cybersecurity. I enjoy working in collaborative teams and solving real-world problems through thoughtful and practical solutions. My experiences include, but are not limited to: (1) contributing to a community sensor project for education, (2) engaging with the UP Consulting Society to tackle case-based challenges, and (3) designing applications that provide users with a positive and intuitive experience. Passionate about continuous learning and innovation, I bring a balance of technical skills, creativity, and a problem-solving mindset to every project. |
+| ![](assets/images/ati.jpeg) | **Atidaishe Mupanemunda** | Backend Engineer | [GitHub](https://github.com/WillyDoo428) | [LinkedIn](https://www.linkedin.com/in/atidaishe-mupanemunda-87ba721b7/) | Spiritually grounded, intellectually driven, and fiercely independent, Atidaishe brings a rare blend of emotional intelligence, technical clarity, and visionary leadership to every table he sits at. Whether he's architecting backends, mentoring peers, meditating, or reverse-engineering programming languages, he's always seeking growth—with intensity, intentionality, and heart. |
+| ![](assets/images/nev.jpg) | **Nevan Rahman** | Fullstack Engineer | [GitHub](https://github.com/rsnevan) | [LinkedIn](https://linkedin.com/in/nevanrahman) | As a final-year BSc Computer Science (with Data Science) student, I combine technical proficiency with strong leadership skills developed through my role as a Senior Team Lead in a university IT Lab. I excel in handling client issues while maintaining complex IT environments. My expertise spans Frontend Development, Backend Systems, API Integration, and Data Science with a focus on creating responsive web applications. I've collaborated on diverse projects that have sharpened my technical abilities across various development environments. I'm known for exceptional communication skills and a team-oriented work ethic, consistently putting in the necessary effort to achieve success. My passion lies in software architecture, full-stack development, database technologies, and machine learning applications.  |
 
 ## Features (Planned)
-- Real-time taxi tracking
-- Secure in-app payments
-- Trip history and receipts
-- Driver ratings and reviews
+- Real-time taxi tracking  
+- Secure in-app payments  
+- Trip history and receipts  
+- Driver ratings and reviews  
 
 ## Getting Started
 Coming soon
