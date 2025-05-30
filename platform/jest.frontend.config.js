@@ -2,8 +2,11 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  roots: ['<rootDir>/components','<rootDir>/app'],
-  testMatch: ['**/?(*.)+(spec|test).[jt]sx?'],
+  // Only look for tests in tests/unit/frontend (matching backend pattern)
+  roots: ['<rootDir>/tests/unit/frontend'],
+  
+  // Only match .test.ts/.test.tsx files (matching backend pattern)
+  testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   transform: {
     '^.+\\.[jt]sx?$': 'ts-jest'
   },
