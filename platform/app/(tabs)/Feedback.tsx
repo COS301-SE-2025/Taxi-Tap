@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  StyleSheet,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function FeedbackScreen() {
   const [rating, setRating] = useState(0);
@@ -17,6 +19,7 @@ export default function FeedbackScreen() {
     { rating: number; comment: string; time: string }[]
   >([]);
   const router = useRouter();
+  const { theme, isDark } = useTheme();
 
   const handleSubmit = () => {
     if (!rating && !comment) {
@@ -31,49 +34,155 @@ export default function FeedbackScreen() {
     };
 
     setFeedbackList([newEntry, ...feedbackList]);
-    // Alert.alert('Feedback Submitted', `Rating: ${rating}, Comment: ${comment}`);
     setRating(0);
     setComment('');
   };
 
+  // Create dynamic styles based on theme
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+      padding: 20,
+      paddingTop: 40,
+    },
+    contentContainer: {
+      paddingBottom: 60,
+    },
+    userInfoCard: {
+      backgroundColor: isDark ? theme.surface : '#F5D9B2',
+      borderRadius: 20,
+      padding: 20,
+      alignItems: 'center',
+      marginBottom: 30,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    userIconContainer: {
+      backgroundColor: isDark ? theme.primary : '#000',
+      borderRadius: 50,
+      padding: 12,
+      marginBottom: 10,
+    },
+    userName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    userDetails: {
+      fontSize: 14,
+      color: theme.textSecondary,
+      marginTop: 4,
+    },
+    sectionTitle: {
+      color: theme.text,
+      fontSize: 18,
+      fontWeight: '500',
+      marginBottom: 10,
+    },
+    ratingContainer: {
+      flexDirection: 'row',
+      marginBottom: 30,
+    },
+    commentInput: {
+      backgroundColor: isDark ? theme.surface : '#F5D9B2',
+      borderRadius: 20,
+      padding: 16,
+      height: 120,
+      fontSize: 16,
+      color: theme.text,
+      marginBottom: 30,
+      textAlignVertical: 'top',
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    submitButton: {
+      backgroundColor: theme.primary,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginBottom: 30,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.2,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    submitButtonText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: isDark ? '#FFFFFF' : '#232f3e',
+    },
+    historyContainer: {
+      padding: 16,
+      backgroundColor: isDark ? theme.surface : '#F5D9B2',
+      borderRadius: 12,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    historyTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+      color: theme.text,
+    },
+    historyEntry: {
+      marginBottom: 12,
+      backgroundColor: theme.card,
+      padding: 12,
+      borderRadius: 8,
+      elevation: 2,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 2,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    historyText: {
+      color: theme.text,
+      marginBottom: 4,
+    },
+    historyLabel: {
+      fontWeight: 'bold',
+      color: theme.text,
+    },
+    historyTime: {
+      color: theme.textSecondary,
+      marginBottom: 4,
+      alignSelf: 'flex-end',
+    },
+  });
+
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 40 }}
-      contentContainerStyle={{ paddingBottom: 60 }}
+      style={dynamicStyles.container}
+      contentContainerStyle={dynamicStyles.contentContainer}
     >
       {/* User Info */}
-      <View
-        style={{
-          backgroundColor: '#F5D9B2',
-          borderRadius: 20,
-          padding: 20,
-          alignItems: 'center',
-          marginBottom: 30,
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: '#000',
-            borderRadius: 50,
-            padding: 12,
-            marginBottom: 10,
-          }}
-        >
-          <FontAwesome name="user" size={24} color="orange" />
+      <View style={dynamicStyles.userInfoCard}>
+        <View style={dynamicStyles.userIconContainer}>
+          <FontAwesome 
+            name="user" 
+            size={24} 
+            color={isDark ? '#FFFFFF' : 'orange'} 
+          />
         </View>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>
+        <Text style={dynamicStyles.userName}>
           Tshepo Mthembu
         </Text>
-        <Text style={{ fontSize: 14, color: '#555', marginTop: 4 }}>
+        <Text style={dynamicStyles.userDetails}>
           Tuesday Morning to Menlyn Taxi Rank
         </Text>
       </View>
 
       {/* Rating */}
-      <Text style={{ color: 'black', fontSize: 18, fontWeight: '500', marginBottom: 10 }}>
+      <Text style={dynamicStyles.sectionTitle}>
         Rating
       </Text>
-      <View style={{ flexDirection: 'row', marginBottom: 30 }}>
+      <View style={dynamicStyles.ratingContainer}>
         {[1, 2, 3, 4, 5].map((star) => {
           const isSelected = star <= rating;
           return (
@@ -90,7 +199,7 @@ export default function FeedbackScreen() {
               <FontAwesome
                 name={isSelected ? 'star' : 'star-o'}
                 size={30}
-                color="orange"
+                color={theme.primary}
                 style={{ marginRight: 8 }}
               />
             </TouchableOpacity>
@@ -99,71 +208,50 @@ export default function FeedbackScreen() {
       </View>
 
       {/* Comment */}
-      <Text style={{ color: 'black', fontSize: 18, fontWeight: '500', marginBottom: 10 }}>
+      <Text style={dynamicStyles.sectionTitle}>
         Leave a comment
       </Text>
       <TextInput
         value={comment}
         onChangeText={setComment}
         placeholder="Type your feedback here..."
-        placeholderTextColor="#999"
+        placeholderTextColor={theme.textSecondary}
         multiline
-        style={{
-          backgroundColor: '#F5D9B2',
-          borderRadius: 20,
-          padding: 16,
-          height: 120,
-          fontSize: 16,
-          color: '#000',
-          marginBottom: 30,
-          textAlignVertical: 'top',
-        }}
+        style={dynamicStyles.commentInput}
       />
 
       {/* Submit Button */}
       <TouchableOpacity
         onPress={handleSubmit}
-        style={{
-          backgroundColor: '#f90',
-          borderRadius: 12,
-          paddingVertical: 16,
-          alignItems: 'center',
-          marginBottom: 30,
-        }}
+        style={dynamicStyles.submitButton}
       >
-        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#232f3e' }}>
+        <Text style={dynamicStyles.submitButtonText}>
           Submit Response
         </Text>
       </TouchableOpacity>
 
       {/* Feedback History */}
       {feedbackList.length > 0 && (
-        <View style={{ padding: 16, backgroundColor: '#F5D9B2', borderRadius: 12 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#000' }}>
+        <View style={dynamicStyles.historyContainer}>
+          <Text style={dynamicStyles.historyTitle}>
             Feedback History
           </Text>
           {feedbackList.map((entry, index) => (
             <View
               key={index}
-              style={{
-                marginBottom: 12,
-                backgroundColor: '#fff',
-                padding: 12,
-                borderRadius: 8,
-                elevation: 2,
-              }}
+              style={dynamicStyles.historyEntry}
             >
               {entry.rating > 0 && (
-                <Text style={{ color: '#333', marginBottom: 4 }}>
-                  <Text style={{ fontWeight: 'bold' }}>Rating:</Text> {entry.rating}
+                <Text style={dynamicStyles.historyText}>
+                  <Text style={dynamicStyles.historyLabel}>Rating:</Text> {entry.rating}
                 </Text>
               )}
               {entry.comment ? (
-                <Text style={{ color: '#333' }}>
-                  <Text style={{ fontWeight: 'bold' }}>Comment:</Text> {entry.comment}
+                <Text style={dynamicStyles.historyText}>
+                  <Text style={dynamicStyles.historyLabel}>Comment:</Text> {entry.comment}
                 </Text>
               ) : null}
-              <Text style={{ color: '#333', marginBottom: 4, alignSelf: 'flex-end' }}>
+              <Text style={dynamicStyles.historyTime}>
                 {entry.time}
               </Text>
             </View>
