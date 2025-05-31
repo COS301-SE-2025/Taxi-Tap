@@ -11,19 +11,25 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import validator from 'validator';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { Dropdown } from 'react-native-element-dropdown';
 
 const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
+const data = [
+    { label: 'Passenger', value: 'Passenger' },
+    { label: 'Driver', value: 'Driver' },
+];
+
 export default function Login() {
-  const signUpWithEmail = useMutation(api.functions.users.UserManagement.signUpWithEmail.signUp);
+  const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
   const [nameSurname, setNameSurname] = useState('');
-  const [email, setEmail] = useState('');
+  const [number, setNumber] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,12 +37,17 @@ export default function Login() {
   const router = useRouter();
 
   const handleSignup = async () => {
-    if (!email || !password || !nameSurname || !confirmPassword) {
+    if (!number || !password || !nameSurname || !confirmPassword) {
       Alert.alert('Error', 'Please fill all fields');
       return;
     }
-    if (!validator.isEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address');
+    if (!selectedRole) {
+      Alert.alert('Error', 'Please select a role');
+      return;
+    }
+    const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
+    if (!saNumberRegex.test(number)) {
+      Alert.alert('Invalid number', 'Please enter a valid number');
       return;
     }
     if (password !== confirmPassword) {
@@ -44,15 +55,15 @@ export default function Login() {
       return;
     }
     try {
-      await signUpWithEmail({ email, name: nameSurname, password });
+      await signUpWithSMS({ number, name: nameSurname, password, role: selectedRole });
       alert(`Welcome!`);
       router.push('/HomeScreen');
     } catch (err) {
       const message =
         (err as any)?.data?.message || (err as any)?.message || "Something went wrong";
 
-      if (message.includes("Email already exists")) {
-        Alert.alert("Email In Use", "This email is already registered. Try logging in or use a different email.");
+      if (message.includes("Number already exists")) {
+        Alert.alert("Number In Use", "This number is already registered. Try logging in or use a different number.");
       } else {
         Alert.alert("Signup Error", message);
       }
@@ -115,13 +126,13 @@ export default function Login() {
 
           {/* Username */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Email
+              Cellphone number
           </Text>
 
           <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
+            value={number}
+            onChangeText={setNumber}
+            placeholder="Cellphone number"
             placeholderTextColor="#999"
             style={{
               backgroundColor: '#fff',
@@ -131,6 +142,31 @@ export default function Login() {
               marginBottom: 15,
               fontSize: 16,
             }}
+          />
+
+          {/* Dropdown */}
+          {/* Dropdown for Role */}
+          <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
+            Select Role
+          </Text>
+
+          <Dropdown
+            data={data}
+            labelField="label"
+            valueField="value"
+            placeholder="Select role"
+            placeholderStyle={{ color: '#999' }}
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 10,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              marginBottom: 15,
+              fontSize: 16,
+            }}
+            selectedTextStyle={{ fontSize: 16, color: '#000' }}
+            value={selectedRole}
+            onChange={item => setSelectedRole(item.value)}
           />
 
           {/* Password */}
