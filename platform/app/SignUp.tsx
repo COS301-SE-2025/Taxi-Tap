@@ -57,7 +57,11 @@ export default function Login() {
     try {
       await signUpWithSMS({ number, name: nameSurname, password, role: selectedRole });
       alert(`Welcome!`);
-      router.push('/HomeScreen');
+      if (selectedRole === 'Driver') {
+        router.push('/DriverProfile');
+      } else if (selectedRole === 'Passenger') {
+        router.push('/HomeScreen');
+      }
     } catch (err) {
       const message =
         (err as any)?.data?.message || (err as any)?.message || "Something went wrong";
