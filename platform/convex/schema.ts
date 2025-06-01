@@ -96,4 +96,33 @@ export default defineSchema({
     .index("by_driver", ["driverId"])
     .index("by_status", ["status"])
     .index("by_requested_at", ["requestedAt"]),
+
+    //passenger table
+    passengers: defineTable({
+    userId: v.id("taxiTap_users"),
+    //passengerID: v.string(),
+    numberOfRidesTaken: v.number(),
+    totalDistance: v.number(),
+    totalFare: v.number(),
+    averageRating: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_id", ["userId"])
+    //.index("by_passenger_id", ["passengerID"])
+    .index("by_created_at", ["createdAt"]),
+  
+    //drivers table
+    drivers: defineTable({
+    userId: v.id("taxiTap_users"),
+    //driverID: v.string(),
+    numberOfRidesCompleted: v.number(),
+    totalDistance: v.number(),
+    totalFare: v.number(),
+      
+    averageRating: v.optional(v.number()),
+    })
+    .index("by_user_id", ["userId"])
+    //.index("by_driver_id", ["driverID"])
+    .index("by_average_rating", ["averageRating"]),
 });
