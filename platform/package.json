@@ -46,7 +46,8 @@
     "react-native-svg": "^15.12.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^10.2.0",
-    "validator": "^13.15.0"
+    "validator": "^13.15.0",
+    "expo-image-picker": "~16.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
