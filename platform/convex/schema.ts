@@ -2,30 +2,41 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  
+  
   users: defineTable({
     name: v.string(),
     email: v.string(),
     password: v.string(),
     age: v.number(),
   }),
-  messages: defineTable({
-    body: v.string(),
-    sender: v.id("users"),
+
+  taxis: defineTable({
+    driverId: v.id("users"),
+    plateNumber: v.string(),
+    seatsAvailable: v.number(),
+    status: v.union(
+      v.literal("available"),
+      v.literal("full"),
+      v.literal("offline")
+    ),
+    location: v.object({
+      lat: v.number(),
+      lon: v.number()
+    })
   }),
-  messages_ati: defineTable({
-    body: v.string(),
-    sender: v.id("users"),
-  }),
-  messages_ati23: defineTable({
-    body: v.string(),
-    sender: v.id("users"),
-  }),
+
+  
+  
+  
   taxiTap_users: defineTable({
     name: v.string(),
     email: v.string(),
     password: v.string(),
     age: v.number(),
   }).index("by_email", ["email"]),
+  
+  
   rides: defineTable({
     rideId: v.string(),
     passengerId: v.id("users"),
@@ -37,7 +48,10 @@ export default defineSchema({
       }),
       address: v.string(), // Human-readable address from frontend
     }),
+
+    
   
+    
     endLocation: v.object({
       coordinates: v.object({
         latitude: v.number(),
@@ -45,6 +59,7 @@ export default defineSchema({
       }),
       address: v.string(), // Human-readable address from frontend
     }),
+    
     
     status: v.union(
       v.literal("requested"),
