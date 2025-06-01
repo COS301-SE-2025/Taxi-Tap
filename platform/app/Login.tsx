@@ -39,9 +39,13 @@ export default function Login() {
         password,
       });
       alert(`Welcome back ${result.name}!`);
-      router.push('/HomeScreen');
+      if (result.role === 'Driver') {
+        router.push('/DriverProfile');
+      } else if (result.role === 'Passenger') {
+        router.push('/HomeScreen');
+      }
     } catch (err) {
-      alert("Email or password is incorrect");
+      alert("Number or password is incorrect");
     }
     // Alert.alert('Login Successful', `Welcome, ${email}`);
   };

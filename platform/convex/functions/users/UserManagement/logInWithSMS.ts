@@ -24,6 +24,7 @@ export const loginSMSHandler = async (
     id: user._id,
     number: user.number,
     name: user.name,
+    role: user.role,
   };
 };
 
