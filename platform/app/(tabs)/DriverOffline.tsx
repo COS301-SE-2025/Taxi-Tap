@@ -1,0 +1,493 @@
+import React, { useState, useLayoutEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Modal,
+  StatusBar,
+  SafeAreaView,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from 'expo-router';
+import { useTheme } from '../../contexts/ThemeContext';
+
+interface DriverOfflineProps {
+  onGoOnline: () => void;
+  todaysEarnings: number;
+  currentRoute?: string;
+  availableSeats?: number;
+}
+
+
+interface QuickActionType {
+  icon: string;
+  title: string;
+  value: string;
+  subtitle: string;
+  color: string;
+  onPress: () => void;
+}
+
+
+
+export default function DriverOffline({ 
+  onGoOnline, 
+  todaysEarnings, 
+  currentRoute = "Not Set",
+  availableSeats = 4,
+}: DriverOfflineProps) {
+  const navigation = useNavigation();
+  const { theme, isDark } = useTheme();
+  
+  
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+      tabBarStyle: { display: 'none' },
+    });
+  }, [navigation]);
+
+  
+
+  
+
+  const quickActions: QuickActionType[] = [
+    {
+      icon: "location-outline",
+      title: "Current Route",
+      value: currentRoute,
+      subtitle: "Tap to set route",
+      color: currentRoute === "Not Set" ? "#FF9900" : "#00A591",
+      onPress: () => console.log('Route pressed')
+    },
+    {
+      icon: "car-outline",
+      title: "Available Seats",
+      value: availableSeats.toString(),
+      subtitle: `of 14 seats free`,
+      color: "#FF9900",
+      onPress: () => console.log('Seats pressed')
+    },
+  ];
+
+ 
+
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      backgroundColor: theme.surface,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    menuButton: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: isDark ? theme.primary : "#f5f5f5",
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    statusContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDark ? theme.surface : "#ECD9C3",
+      borderColor: isDark ? theme.border : "#D4A57D",
+      borderWidth: 1,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 20,
+    },
+    statusDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: '#FF4444',
+      marginRight: 6,
+    },
+    statusText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: isDark ? theme.text : "#C62828",
+    },
+    contentContainer: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
+    earningsCard: {
+      backgroundColor: theme.surface,
+      borderRadius: 30,
+      padding: 24,
+      marginBottom: 20,
+      alignItems: "center",
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 4,
+      borderLeftWidth: 4,
+      borderLeftColor: theme.primary,
+    },
+    earningsAmount: {
+      color: theme.primary,
+      fontSize: 32,
+      fontWeight: "bold",
+      marginBottom: 4,
+    },
+    earningsTitle: {
+      color: theme.textSecondary,
+      fontSize: 16,
+      fontWeight: "bold",
+      marginBottom: 8,
+    },
+    earningsSubtitle: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      fontWeight: "bold",
+      textAlign: 'center',
+    },
+    offlineSection: {
+      backgroundColor: theme.surface,
+      borderRadius: 30,
+      padding: 24,
+      marginBottom: 20,
+      alignItems: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    offlineIconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: isDark ? theme.primary : "#ECD9C3",
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    offlineTitle: {
+      fontSize: 22,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    offlineSubtitle: {
+      fontSize: 16,
+      color: theme.textSecondary,
+      fontWeight: "bold",
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: 24,
+    },
+    goOnlineButton: {
+      width: '100%',
+      height: 56,
+      borderRadius: 30,
+      backgroundColor: isDark ? '#10B981' : '#00A591',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 4,
+      flexDirection: 'row',
+    },
+    goOnlineButtonText: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: isDark ? "#121212" : "#FFFFFF",
+      marginLeft: 8,
+    },
+    quickActionsSection: {
+      marginBottom: 20,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 16,
+    },
+    quickActionsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    quickActionCard: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      padding: 16,
+      marginHorizontal: 4,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 4,
+      minHeight: 100,
+    },
+    quickActionIcon: {
+      marginBottom: 8,
+    },
+    quickActionTitle: {
+      fontSize: 12,
+      fontWeight: 'bold',
+      color: theme.textSecondary,
+      marginBottom: 4,
+    },
+    quickActionValue: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 2,
+    },
+    quickActionSubtitle: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: theme.textSecondary,
+    },
+    safetyButton: {
+      position: 'absolute',
+      bottom: 30,
+      right: 20,
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: '#FF4444',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 8,
+      zIndex: 1000,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-start',
+      alignItems: 'flex-start',
+    },
+    menuModal: {
+      marginTop: 80,
+      marginLeft: 20,
+      marginRight: 20,
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      paddingVertical: 8,
+      minWidth: 280,
+      maxWidth: '90%',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 12,
+    },
+    menuModalHeader: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? theme.border : "#D4A57D",
+    },
+    menuModalHeaderText: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.text,
+    },
+    menuModalItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      minHeight: 60,
+    },
+    menuModalItemIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: isDark ? theme.primary : "#ECD9C3",
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    menuModalItemContent: {
+      flex: 1,
+    },
+    menuModalItemTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 2,
+    },
+    menuModalItemSubtitle: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: theme.textSecondary,
+    },
+    safetyModal: {
+      position: 'absolute',
+      bottom: 100,
+      right: 20,
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      padding: 8,
+      minWidth: 200,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 8,
+    },
+    safetyItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      minHeight: 50,
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? theme.border : "#D4A57D",
+    },
+    safetyItemLast: {
+      borderBottomWidth: 0,
+    },
+    safetyItemIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    safetyItemContent: {
+      flex: 1,
+    },
+    safetyItemTitle: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 2,
+    },
+    safetyItemSubtitle: {
+      fontSize: 12,
+      fontWeight: 'bold',
+      color: theme.textSecondary,
+    },
+  });
+
+  return (
+    <SafeAreaView style={dynamicStyles.safeArea}>
+      <StatusBar 
+        barStyle={isDark ? "light-content" : "dark-content"} 
+        backgroundColor={theme.surface} 
+      />
+      <View style={dynamicStyles.container}>
+        <View style={dynamicStyles.header}>
+          <View style={dynamicStyles.headerLeft}>
+            
+            <Text style={dynamicStyles.headerTitle}>My Dashboard</Text>
+          </View>
+          
+          <View style={dynamicStyles.headerRight}>
+            <View style={dynamicStyles.statusContainer}>
+              <View style={dynamicStyles.statusDot} />
+              <Text style={dynamicStyles.statusText}>OFFLINE</Text>
+            </View>
+          </View>
+        </View>
+
+        <ScrollView 
+          style={dynamicStyles.contentContainer} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
+          <TouchableOpacity style={dynamicStyles.earningsCard} activeOpacity={0.8}>
+            <Text style={dynamicStyles.earningsAmount}>
+             R{todaysEarnings.toFixed(2)}
+            </Text>
+            <Text style={dynamicStyles.earningsTitle}>Today's Earnings</Text>
+            <Text style={dynamicStyles.earningsSubtitle}>
+              Tap to view detailed breakdown
+            </Text>
+          </TouchableOpacity>
+
+          <View style={dynamicStyles.offlineSection}>
+            <View style={dynamicStyles.offlineIconContainer}>
+              <Icon name="car-outline" size={40} color={isDark ? "#121212" : "#FF9900"} />
+            </View>
+            <Text style={dynamicStyles.offlineTitle}>Ready to Pick Up Passengers?</Text>
+            <Text style={dynamicStyles.offlineSubtitle}>
+              Go online to start accepting seat reservation requests
+            </Text>
+            <TouchableOpacity
+              style={dynamicStyles.goOnlineButton}
+              onPress={onGoOnline}
+              activeOpacity={0.8}
+              accessibilityLabel="Go online to accept passengers"
+            >
+              <Text style={dynamicStyles.goOnlineButtonText}>GO ONLINE</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={dynamicStyles.quickActionsSection}>
+            <Text style={dynamicStyles.sectionTitle}>Quick Overview</Text>
+            
+            <View style={dynamicStyles.quickActionsRow}>
+              {quickActions.map((action, index) => (
+                <TouchableOpacity 
+                  key={index}
+                  style={dynamicStyles.quickActionCard}
+                  onPress={action.onPress}
+                  activeOpacity={0.8}
+                  accessibilityLabel={`${action.title}: ${action.value}`}
+                >
+                  <Icon 
+                    name={action.icon} 
+                    size={24} 
+                    color={action.color} 
+                    style={dynamicStyles.quickActionIcon} 
+                  />
+                  <Text style={dynamicStyles.quickActionTitle}>{action.title}</Text>
+                  <Text style={[dynamicStyles.quickActionValue, { color: action.color }]}>
+                    {action.value}
+                  </Text>
+                  <Text style={dynamicStyles.quickActionSubtitle}>{action.subtitle}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
