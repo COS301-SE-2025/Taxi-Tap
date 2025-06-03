@@ -37,7 +37,13 @@ interface QuickActionType {
   onPress: () => void;
 }
 
-
+interface SafetyOptionType {
+  icon: string;
+  title: string;
+  subtitle: string;
+  color: string;
+  onPress: () => void;
+}
 
 export default function DriverOffline({ 
   onGoOnline, 
@@ -62,7 +68,23 @@ export default function DriverOffline({
     setShowMenu(!showMenu);
   };
 
-  
+  const handleSafetyPress = () => {
+    setShowSafetyMenu(!showSafetyMenu);
+  };
+
+  const handleEmergency = () => {
+    Alert.alert(
+      "Emergency Alert",
+      "This will contact emergency services (112)",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Yes, Get Help", style: "destructive", onPress: () => {
+          Alert.alert("Emergency Alert Sent", "Emergency services contacted. ");
+          setShowSafetyMenu(false);
+        }}
+      ]
+    );
+  };
 
   const menuItems: MenuItemType[] = [
     { 
@@ -110,7 +132,15 @@ export default function DriverOffline({
     },
   ];
 
-  
+  const safetyOptions: SafetyOptionType[] = [
+    {
+      icon: "call",
+      title: "Emergency Call",
+      subtitle: "Call 112 immediately",
+      color: "#FF4444",
+      onPress: handleEmergency
+    },
+  ];
 
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -534,7 +564,14 @@ export default function DriverOffline({
           </View>
         </ScrollView>
 
-        
+        <TouchableOpacity 
+          style={dynamicStyles.safetyButton}
+          onPress={handleSafetyPress}
+          activeOpacity={0.8}
+          accessibilityLabel="Safety and emergency options"
+        >
+          <Icon name="shield-checkmark" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
 
         <Modal
           visible={showMenu}
@@ -580,4 +617,30 @@ export default function DriverOffline({
             activeOpacity={1}
             onPress={() => setShowSafetyMenu(false)}
           >
-            
+            <View style={dynamicStyles.safetyModal}>
+              {safetyOptions.map((option, index) => (
+                <TouchableOpacity 
+                  key={index}
+                  style={[
+                    dynamicStyles.safetyItem,
+                    index === safetyOptions.length - 1 && dynamicStyles.safetyItemLast
+                  ]}
+                  onPress={option.onPress}
+                  activeOpacity={0.8}
+                >
+                  <View style={[dynamicStyles.safetyItemIcon, { backgroundColor: `${option.color}20` }]}>
+                    <Icon name={option.icon} size={16} color={option.color} />
+                  </View>
+                  <View style={dynamicStyles.safetyItemContent}>
+                    <Text style={dynamicStyles.safetyItemTitle}>{option.title}</Text>
+                    <Text style={dynamicStyles.safetyItemSubtitle}>{option.subtitle}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+    </SafeAreaView>
+  );
+}
