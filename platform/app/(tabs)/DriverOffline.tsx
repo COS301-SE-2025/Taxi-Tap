@@ -21,6 +21,12 @@ interface DriverOfflineProps {
   availableSeats?: number;
 }
 
+interface MenuItemType {
+  icon: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}
 
 interface QuickActionType {
   icon: string;
@@ -42,7 +48,8 @@ export default function DriverOffline({
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
   
-  
+  const [showMenu, setShowMenu] = useState(false);
+  const [showSafetyMenu, setShowSafetyMenu] = useState(false);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -51,9 +58,38 @@ export default function DriverOffline({
     });
   }, [navigation]);
 
-  
+  const handleMenuPress = () => {
+    setShowMenu(!showMenu);
+  };
 
   
+
+  const menuItems: MenuItemType[] = [
+    { 
+      icon: "person-outline", 
+      title: "My Profile", 
+      subtitle: "Driver details & documents",
+      onPress: () => console.log('Profile pressed') 
+    },
+    { 
+      icon: "car-outline", 
+      title: "My Taxi & Route", 
+      subtitle: "Vehicle info & route settings",
+      onPress: () => console.log('Vehicle Info pressed') 
+    },
+    { 
+      icon: "time-outline", 
+      title: "Trip History", 
+      subtitle: "Past rides & routes",
+      onPress: () => console.log('Trip History pressed') 
+    },
+    { 
+      icon: "settings-outline", 
+      title: "Settings", 
+      subtitle: "App preferences",
+      onPress: () => console.log('Settings pressed') 
+    },
+  ];
 
   const quickActions: QuickActionType[] = [
     {
@@ -74,7 +110,7 @@ export default function DriverOffline({
     },
   ];
 
- 
+  
 
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -418,7 +454,13 @@ export default function DriverOffline({
       <View style={dynamicStyles.container}>
         <View style={dynamicStyles.header}>
           <View style={dynamicStyles.headerLeft}>
-            
+            <TouchableOpacity 
+              style={dynamicStyles.menuButton}
+              onPress={handleMenuPress}
+              accessibilityLabel="Open menu"
+            >
+              <Icon name="menu" size={24} color={isDark ? "#121212" : "#FF9900"} />
+            </TouchableOpacity>
             <Text style={dynamicStyles.headerTitle}>My Dashboard</Text>
           </View>
           
@@ -491,3 +533,51 @@ export default function DriverOffline({
             </View>
           </View>
         </ScrollView>
+
+        
+
+        <Modal
+          visible={showMenu}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowMenu(false)}
+        >
+          <TouchableOpacity 
+            style={dynamicStyles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}
+          >
+            <View style={dynamicStyles.menuModal}>
+              <View style={dynamicStyles.menuModalHeader}>
+                <Text style={dynamicStyles.menuModalHeaderText}>Menu</Text>
+              </View>
+              {menuItems.map((item, index) => (
+                <TouchableOpacity 
+                  key={index}
+                  style={dynamicStyles.menuModalItem}
+                  onPress={() => {
+                    item.onPress();
+                    setShowMenu(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={dynamicStyles.menuModalItemIcon}>
+                    <Icon name={item.icon} size={20} color={isDark ? "#121212" : "#FF9900"} />
+                  </View>
+                  <View style={dynamicStyles.menuModalItemContent}>
+                    <Text style={dynamicStyles.menuModalItemTitle}>{item.title}</Text>
+                    <Text style={dynamicStyles.menuModalItemSubtitle}>{item.subtitle}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {showSafetyMenu && (
+          <TouchableOpacity 
+            style={dynamicStyles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowSafetyMenu(false)}
+          >
+            
