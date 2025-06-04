@@ -1,32 +1,52 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable, Image, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 export default function DriverProfile() {
-  const [name, setName] = useState('Tshepo Mthembu');
-  const [experience, setExperience] = useState('5 years');
-  const router = useRouter();
+    const [name, setName] = useState('Tshepo Mthembu');
+    const [experience, setExperience] = useState('5 years');
+    const router = useRouter();
 
-  const handleVehicle = () => {
-    router.push('../VehicleDriver');
-  };
+    const handleVehicle = () => {
+        router.push('../DriverRequestPage');
+    };
 
-  const handleDocs = () => {
-    //router.push('../Docs'); ->change to real name
-  };
+    const handleDocs = () => {
+        //router.push('../Docs'); ->change to real name
+    };
 
-  const handleEarnings = () => {
-    //router.push('../Earnings'); ->change to real name
-  };
+    const handleEarnings = () => {
+        //router.push('../Earnings'); ->change to real name
+    };
 
-  const handleRoutes = () => {
-    //router.push('../Routes'); ->change to real name
-  };
+    const handleRoutes = () => {
+        //router.push('../Routes'); ->change to real name
+    };
 
-  const handleSignout = () => {
-    router.push('../LandingPage');
-  };
+    const handleSignout = () => {
+        router.push('../LandingPage');
+    };
+
+    const handleSwitchToPassenger = () => {
+        Alert.alert(
+        'Switch Profile',
+        'Are you sure you want to switch to the passenger profile?',
+        [
+            { text: 'Cancel', style: 'cancel' },
+            {
+            text: 'Yes',
+            onPress: () => {
+                router.push('../HomeScreen'); // Adjust path if needed
+            },
+            },
+        ]
+        );
+    };
+
+    const handleSave = () => {
+        // Add save logic here
+    };
 
   return (
     <ScrollView>
@@ -140,6 +160,30 @@ export default function DriverProfile() {
             }}
         >
             <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Sign Out</Text>
+        </Pressable>
+        <Pressable
+            onPress={handleSwitchToPassenger}
+            style={{
+            backgroundColor: '#ecd4b5',
+            paddingVertical: 14,
+            borderRadius: 30,
+            alignItems: 'center',
+            marginTop: 20,
+            }}
+        >
+            <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Switch to Passenger Profile</Text>
+        </Pressable>
+        <Pressable
+            onPress={handleSave}
+            style={{
+            backgroundColor: '#ecd4b5',
+            paddingVertical: 14,
+            borderRadius: 30,
+            alignItems: 'center',
+            marginTop: 20,
+            }}
+        >
+            <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Save Profile</Text>
         </Pressable>
         </View>
     </ScrollView>
