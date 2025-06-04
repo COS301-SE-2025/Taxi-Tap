@@ -509,7 +509,7 @@ export default function DriverOffline({
         >
           <TouchableOpacity style={dynamicStyles.earningsCard} activeOpacity={0.8}>
             <Text style={dynamicStyles.earningsAmount}>
-             R{todaysEarnings.toFixed(2)}
+             R{(todaysEarnings ?? 0).toFixed(2)}
             </Text>
             <Text style={dynamicStyles.earningsTitle}>Today's Earnings</Text>
             <Text style={dynamicStyles.earningsSubtitle}>
