@@ -1,18 +1,35 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useRouter } from 'expo-router';
 
 export default function PassengerProfile() {
   const [name, setName] = useState('Tshepo Mthembu');
   const [number, setNumber] = useState('073 658 9142');
   const [email, setEmail] = useState('tshepo@gmail.com');
   const { theme, isDark } = useTheme();
+  const router = useRouter();
 
   const handleSave = () => {
     // Add save logic here
-    console.log('Saved:', { name, number, email });
+  };
+
+  const handleSwitchToDriver = () => {
+    Alert.alert(
+      'Switch Profile',
+      'Are you sure you want to switch to the driver profile?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes',
+          onPress: () => {
+            router.push('../DriverProfile');
+          },
+        },
+      ]
+    );
   };
 
   // Create dynamic styles based on theme
@@ -187,7 +204,18 @@ export default function PassengerProfile() {
             </View>
           </View>
         </View>
-
+        <Pressable
+          onPress={handleSwitchToDriver}
+          style={{
+          backgroundColor: '#ecd4b5',
+          paddingVertical: 14,
+          borderRadius: 30,
+          alignItems: 'center',
+          marginTop: 20,
+          }}
+        >
+          <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Switch to Driver Profile</Text>
+        </Pressable>
         <Pressable
           onPress={handleSave}
           style={dynamicStyles.saveButton}
