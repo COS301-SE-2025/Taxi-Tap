@@ -3,7 +3,7 @@ import { v } from "convex/values";
 
 export const requestRide = mutation({
   args: {
-    passengerId: v.id("users"),
+    passengerId: v.id("taxiTap_users"),
     startLocation: v.object({
       coordinates: v.object({
         latitude: v.number(),
