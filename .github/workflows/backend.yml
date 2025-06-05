@@ -35,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Run Convex type checker
-        run: npx convex dev --check
+        run: npx convex dev --typecheck enable --once
 
   deploy:
     if: github.ref == 'refs/heads/main'
