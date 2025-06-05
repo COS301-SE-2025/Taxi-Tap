@@ -1,0 +1,46 @@
+name: React Native Frontend CI
+
+on:
+  push:
+    paths:
+      - 'platform/app/**'
+      - 'platform/components/**'
+      - 'platform/constants/**'
+      - 'platform/contexts/**'
+      - 'platform/tests/**'
+      - 'platform/package.json'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    paths:
+      - 'platform/**'
+
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: platform/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('platform/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
