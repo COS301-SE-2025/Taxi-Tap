@@ -1,21 +1,21 @@
 import React, { useLayoutEffect } from "react";
-import { SafeAreaView, View, ScrollView, ImageBackground, Image, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 
-export default () => {
+export default function SeatReserved() {
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
 	
 	useLayoutEffect(() => {
 		navigation.setOptions({
-			headerShown: false,
+			headerShown: false
 		});
-	});
+	}, []);
 
 	// Parse location data from params
 	const currentLocation = {

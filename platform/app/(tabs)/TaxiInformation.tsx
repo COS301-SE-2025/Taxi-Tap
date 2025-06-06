@@ -1,12 +1,12 @@
 import React, { useState, useLayoutEffect } from "react";
 import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, } from "react-native";
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
+import taxi from '../../assets/images/Quantum.png';
 
-export default () => {
+export default function TaxiInformation() {
 	const [selectedVehicle, setSelectedVehicle] = useState(null);
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
@@ -35,7 +35,7 @@ export default () => {
 		{
 			id: 1,
 			plate: "VV 87 89 GP",
-			image: require('../../assets/images/Siyaya-Taxi-Avatar.jpg'),
+			image: taxi,
 			time: "8 min away",
 			seats: "2 seats left",
 			price: "R12"
@@ -43,7 +43,7 @@ export default () => {
 		{
 			id: 2,
 			plate: "YY 87 89 GP", 
-			image: require('../../assets/images/Quantum.png'),
+			image: taxi,
 			time: "3 min away",
 			seats: "1 seat left",
 			price: "R12"
@@ -51,7 +51,7 @@ export default () => {
 		{
 			id: 3,
 			plate: "YTV 567 GP",
-			image: require('../../assets/images/Siyaya-Taxi-Avatar.jpg'),
+			image: taxi,
 			time: "8 min away",
 			seats: "5 seats left",
 			price: "R12"
@@ -59,7 +59,7 @@ export default () => {
 		{
 			id: 5,
 			plate: "XYZ 879 GP", 
-			image: require('../../assets/images/Quantum.png'),
+			image: taxi,
 			time: "4 min away",
 			seats: "4 seat left",
 			price: "R12"

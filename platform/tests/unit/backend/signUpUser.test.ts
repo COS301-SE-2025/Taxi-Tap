@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('convex/values', () => ({
   v: {
     string: jest.fn(() => 'string'),

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 jest.mock('convex/values', () => ({
   v: {
     string: jest.fn(() => 'string'),
@@ -189,7 +190,7 @@ describe('loginHandler', () => {
         password: 'password123',
       };
 
-      mockFirst.mockResolvedValue(null);
+      mockFirst.mockResolvedValue(mockUser);
 
       await expect(loginHandler(mockCtx, args)).rejects.toThrow('User not found');
     });

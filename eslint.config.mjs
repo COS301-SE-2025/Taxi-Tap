@@ -1,25 +1,12 @@
-// import js from "@eslint/js";
-// import globals from "globals";
-// import tseslint from "typescript-eslint";
-// import pluginReact from "eslint-plugin-react";
-// import { defineConfig } from "eslint/config";
-
-
-// export default defineConfig([
-//   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"] },
-//   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
-//   tseslint.configs.recommended,
-//   pluginReact.configs.flat.recommended,
-// ]);
 import js from "@eslint/js";
 import globals from "globals";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import reactPlugin from "eslint-plugin-react";
 import { defineConfig } from "eslint/config";
+import reactNativePlugin from "eslint-plugin-react-native";
 
 export default defineConfig([
-  // JS files config
   {
     files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
     languageOptions: {
@@ -29,19 +16,13 @@ export default defineConfig([
         sourceType: "module",
       },
     },
-    plugins: {
-      js,
-    },
-    extends: [
-      "eslint:recommended",
-      "plugin:js/recommended"
-    ],
+    // Instead of 'extends: ["eslint:recommended", js.configs.recommended]'
+    // Spread the recommended config object directly here:
+    ...js.configs.recommended,
     rules: {
-      // Your JS rules here
+      // your JS rules here
     },
   },
-
-  // TS and JSX/TSX files config
   {
     files: ["**/*.ts", "**/*.mts", "**/*.cts", "**/*.tsx", "**/*.jsx"],
     languageOptions: {
@@ -50,23 +31,26 @@ export default defineConfig([
       parserOptions: {
         ecmaVersion: 2020,
         sourceType: "module",
-        project: "./tsconfig.json", // enable type-aware linting
+        project: "./tsconfig.json",
       },
     },
     plugins: {
       "@typescript-eslint": tsPlugin,
       react: reactPlugin,
+      "react-native": reactNativePlugin,
     },
     extends: [
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended",
       "plugin:react/recommended",
+      "plugin:react-native/all",
     ],
     rules: {
-      // Your TS and React-specific rules here
-      // Example:
-      // "@typescript-eslint/no-unused-vars": ["warn"],
-      // "react/react-in-jsx-scope": "off" // if using React 17+
+      "react-native/no-inline-styles": "warn",
+      "react-native/no-unused-styles": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-require-imports": "off",
     },
     settings: {
       react: {
