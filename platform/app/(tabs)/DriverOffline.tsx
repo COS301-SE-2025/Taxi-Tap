@@ -79,11 +79,16 @@ export default function DriverOffline({
       [
         { text: "Cancel", style: "cancel" },
         { text: "Yes, Get Help", style: "destructive", onPress: () => {
-          Alert.alert("Emergency Alert Sent", "Emergency services contacted. ");
+          Alert.alert("Emergency Alert Sent", "Emergency services contacted.");
           setShowSafetyMenu(false);
         }}
       ]
     );
+  };
+
+  const handleEarningsPress = () => {
+    // Type-safe navigation
+    navigation.navigate('EarningsPage' as never);
   };
 
   const menuItems: MenuItemType[] = [
@@ -507,9 +512,13 @@ export default function DriverOffline({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
         >
-          <TouchableOpacity style={dynamicStyles.earningsCard} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={dynamicStyles.earningsCard} 
+            activeOpacity={0.8} 
+            onPress={handleEarningsPress}
+          >
             <Text style={dynamicStyles.earningsAmount}>
-             R{(todaysEarnings ?? 0).toFixed(2)}
+              R{(todaysEarnings ?? 0).toFixed(2)}
             </Text>
             <Text style={dynamicStyles.earningsTitle}>Today's Earnings</Text>
             <Text style={dynamicStyles.earningsSubtitle}>
