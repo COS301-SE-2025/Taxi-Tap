@@ -21,3 +21,12 @@ export const cancelRide = mutation({
         if (ride.passengerId !== args.userId) {
             throw new Error("You are not authorized to cancel this ride");
         }
+        
+        // Update the ride status to cancelled
+        await ctx.db.patch(ride._id, {
+            status: "cancelled",
+        });
+
+        return { success: true, message: "Ride cancelled successfully" };
+        }
+    });
