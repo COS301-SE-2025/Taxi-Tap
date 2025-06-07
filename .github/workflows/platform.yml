@@ -4,10 +4,10 @@ on:
   push:
     paths:
       - 'platform/**'
-      - '.github/workflows/platform-ci.yml'
+      - '.github/workflows/platform.yml'
   pull_request:
-    branches:
-      - '**'
+    paths:
+      - 'platform/**'
   workflow_dispatch:
 
 jobs:
@@ -65,7 +65,7 @@ jobs:
 
       # - name: Run Convex type checker
       #   run: npx convex dev --typecheck enable --once
-      
+
       # - name: Run backend tests
       #   run: npm run test:backend
 
