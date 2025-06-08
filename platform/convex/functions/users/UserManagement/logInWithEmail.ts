@@ -7,7 +7,6 @@ export const loginHandler = async (
   args: { 
     email: string; 
     password: string; 
-    requestedAccountType: "passenger" | "driver" 
   }
 ) => {
   const user = await ctx.db
@@ -23,21 +22,27 @@ export const loginHandler = async (
     throw new Error("Invalid password");
   }
 
-  // Check if user has permission for the requested account type
+  // Check if account is active
+  if (!user.isActive) {
+    throw new Error("Account is deactivated. Please contact support.");
+  }
+
+  // Use the user's current active role for login
+  const activeRole = user.currentActiveRole;
+  
+  if (!activeRole) {
+    throw new Error("No active role set. Please contact support.");
+  }
+
+  // Verify user has permission for their current active role
   const hasPermission = 
-    user.accountType === args.requestedAccountType || 
+    user.accountType === activeRole || 
     user.accountType === "both";
 
   if (!hasPermission) {
     throw new Error(
-      `Access denied: You don't have ${args.requestedAccountType} privileges. ` +
-      `Your account type is: ${user.accountType}`
+      `Role mismatch: Current active role (${activeRole}) doesn't match your account permissions (${user.accountType})`
     );
-  }
-
-  // Check if account is active
-  if (!user.isActive) {
-    throw new Error("Account is deactivated. Please contact support.");
   }
 
   return {
@@ -45,7 +50,6 @@ export const loginHandler = async (
     email: user.email,
     name: user.name,
     accountType: user.accountType,
-    requestedRole: args.requestedAccountType,
     currentActiveRole: user.currentActiveRole,
     isVerified: user.isVerified,
   };
@@ -56,7 +60,6 @@ export const login = query({
   args: {
     email: v.string(),
     password: v.string(),
-    requestedAccountType: v.union(v.literal("passenger"), v.literal("driver")),
   },
   handler: loginHandler,
 });
