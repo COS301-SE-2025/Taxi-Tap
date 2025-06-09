@@ -1,12 +1,16 @@
 import { mutation } from "../../../_generated/server";
 import { v } from "convex/values";
 import { MutationCtx } from "../../../_generated/server";
+import { Id } from "../../../_generated/dataModel";
 
 export const switchBothToDriverHandler = async (
   ctx: MutationCtx,
-  args: { userId: v.Id<"taxiTap_users"> }
+  args: { userId: Id<"taxiTap_users"> }
 ) => {
-  const user = await ctx.db.get(args.userId);
+  const user = await ctx.db
+    .query("taxiTap_users")
+    .filter((q) => q.eq(q.field("_id"), args.userId))
+    .first();
   
   if (!user) {
     throw new Error("User not found");
@@ -36,7 +40,7 @@ export const switchBothToDriverHandler = async (
   // Update user account type to driver only
   await ctx.db.patch(args.userId, {
     accountType: "driver",
-    currentActiveRole: undefined, // Clear active role since they're now single-role
+    currentActiveRole: "driver", // Set active role to driver since they're now driver-only
     lastRoleSwitchAt: Date.now(),
     updatedAt: Date.now(),
   });

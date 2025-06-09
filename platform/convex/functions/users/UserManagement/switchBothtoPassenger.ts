@@ -1,12 +1,16 @@
 import { mutation } from "../../../_generated/server";
 import { v } from "convex/values";
 import { MutationCtx } from "../../../_generated/server";
+import { Id } from "../../../_generated/dataModel";
 
 export const switchBothToPassengerHandler = async (
   ctx: MutationCtx,
-  args: { userId: v.Id<"taxiTap_users"> }
+  args: { userId: Id<"taxiTap_users"> }
 ) => {
-  const user = await ctx.db.get(args.userId);
+   const user = await ctx.db
+    .query("taxiTap_users")
+    .filter((q) => q.eq(q.field("_id"), args.userId))
+    .first();
   
   if (!user) {
     throw new Error("User not found");
@@ -35,7 +39,7 @@ export const switchBothToPassengerHandler = async (
   // Update user account type to passenger only
   await ctx.db.patch(args.userId, {
     accountType: "passenger",
-    currentActiveRole: undefined, // Clear active role since they're now single-role
+    currentActiveRole: "passenger", // Clear active role since they're now single-role
     lastRoleSwitchAt: Date.now(),
     updatedAt: Date.now(),
   });

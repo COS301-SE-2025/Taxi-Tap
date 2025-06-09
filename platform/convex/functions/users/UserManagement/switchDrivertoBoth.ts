@@ -1,12 +1,16 @@
 import { mutation } from "../../../_generated/server";
 import { v } from "convex/values";
 import { MutationCtx } from "../../../_generated/server";
+import { Id } from "../../../_generated/dataModel";
 
 export const switchDriverToBothHandler = async (
   ctx: MutationCtx,
-  args: { userId: v.Id<"taxiTap_users"> }
+  args: { userId: Id<"taxiTap_users"> }
 ) => {
-  const user = await ctx.db.get(args.userId);
+  const user = await ctx.db
+    .query("taxiTap_users")
+    .filter((q) => q.eq(q.field("_id"), args.userId))
+    .first();
   
   if (!user) {
     throw new Error("User not found");
