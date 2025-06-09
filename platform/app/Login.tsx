@@ -7,11 +7,9 @@ import {
   Alert,
   Image,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import validator from 'validator';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { useConvex  } from "convex/react";
@@ -19,30 +17,35 @@ import { api } from "../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [number, setNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const convex = useConvex();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!number || !password) {
       Alert.alert('Error', 'Please enter both email and password');
       return;
     }
-    if (!validator.isEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address');
+    const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
+    if (!saNumberRegex.test(number)) {
+      Alert.alert('Invalid number', 'Please enter a valid number');
       return;
     }
     try {
-      const result = await convex.query(api.functions.users.UserManagement.logInWithEmail.login, {
-        email,
+      const result = await convex.query(api.functions.users.UserManagement.logInWithSMS.loginSMS, {
+        number,
         password,
       });
       alert(`Welcome back ${result.name}!`);
-      router.push('/HomeScreen');
+      if (result.role === 'Driver') {
+        router.push('/DriverProfile');
+      } else if (result.role === 'Passenger') {
+        router.push('/HomeScreen');
+      }
     } catch (err) {
-      alert("Email or password is incorrect");
+      alert("Number or password is incorrect");
     }
     // Alert.alert('Login Successful', `Welcome, ${email}`);
   };
@@ -78,13 +81,13 @@ export default function Login() {
         >
           {/* Username */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Email
+              Cellphone number
           </Text>
 
           <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
+            value={number}
+            onChangeText={setNumber}
+            placeholder="Cellphone number"
             placeholderTextColor="#999"
             style={{
               backgroundColor: '#fff',
