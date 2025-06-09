@@ -25,7 +25,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!number || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+      Alert.alert('Error', 'Please enter both phone number and password');
       return;
     }
     const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
@@ -35,17 +35,17 @@ export default function Login() {
     }
     try {
       const result = await convex.query(api.functions.users.UserManagement.logInWithSMS.loginSMS, {
-        number,
+        phoneNumber: number,
         password,
       });
       alert(`Welcome back ${result.name}!`);
-      if (result.role === 'Driver') {
+      if (result.currentActiveRole === 'driver') {
         router.push('/DriverProfile');
-      } else if (result.role === 'Passenger') {
+      } else if (result.currentActiveRole === 'passenger') {
         router.push('/HomeScreen');
       }
     } catch (err) {
-      alert("Number or password is incorrect");
+      alert("Phone number or password is incorrect");
     }
     // Alert.alert('Login Successful', `Welcome, ${email}`);
   };

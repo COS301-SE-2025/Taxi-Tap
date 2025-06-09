@@ -21,8 +21,8 @@ import { Dropdown } from 'react-native-element-dropdown';
 const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
 const data = [
-    { label: 'Passenger', value: 'Passenger' },
-    { label: 'Driver', value: 'Driver' },
+    { label: 'Passenger', value: 'passenger' },
+    { label: 'Driver', value: 'driver' },
 ];
 
 export default function Login() {
@@ -55,19 +55,24 @@ export default function Login() {
       return;
     }
     try {
-      await signUpWithSMS({ number, name: nameSurname, password, role: selectedRole });
+      await signUpWithSMS({ 
+        phoneNumber: number, 
+        name: nameSurname, 
+        password, 
+        accountType: selectedRole 
+      });
       alert(`Welcome!`);
-      if (selectedRole === 'Driver') {
+      if (selectedRole === 'driver') {
         router.push('/DriverProfile');
-      } else if (selectedRole === 'Passenger') {
+      } else if (selectedRole === 'passenger') {
         router.push('/HomeScreen');
       }
     } catch (err) {
       const message =
         (err as any)?.data?.message || (err as any)?.message || "Something went wrong";
 
-      if (message.includes("Number already exists")) {
-        Alert.alert("Number In Use", "This number is already registered. Try logging in or use a different number.");
+      if (message.includes("Phone number already exists")) {
+        Alert.alert("Phone Number In Use", "This phone number is already registered. Try logging in or use a different number.");
       } else {
         Alert.alert("Signup Error", message);
       }
