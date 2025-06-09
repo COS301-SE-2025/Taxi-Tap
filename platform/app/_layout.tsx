@@ -14,6 +14,7 @@ import { api } from '../convex/_generated/api'; // Adjust path if needed
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { UserProvider } from '../contexts/UserContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -52,7 +53,9 @@ export default function RootLayout() {
   return (
     <ConvexProvider client={convex}>
       <ThemeProvider>
-        <RootLayoutNav />
+        <UserProvider>
+          <RootLayoutNav />
+        </UserProvider>
       </ThemeProvider>
     </ConvexProvider>
   );
@@ -99,7 +102,6 @@ function RootLayoutNav() {
               headerShown: false
             }} 
           />
-
           
           <Stack.Screen 
             name="(tabs)" 
