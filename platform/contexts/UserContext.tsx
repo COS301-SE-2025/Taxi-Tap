@@ -6,16 +6,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface User {
   id: string;
   name: string;
-  role: string;
-  accountType: string;
+  role: string | undefined;
+  accountType: "passenger" | "driver" | "both";
 }
 
 interface UserLoginData {
   _id?: string;
   id?: string;
   name: string;
-  currentActiveRole: string;
-  accountType: string;
+  currentActiveRole?: "passenger" | "driver" | undefined;
+  accountType: "passenger" | "driver" | "both";
 }
 
 interface UserContextType {
@@ -23,9 +23,9 @@ interface UserContextType {
   loading: boolean;
   login: (userData: UserLoginData) => Promise<void>;
   logout: () => Promise<void>;
-  updateUserRole: (newRole: string) => Promise<void>;
+  updateUserRole: (newRole: string | undefined) => Promise<void>;
   updateUserName: (newName: string) => Promise<void>;
-  updateAccountType: (newAccountType: string) => Promise<void>;
+  updateAccountType: (newAccountType: "passenger" | "driver" | "both") => Promise<void>;
 }
 
 interface UserProviderProps {
@@ -60,7 +60,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           id: userId,
           name: userName || '',
           role: userRole || '',
-          accountType: userAccountType || '',
+          accountType: userAccountType as "passenger" | "driver" | "both",
         });
       }
     } catch (error) {
@@ -75,7 +75,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       id: userData._id || userData.id || '',
       name: userData.name,
       role: userData.currentActiveRole,
-      accountType: userData.accountType, // Include account type for switching logic
+      accountType: userData.accountType,
     };
     
     setUser(userInfo);
@@ -84,7 +84,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     await AsyncStorage.multiSet([
       ['userId', userInfo.id],
       ['userName', userInfo.name],
-      ['userRole', userInfo.role],
+      ['userRole', userInfo.role || ''],
       ['userAccountType', userInfo.accountType],
     ]);
   };
@@ -94,11 +94,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     await AsyncStorage.multiRemove(['userId', 'userName', 'userRole', 'userAccountType']);
   };
 
-  const updateUserRole = async (newRole: string): Promise<void> => {
+  const updateUserRole = async (newRole: string | undefined): Promise<void> => {
     if (user) {
       const updatedUser: User = { ...user, role: newRole };
       setUser(updatedUser);
-      await AsyncStorage.setItem('userRole', newRole);
+      await AsyncStorage.setItem('userRole', newRole || '');
     }
   };
 
@@ -110,7 +110,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   };
 
-  const updateAccountType = async (newAccountType: string): Promise<void> => {
+  const updateAccountType = async (newAccountType: "passenger" | "driver" | "both"): Promise<void> => {
     if (user) {
       const updatedUser: User = { ...user, accountType: newAccountType };
       setUser(updatedUser);
