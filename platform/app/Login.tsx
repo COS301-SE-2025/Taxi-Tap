@@ -12,9 +12,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
-import { useConvex  } from "convex/react";
+import { useConvex } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
+import { useUser } from '../contexts/UserContext';
 
 export default function Login() {
   const [number, setNumber] = useState('');
@@ -22,6 +23,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const convex = useConvex();
+  const { login } = useUser();
 
   const handleLogin = async () => {
     if (!number || !password) {
@@ -38,7 +40,12 @@ export default function Login() {
         phoneNumber: number,
         password,
       });
+      
+      // Use the context login function
+      await login(result);
+      
       alert(`Welcome back ${result.name}!`);
+      
       if (result.currentActiveRole === 'driver') {
         router.push('/DriverProfile');
       } else if (result.currentActiveRole === 'passenger') {
@@ -47,7 +54,6 @@ export default function Login() {
     } catch (err) {
       alert("Phone number or password is incorrect");
     }
-    // Alert.alert('Login Successful', `Welcome, ${email}`);
   };
 
   return (
@@ -123,7 +129,6 @@ export default function Login() {
               secureTextEntry={!showPassword}
               style={{
                   flex: 1,
-                  // paddingVertical: 12,
                   fontSize: 16,
               }}
             />
