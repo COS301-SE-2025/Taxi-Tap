@@ -13,11 +13,9 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as functions_family_addChild from "../functions/family/addChild.js";
 import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
 import type * as functions_users_UserManagement_logInWithEmail from "../functions/users/UserManagement/logInWithEmail.js";
 import type * as functions_users_UserManagement_signUpWithEmail from "../functions/users/UserManagement/signUpWithEmail.js";
-import type * as functions_users_addUser from "../functions/users/addUser.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -28,11 +26,9 @@ import type * as functions_users_addUser from "../functions/users/addUser.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  "functions/family/addChild": typeof functions_family_addChild;
   "functions/rides/RequestRide": typeof functions_rides_RequestRide;
   "functions/users/UserManagement/logInWithEmail": typeof functions_users_UserManagement_logInWithEmail;
   "functions/users/UserManagement/signUpWithEmail": typeof functions_users_UserManagement_signUpWithEmail;
-  "functions/users/addUser": typeof functions_users_addUser;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

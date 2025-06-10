@@ -7,7 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import taxi from '../../assets/images/Quantum.png';
 
 export default function TaxiInformation() {
-	const [selectedVehicle, setSelectedVehicle] = useState(null);
+	const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
@@ -20,15 +20,15 @@ export default function TaxiInformation() {
 	
 	// Parse location data from params
 	const currentLocation = {
-		latitude: parseFloat(params.currentLat as string) || -25.7479,
-		longitude: parseFloat(params.currentLng as string) || 28.2293,
-		name: params.currentName || 'Current Location'
+		latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
+		longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
+		name: getParamAsString(params.currentName, "Current Location")
 	};
-	
+
 	const destination = {
-		latitude: parseFloat(params.destinationLat as string) || -25.7824,
-		longitude: parseFloat(params.destinationLng as string) || 28.2753,
-		name: params.destinationName || 'Menlyn Taxi Rank'
+		latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
+		longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
+		name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
 	};
 
 	const vehicles = [
@@ -66,7 +66,7 @@ export default function TaxiInformation() {
 		}
 	];
 
-	const handleVehicleSelect = (vehicleId) => {
+	const handleVehicleSelect = (vehicleId: number) => {
 		setSelectedVehicle(vehicleId);
 	};
 
@@ -75,30 +75,37 @@ export default function TaxiInformation() {
 	};
 
 	const handleReserveSeat = () => {
-		if (selectedVehicle) {
-			const selected = vehicles.find(vehicle => vehicle.id === selectedVehicle);
-			router.push({
-				pathname: './SeatReserved',
-				params: {
-					destinationName: destination.name,
-					destinationLat: destination.latitude.toString(),
-					destinationLng: destination.longitude.toString(),
-					currentName: currentLocation.name,
-					currentLat: currentLocation.latitude.toString(),
-					currentLng: currentLocation.longitude.toString(),
-
-					// Vehicle details
-					selectedVehicleId: selected.id.toString(),
-					plate: selected.plate,
-					time: selected.time,
-					seats: selected.seats,
-					price: selected.price,
-					image: selected.id.toString(),
-				}
-			});
-		} else {
+		if (selectedVehicle === null) {
 			alert('Please select a vehicle first!');
+			return;
 		}
+
+		const selected = vehicles.find(vehicle => vehicle.id === selectedVehicle);
+
+		if (!selected) {
+			alert('Selected vehicle not found!');
+			return;
+		}
+
+		router.push({
+			pathname: './SeatReserved',
+			params: {
+				destinationName: destination.name,
+				destinationLat: destination.latitude.toString(),
+				destinationLng: destination.longitude.toString(),
+				currentName: currentLocation.name,
+				currentLat: currentLocation.latitude.toString(),
+				currentLng: currentLocation.longitude.toString(),
+
+				// Vehicle details
+				selectedVehicleId: selected.id.toString(),
+				plate: selected.plate,
+				time: selected.time,
+				seats: selected.seats,
+				price: selected.price,
+				image: selected.id.toString(),
+			}
+		});
 	};
 
 	// Create dynamic styles based on theme
@@ -413,6 +420,13 @@ export default function TaxiInformation() {
 			]
 		}
 	];
+
+	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
+		if (Array.isArray(param)) {
+			return param[0] || fallback;
+		}
+		return param || fallback;
+	}
 
 	return (
 		<SafeAreaView style={dynamicStyles.container}>

@@ -36,7 +36,7 @@ export default function HomeScreen() {
     navigation.setOptions({
       title: "Home",
     });
-  });
+  }, [navigation]);
 
   // Get current location on mount
   useEffect(() => {
@@ -77,7 +77,11 @@ export default function HomeScreen() {
   }, []);
 
   // Navigate to TaxiInformation after destination selection
-  const handleDestinationSelect = (route) => {
+  const handleDestinationSelect = (route: {
+    coords: { latitude: number; longitude: number };
+    title: string;
+    subtitle?: string;
+  }) => {
     const newDestination = {
       latitude: route.coords.latitude,
       longitude: route.coords.longitude,
