@@ -64,7 +64,10 @@ jobs:
         run: npm ci
 
       - name: Run Convex type checker
-        run: npx convex dev --typecheck enable --once
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: npx convex dev --typecheck enable --once --deploymentKey $CONVEX_DEPLOY_KEY
+
 
       # - name: Run backend tests
       #   run: npm run test:backend
