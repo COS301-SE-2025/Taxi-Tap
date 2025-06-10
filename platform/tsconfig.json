@@ -9,7 +9,8 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "allowUnusedLabels": true
   },
   "include": [
     "**/*.ts",
