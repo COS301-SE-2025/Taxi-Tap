@@ -63,8 +63,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # - name: Run Convex type checker
-      #   run: npx convex dev --typecheck enable --once
+      - name: Run Convex type checker
+        run: npx convex dev --typecheck enable --once
 
       # - name: Run backend tests
       #   run: npm run test:backend
