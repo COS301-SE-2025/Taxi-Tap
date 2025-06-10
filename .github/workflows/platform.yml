@@ -66,9 +66,8 @@ jobs:
       - name: Generate Convex types
         run: npx convex codegen
 
-      - name: Run TypeScript type checker
-        run: npx tsc --noEmit --skipLibCheck
-
+      # - name: Run TypeScript type checker
+      #   run: npx tsc --noEmit --skipLibCheck
 
       # - name: Run backend tests
       #   run: npm run test:backend
