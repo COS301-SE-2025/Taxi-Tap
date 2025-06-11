@@ -17,6 +17,9 @@ import 'react-native-get-random-values';
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import icon from '../assets/images/icon.png';
+import google from '../assets/images/google5.png';
+import { AxiosError } from 'axios';
 
 const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
@@ -48,8 +51,8 @@ export default function Login() {
       alert(`Welcome!`);
       router.push('/HomeScreen');
     } catch (err) {
-      const message =
-        (err as any)?.data?.message || (err as any)?.message || "Something went wrong";
+      const axiosErr = err as AxiosError<{ message: string }>;
+      const message = axiosErr?.response?.data?.message || axiosErr.message || "Something went wrong";
 
       if (message.includes("Email already exists")) {
         Alert.alert("Email In Use", "This email is already registered. Try logging in or use a different email.");
@@ -76,7 +79,7 @@ export default function Login() {
         >
           <View style={{ alignItems: 'center' }}>
             <Image
-              source={require('../assets/images/icon.png')}
+              source={icon}
               style={{ width: '100%', height: 200 }}
             />
           </View>
@@ -242,7 +245,7 @@ export default function Login() {
             }}
           >
             <Image
-              source={require('../assets/images/google5.png')}
+              source={google}
               style={{ width: 24, height: 24 }}
             />
           </Pressable>
