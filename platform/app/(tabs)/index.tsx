@@ -7,7 +7,7 @@ export default function HomeScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/LandingPage');
+    router.replace('/DriverHomeScreen');
   }, []);
 
   return <View style={styles.container} />;
