@@ -13,8 +13,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
-import { useMutation } from "convex/react";
-import { api } from "../convex/_generated/api";
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { Dropdown } from 'react-native-element-dropdown';
 
@@ -26,7 +24,7 @@ const data = [
 ];
 
 export default function Login() {
-  const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
+  // const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
   const [nameSurname, setNameSurname] = useState('');
   const [number, setNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
@@ -55,7 +53,7 @@ export default function Login() {
       return;
     }
     try {
-      await signUpWithSMS({ number, name: nameSurname, password, role: selectedRole });
+      // await signUpWithSMS({ number, name: nameSurname, password, role: selectedRole });
       alert(`Welcome!`);
       if (selectedRole === 'Driver') {
         router.push('/DriverProfile');
