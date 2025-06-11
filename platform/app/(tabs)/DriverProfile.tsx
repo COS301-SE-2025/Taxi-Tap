@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, Image, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import taxiImage from '../../assets/images/taxi.png';
 
 export default function DriverProfile() {
   const [name, setName] = useState('Tshepo Mthembu');
@@ -131,7 +132,7 @@ export default function DriverProfile() {
 
             <View style={{ width: '100%' }}>
                 <Image
-                    source={require('../../assets/images/taxi.png')}
+                    source={taxiImage}
                     resizeMode="contain"
                     style={{ width: '100%', height: 200 }}
                 />

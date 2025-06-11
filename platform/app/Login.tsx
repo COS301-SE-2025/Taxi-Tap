@@ -7,7 +7,6 @@ import {
   Alert,
   Image,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +16,8 @@ import 'react-native-get-random-values';
 import { useConvex  } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
+import icon from '../assets/images/icon.png';
+import google from '../assets/images/google5.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -41,7 +42,7 @@ export default function Login() {
       });
       alert(`Welcome back ${result.name}!`);
       router.push('/HomeScreen');
-    } catch (err) {
+    } catch {
       alert("Email or password is incorrect");
     }
     // Alert.alert('Login Successful', `Welcome, ${email}`);
@@ -59,7 +60,7 @@ export default function Login() {
         >
           <View style={{ alignItems: 'center' }}>
             <Image
-              source={require('../assets/images/icon.png')}
+              source={icon}
               style={{ width: '100%', height: 200 }}
             />
           </View>
@@ -173,7 +174,7 @@ export default function Login() {
             }}
           >
             <Image
-              source={require('../assets/images/google5.png')}
+              source={google}
               style={{ width: 24, height: 24 }}
             />
           </Pressable>
