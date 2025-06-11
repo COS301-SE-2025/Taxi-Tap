@@ -13,13 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
 import type * as functions_users_UserManagement_logInWithEmail from "../functions/users/UserManagement/logInWithEmail.js";
-import type * as functions_users_UserManagement_logInWithSMS from "../functions/users/UserManagement/logInWithSMS.js";
-import type * as functions_users_UserManagement_signUpWithEmail from "../functions/users/UserManagement/signUpWithEmail.js";
-import type * as functions_users_UserManagement_signUpWithSMS from "../functions/users/UserManagement/signUpWithSMS.js";
-import type * as functions_users_addUser from "../functions/users/addUser.js";
-import type * as functions_users_addUserHandler from "../functions/users/addUserHandler.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -30,13 +24,7 @@ import type * as functions_users_addUserHandler from "../functions/users/addUser
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  "functions/rides/RequestRide": typeof functions_rides_RequestRide;
   "functions/users/UserManagement/logInWithEmail": typeof functions_users_UserManagement_logInWithEmail;
-  "functions/users/UserManagement/logInWithSMS": typeof functions_users_UserManagement_logInWithSMS;
-  "functions/users/UserManagement/signUpWithEmail": typeof functions_users_UserManagement_signUpWithEmail;
-  "functions/users/UserManagement/signUpWithSMS": typeof functions_users_UserManagement_signUpWithSMS;
-  "functions/users/addUser": typeof functions_users_addUser;
-  "functions/users/addUserHandler": typeof functions_users_addUserHandler;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
