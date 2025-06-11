@@ -1,7 +1,6 @@
 import { mutation } from "../../../_generated/server";
 import { v } from "convex/values";
 import { MutationCtx } from "../../../_generated/server";
-import * as utils from "@noble/hashes/utils";
 
 export const signUpHandler = async (
   ctx: MutationCtx,

@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { router, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
+import loading from '../../assets/images/loading4.png';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -35,18 +36,18 @@ export default function HomeScreen() {
     navigation.setOptions({
       title: "Home",
     });
-  });
+  }, [navigation]);
 
   // Get current location on mount
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.warn('Permission to access location was denied');
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({
+      const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Highest,
       });
 
@@ -76,7 +77,11 @@ export default function HomeScreen() {
   }, []);
 
   // Navigate to TaxiInformation after destination selection
-  const handleDestinationSelect = (route) => {
+  const handleDestinationSelect = (route: {
+    coords: { latitude: number; longitude: number };
+    title: string;
+    subtitle?: string;
+  }) => {
     const newDestination = {
       latitude: route.coords.latitude,
       longitude: route.coords.longitude,
@@ -248,7 +253,7 @@ export default function HomeScreen() {
       {!currentLocation ? (
         <View style={[dynamicStyles.map, dynamicStyles.loadingContainer]}>
           <Image
-            source={require('../../assets/images/loading4.png')}
+            source={loading}
             style={{ width: 120, height: 120 }}
             resizeMode="contain"
           />
