@@ -13,8 +13,6 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as functions_family_addChild from "../functions/family/addChild.js";
-import type * as functions_family_idkAddChildHandler from "../functions/family/idkAddChildHandler.js";
 import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
 import type * as functions_users_UserManagement_logInWithEmail from "../functions/users/UserManagement/logInWithEmail.js";
 import type * as functions_users_UserManagement_logInWithSMS from "../functions/users/UserManagement/logInWithSMS.js";
@@ -32,8 +30,6 @@ import type * as functions_users_addUserHandler from "../functions/users/addUser
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  "functions/family/addChild": typeof functions_family_addChild;
-  "functions/family/idkAddChildHandler": typeof functions_family_idkAddChildHandler;
   "functions/rides/RequestRide": typeof functions_rides_RequestRide;
   "functions/users/UserManagement/logInWithEmail": typeof functions_users_UserManagement_logInWithEmail;
   "functions/users/UserManagement/logInWithSMS": typeof functions_users_UserManagement_logInWithSMS;

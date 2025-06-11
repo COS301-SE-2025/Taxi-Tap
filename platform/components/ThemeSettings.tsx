@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const ThemeSettings: React.FC = () => {
-  const { theme, themeMode, setThemeMode, isDark } = useTheme();
+  const { theme, themeMode, setThemeMode } = useTheme();
 
   const themeOptions = [
     { mode: 'system' as const, label: 'System', icon: 'settings' as const },
