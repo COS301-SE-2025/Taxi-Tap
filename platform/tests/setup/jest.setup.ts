@@ -32,7 +32,7 @@ jest.mock('@react-native-community/netinfo', () => ({
 beforeAll(() => {
   try {
     require('react-native-gesture-handler/jestSetup');
-  } catch (error) {
+  } catch {
     jest.mock('react-native-gesture-handler', () => {
       const View = require('react-native/Libraries/Components/View/View');
       return {

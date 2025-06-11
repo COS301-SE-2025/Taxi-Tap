@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-unused-styles */
 import React, { useState, useLayoutEffect, useCallback } from 'react';
 import {
   View,
@@ -371,7 +372,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
 // MAIN COMPONENT
 // ============================================================================
 
-export default function EarningsPage({ todaysEarnings = 0 }: EarningsPageProps) {
+export default function EarningsPage({}: EarningsPageProps) {
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
   

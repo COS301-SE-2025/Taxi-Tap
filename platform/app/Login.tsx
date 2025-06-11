@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { useConvex  } from "convex/react";
-import { api } from "../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
 import icon from '../assets/images/icon.png';
 import google from '../assets/images/google5.png';
@@ -35,20 +34,20 @@ export default function Login() {
       Alert.alert('Invalid number', 'Please enter a valid number');
       return;
     }
-    try {
-      const result = await convex.query(api.functions.users.UserManagement.logInWithSMS.loginSMS, {
-        number,
-        password,
-      });
-      alert(`Welcome back ${result.name}!`);
-      if (result.role === 'Driver') {
-        router.push('/DriverProfile');
-      } else if (result.role === 'Passenger') {
+    // try {
+    //   const result = await convex.query(api.functions.users.UserManagement.logInWithSMS.loginSMS, {
+    //     number,
+    //     password,
+    //   });
+    //   alert(`Welcome back ${result.name}!`);
+    //   if (result.role === 'Driver') {
+    //     router.push('/DriverProfile');
+    //   } else if (result.role === 'Passenger') {
         router.push('/HomeScreen');
-      }
-    } catch (err) {
-      alert("Number or password is incorrect");
-    }
+    //   }
+    // } catch (err) {
+    //   alert("Number or password is incorrect");
+    // }
     // Alert.alert('Login Successful', `Welcome, ${email}`);
   };
 

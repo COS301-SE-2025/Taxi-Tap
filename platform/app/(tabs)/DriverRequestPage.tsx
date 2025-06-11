@@ -1,8 +1,7 @@
 import React, { useLayoutEffect } from "react";
-import { SafeAreaView, View, ScrollView, ImageBackground, Image, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -17,26 +16,25 @@ export default () => {
         });
     });
 
-    // Parse location data from params
-    const currentLocation = {
-        latitude: parseFloat(params.currentLat as string) || -25.7479,
-        longitude: parseFloat(params.currentLng as string) || 28.2293,
-        name: params.currentName || 'Current Location'
-    };
-    
-    const destination = {
-        latitude: parseFloat(params.destinationLat as string) || -25.7824,
-        longitude: parseFloat(params.destinationLng as string) || 28.2753,
-        name: params.destinationName || 'Menlyn Taxi Rank'
-    };
+    function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
+		if (Array.isArray(param)) {
+			return param[0] || fallback;
+		}
+		return param || fallback;
+	}
 
-    const vehicleInfo = {
-        plate: params.plate || 'Unknown',
-        time: params.time || 'Unknown',
-        seats: params.seats || '0',
-        price: params.price || '0',
-        selectedVehicleId: params.selectedVehicleId || ''
-    };
+	// Parse location data from params
+	const currentLocation = {
+		latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
+		longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
+		name: getParamAsString(params.currentName, "Current Location")
+	};
+
+	const destination = {
+		latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
+		longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
+		name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+	};
 
     const handleAccept = () => {
         //Handle Accept
@@ -56,102 +54,12 @@ export default () => {
             flex: 1,
             backgroundColor: theme.background,
         },
-        arrivalTimeOverlay: {
-            position: "absolute",
-            top: 50,
-            left: 0,
-            right: 0,
-            alignItems: "center",
-        },
-        arrivalTimeBox: {
-            backgroundColor: isDark ? theme.surface : "#121212",
-            borderRadius: 30,
-            paddingVertical: 16,
-            paddingHorizontal: 20,
-        },
-        arrivalTimeText: {
-            color: isDark ? theme.text : "#FFFFFF",
-            fontSize: 13,
-            fontWeight: "bold",
-            textAlign: "center",
-        },
         bottomSection: {
             alignItems: "center",
             backgroundColor: theme.surface,
             borderRadius: 30,
             paddingTop: 47,
             paddingBottom: 60,
-        },
-        driverDetailsHeader: {
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 33,
-            width: '100%',
-        },
-        driverDetailsTitle: {
-            color: theme.textSecondary,
-            fontSize: 16,
-            fontWeight: "bold",
-            flex: 1,
-        },
-        contactButton: {
-            width: 35,
-            height: 35,
-            backgroundColor: isDark ? theme.primary : "#121212",
-            borderRadius: 17.5,
-            justifyContent: "center",
-            alignItems: "center",
-            marginRight: 5,
-        },
-        driverInfoSection: {
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 36,
-            width: '100%',
-            paddingHorizontal: 15,
-        },
-        driverAvatar: {
-            width: 60,
-            height: 60,
-            backgroundColor: isDark ? theme.primary : "#121212",
-            borderRadius: 30,
-            justifyContent: "center",
-            alignItems: "center",
-            marginRight: 11,
-        },
-        driverName: {
-            color: theme.text,
-            fontSize: 16,
-            fontWeight: "bold",
-            marginBottom: 1,
-        },
-        driverVehicle: {
-            color: theme.textSecondary,
-            fontSize: 12,
-            fontWeight: "bold",
-        },
-        ratingText: {
-            color: theme.text,
-            fontSize: 12,
-            fontWeight: "bold",
-            marginRight: 3,
-        },
-        licensePlateSection: {
-            flexDirection: "row",
-            marginBottom: 26,
-            width: '100%',
-            paddingHorizontal: 35,
-            justifyContent: 'space-between',
-        },
-        licensePlateLabel: {
-            color: theme.textSecondary,
-            fontSize: 13,
-            fontWeight: "bold",
-        },
-        licensePlateValue: {
-            color: theme.textSecondary,
-            fontSize: 13,
-            fontWeight: "bold",
         },
         locationBox: {
             flexDirection: "row",

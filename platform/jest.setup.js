@@ -1,3 +1,4 @@
+/* global jest */
 import 'react-native';
 import 'jest-enzyme';
 import Adapter from '@cfaester/enzyme-adapter-react-18';
