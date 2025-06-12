@@ -7,44 +7,54 @@ import {
   Alert,
   Image,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import validator from 'validator';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
-import { useConvex  } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { useConvex } from "convex/react";
 import { ConvexProvider } from 'convex/react';
+import icon from '../assets/images/icon.png';
+import google from '../assets/images/google5.png';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [number, setNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const convex = useConvex();
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+    if (!number || !password) {
+      Alert.alert('Error', 'Please enter both phone number and password');
       return;
     }
-    if (!validator.isEmail(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address');
+    const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
+    if (!saNumberRegex.test(number)) {
+      Alert.alert('Invalid number', 'Please enter a valid number');
       return;
     }
-    try {
-      const result = await convex.query(api.functions.users.UserManagement.logInWithEmail.login, {
-        email,
-        password,
-      });
-      alert(`Welcome back ${result.name}!`);
-      router.push('/HomeScreen');
-    } catch (err) {
-      alert("Email or password is incorrect");
-    }
-    // Alert.alert('Login Successful', `Welcome, ${email}`);
+
+    // TODO: Replace with actual authentication
+    // For now, we'll use a mock role selection
+    Alert.alert(
+      'Select Role',
+      'Please select your role',
+      [
+        {
+          text: 'Driver',
+          onPress: () => {
+            router.replace('/DriverHomeScreen');
+          }
+        },
+        {
+          text: 'Passenger',
+          onPress: () => {
+            router.replace('/HomeScreen');
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -59,7 +69,7 @@ export default function Login() {
         >
           <View style={{ alignItems: 'center' }}>
             <Image
-              source={require('../assets/images/icon.png')}
+              source={icon}
               style={{ width: '100%', height: 200 }}
             />
           </View>
@@ -78,13 +88,13 @@ export default function Login() {
         >
           {/* Username */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Email
+              Cellphone number
           </Text>
 
           <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
+            value={number}
+            onChangeText={setNumber}
+            placeholder="Cellphone number"
             placeholderTextColor="#999"
             style={{
               backgroundColor: '#fff',
@@ -173,7 +183,7 @@ export default function Login() {
             }}
           >
             <Image
-              source={require('../assets/images/google5.png')}
+              source={google}
               style={{ width: 24, height: 24 }}
             />
           </Pressable>

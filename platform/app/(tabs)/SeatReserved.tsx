@@ -1,41 +1,48 @@
 import React, { useLayoutEffect } from "react";
-import { SafeAreaView, View, ScrollView, ImageBackground, Image, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 
-export default () => {
+export default function SeatReserved() {
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
 	
 	useLayoutEffect(() => {
 		navigation.setOptions({
-			headerShown: false,
+			headerShown: false
 		});
-	});
+	}, []);
+
+	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
+		if (Array.isArray(param)) {
+			return param[0] || fallback;
+		}
+		return param || fallback;
+	}
 
 	// Parse location data from params
 	const currentLocation = {
-		latitude: parseFloat(params.currentLat as string) || -25.7479,
-		longitude: parseFloat(params.currentLng as string) || 28.2293,
-		name: params.currentName || 'Current Location'
+		latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
+		longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
+		name: getParamAsString(params.currentName, "Current Location")
 	};
-	
+
 	const destination = {
-		latitude: parseFloat(params.destinationLat as string) || -25.7824,
-		longitude: parseFloat(params.destinationLng as string) || 28.2753,
-		name: params.destinationName || 'Menlyn Taxi Rank'
+		latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
+		longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
+		name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
 	};
 
 	const vehicleInfo = {
-		plate: params.plate || 'Unknown',
-		time: params.time || 'Unknown',
-		seats: params.seats || '0',
-		price: params.price || '0',
-		selectedVehicleId: params.selectedVehicleId || ''
+		plate: getParamAsString(params.plate, "Unknown"),
+		time: getParamAsString(params.time, "Unknown"),
+		seats: getParamAsString(params.seats, "0"),
+		price: getParamAsString(params.price, "0"),
+		selectedVehicleId: getParamAsString(params.selectedVehicleId, "")
 	};
 
 	const handleCancelReservation = () => {

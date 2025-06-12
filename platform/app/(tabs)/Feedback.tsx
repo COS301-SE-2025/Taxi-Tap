@@ -9,7 +9,6 @@ import {
   StyleSheet,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function FeedbackScreen() {
@@ -18,7 +17,6 @@ export default function FeedbackScreen() {
   const [feedbackList, setFeedbackList] = useState<
     { rating: number; comment: string; time: string }[]
   >([]);
-  const router = useRouter();
   const { theme, isDark } = useTheme();
 
   const handleSubmit = () => {
