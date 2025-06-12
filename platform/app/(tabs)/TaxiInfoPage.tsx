@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, Image, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, Image, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import taxi from '../../assets/images/taxi.png';
 
 export default function DriverProfile() {
   return (
@@ -67,7 +68,7 @@ export default function DriverProfile() {
 
             <View style={{ width: '100%' }}>
                 <Image
-                    source={require('../../assets/images/taxi.png')}
+                    source={taxi}
                     resizeMode="contain"
                     style={{ width: '100%', height: 200 }}
                 />

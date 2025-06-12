@@ -16,6 +16,8 @@ import { useConvex } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
 import { useUser } from '../contexts/UserContext';
+import icon from '../assets/images/icon.png';
+import google from '../assets/images/google5.png';
 
 export default function Login() {
   const [number, setNumber] = useState('');
@@ -68,7 +70,7 @@ export default function Login() {
         >
           <View style={{ alignItems: 'center' }}>
             <Image
-              source={require('../assets/images/icon.png')}
+              source={icon}
               style={{ width: '100%', height: 200 }}
             />
           </View>
@@ -181,7 +183,7 @@ export default function Login() {
             }}
           >
             <Image
-              source={require('../assets/images/google5.png')}
+              source={google}
               style={{ width: 24, height: 24 }}
             />
           </Pressable>

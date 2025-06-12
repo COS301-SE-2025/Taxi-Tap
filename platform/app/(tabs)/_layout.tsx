@@ -5,6 +5,8 @@ import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import { UserProvider } from '../../contexts/UserContext';
+import dark from '../../assets/images/icon-dark.png';
+import light from '../../assets/images/icon.png';
 
 // Theme Toggle Button Component (inline)
 const ThemeToggleButton: React.FC = () => {
@@ -62,8 +64,8 @@ const TabNavigation: React.FC = () => {
         headerTitle: () => (
           <Image
             source={isDark 
-              ? require('../../assets/images/icon-dark.png')
-              : require('../../assets/images/icon.png')
+              ? dark
+              : light
             }
             style={{ 
               width: 150,
