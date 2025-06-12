@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
@@ -72,7 +72,6 @@ export default function DriverProfile() {
 
     const styles = StyleSheet.create({
         container: {
-            flex: 1,
             backgroundColor: theme.background,
             padding: 20,
         },
@@ -132,57 +131,59 @@ export default function DriverProfile() {
     });
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.sectionTitle}>Driver Information</Text>
-            <View style={styles.profileCard}>
-                <Ionicons name="person-circle" size={64} color={theme.text} style={{ marginBottom: 20 }} />
+        <SafeAreaView style={{ flex: 1 }}>
+            <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+                <Text style={styles.sectionTitle}>Driver Information</Text>
+                <View style={styles.profileCard}>
+                    <Ionicons name="person-circle" size={64} color={theme.text} style={{ marginBottom: 20 }} />
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Name:</Text>
-                    <TextInput
-                        value={name}
-                        onChangeText={setName}
-                        style={styles.input}
-                    />
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Name:</Text>
+                        <TextInput
+                            value={name}
+                            onChangeText={setName}
+                            style={styles.input}
+                        />
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Experience:</Text>
+                        <TextInput
+                            value={experience}
+                            onChangeText={setExperience}
+                            style={styles.input}
+                        />
+                    </View>
                 </View>
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Experience:</Text>
-                    <TextInput
-                        value={experience}
-                        onChangeText={setExperience}
-                        style={styles.input}
-                    />
-                </View>
-            </View>
+                <Pressable onPress={handleVehicle} style={styles.button}>
+                    <Text style={styles.buttonText}>Vehicle</Text>
+                </Pressable>
 
-            <Pressable onPress={handleVehicle} style={styles.button}>
-                <Text style={styles.buttonText}>Vehicle</Text>
-            </Pressable>
+                <Pressable onPress={handleDocs} style={styles.button}>
+                    <Text style={styles.buttonText}>Documents</Text>
+                </Pressable>
 
-            <Pressable onPress={handleDocs} style={styles.button}>
-                <Text style={styles.buttonText}>Documents</Text>
-            </Pressable>
+                <Pressable onPress={handleEarnings} style={styles.button}>
+                    <Text style={styles.buttonText}>Weekly Earnings</Text>
+                </Pressable>
 
-            <Pressable onPress={handleEarnings} style={styles.button}>
-                <Text style={styles.buttonText}>Weekly Earnings</Text>
-            </Pressable>
+                <Pressable onPress={handleRoutes} style={styles.button}>
+                    <Text style={styles.buttonText}>Routes</Text>
+                </Pressable>
 
-            <Pressable onPress={handleRoutes} style={styles.button}>
-                <Text style={styles.buttonText}>Routes</Text>
-            </Pressable>
+                <Pressable onPress={handleSignout} style={styles.button}>
+                    <Text style={styles.buttonText}>Sign Out</Text>
+                </Pressable>
 
-            <Pressable onPress={handleSignout} style={styles.button}>
-                <Text style={styles.buttonText}>Sign Out</Text>
-            </Pressable>
+                <Pressable onPress={handleSwitchToPassenger} style={styles.button}>
+                    <Text style={styles.buttonText}>Switch to Passenger Profile</Text>
+                </Pressable>
 
-            <Pressable onPress={handleSwitchToPassenger} style={styles.button}>
-                <Text style={styles.buttonText}>Switch to Passenger Profile</Text>
-            </Pressable>
-
-            <Pressable onPress={handleSave} style={styles.button}>
-                <Text style={styles.buttonText}>Save Profile</Text>
-            </Pressable>
-        </ScrollView>
+                <Pressable onPress={handleSave} style={styles.button}>
+                    <Text style={styles.buttonText}>Save Profile</Text>
+                </Pressable>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
