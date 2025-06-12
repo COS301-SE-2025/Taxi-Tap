@@ -4,23 +4,29 @@ import DriverHomeScreen from '../../../app/DriverHomeScreen';
 
 // Mock dependencies
 jest.mock('../../../app/DriverOffline', () => {
+  const { View, TouchableOpacity, Text } = jest.requireActual('react-native');
   return function MockDriverOffline({ onGoOnline, todaysEarnings }: any) {
     return (
-      <div data-testid="mock-driver-offline">
-        <button onClick={onGoOnline}>Go Online</button>
-        <span>Earnings: {todaysEarnings}</span>
-      </div>
+      <View testID="driver-offline-component">
+        <TouchableOpacity testID="go-online-button" onPress={onGoOnline}>
+          <Text>Go Online</Text>
+        </TouchableOpacity>
+        <Text testID="offline-earnings">Earnings: R{todaysEarnings.toFixed(2)}</Text>
+      </View>
     );
   };
 });
 
 jest.mock('../../../app/DriverOnline', () => {
+  const { View, TouchableOpacity, Text } = jest.requireActual('react-native');
   return function MockDriverOnline({ onGoOffline, todaysEarnings }: any) {
     return (
-      <div data-testid="mock-driver-online">
-        <button onClick={onGoOffline}>Go Offline</button>
-        <span>Earnings: {todaysEarnings}</span>
-      </div>
+      <View testID="driver-online-component">
+        <TouchableOpacity testID="go-offline-button" onPress={onGoOffline}>
+          <Text>Go Offline</Text>
+        </TouchableOpacity>
+        <Text testID="online-earnings">Earnings: R{todaysEarnings.toFixed(2)}</Text>
+      </View>
     );
   };
 });
@@ -184,7 +190,6 @@ describe('DriverHomeScreen', () => {
       
       expect(() => unmount()).not.toThrow();
     });
-
   });
 
   describe('Accessibility', () => {
