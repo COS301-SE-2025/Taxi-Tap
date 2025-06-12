@@ -1,0 +1,65 @@
+[33m5e96b0f[m[33m ([m[1;36mHEAD -> [m[1;32m96-backend-functions-related-to-rides[m[33m, [m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m HEAD@{0}: checkout: moving from 96-backend-functions-related-to-rides to 96-backend-functions-related-to-rides
+[33m5e96b0f[m[33m ([m[1;36mHEAD -> [m[1;32m96-backend-functions-related-to-rides[m[33m, [m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m HEAD@{1}: merge origin/dev: Fast-forward
+[33mcbca941[m HEAD@{2}: checkout: moving from dev to 96-backend-functions-related-to-rides
+[33m5e96b0f[m[33m ([m[1;36mHEAD -> [m[1;32m96-backend-functions-related-to-rides[m[33m, [m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m HEAD@{3}: pull: Fast-forward
+[33mc1a8704[m HEAD@{4}: checkout: moving from 97-backend-functions-related-to-rides to dev
+[33m1123d95[m[33m ([m[1;31morigin/97-backend-functions-related-to-rides[m[33m, [m[1;32m97-backend-functions-related-to-rides[m[33m)[m HEAD@{5}: commit: testing funciton for cancelling a ride
+[33m1e83f70[m HEAD@{6}: commit (merge): Merge remote-tracking branch 'origin/dev' into 97-backend-functions-related-to-rides
+[33md33b39d[m HEAD@{7}: commit: creating test for cancel rides
+[33m9fb2f34[m HEAD@{8}: commit: fixing errors within the cancel ride function
+[33m74c17aa[m HEAD@{9}: commit: creating the function for a user to cancel a ride
+[33m0debed0[m HEAD@{10}: commit: created the function for a driver to accept a ride request
+[33m5d6220d[m HEAD@{11}: commit: creating a function for accepting a ride
+[33m9121808[m HEAD@{12}: commit: fixed error of request ride function referencing wrong table in schema
+[33mcbca941[m HEAD@{13}: checkout: moving from 96-backend-functions-related-to-rides to 97-backend-functions-related-to-rides
+[33mcbca941[m HEAD@{14}: checkout: moving from feature/toggle-passenger-driver to 96-backend-functions-related-to-rides
+[33m360a994[m[33m ([m[1;32mfeature/toggle-passenger-driver[m[33m)[m HEAD@{15}: checkout: moving from feature/usertaxi-dbtables to feature/toggle-passenger-driver
+[33m344d11b[m[33m ([m[1;31morigin/feature/usertaxi-dbtables[m[33m, [m[1;32mfeature/usertaxi-dbtables[m[33m)[m HEAD@{16}: commit: added the passeenger and driver tables to the schema
+[33m2c71e7b[m HEAD@{17}: checkout: moving from feature/signupLoginFix to feature/usertaxi-dbtables
+[33m2f5678e[m[33m ([m[1;32mfeature/signupLoginFix[m[33m)[m HEAD@{18}: pull --tags origin feature/signupLoginFix: Fast-forward
+[33m163cf1e[m HEAD@{19}: checkout: moving from main to feature/signupLoginFix
+[33m722fbca[m[33m ([m[1;32mmain[m[33m)[m HEAD@{20}: pull --tags origin main: Fast-forward
+[33m36ea737[m HEAD@{21}: pull --tags origin main: Fast-forward
+[33m8fe7073[m HEAD@{22}: checkout: moving from dev to main
+[33mc1a8704[m HEAD@{23}: pull --tags origin dev: Fast-forward
+[33ma2b6f6b[m HEAD@{24}: checkout: moving from dev to dev
+[33ma2b6f6b[m HEAD@{25}: checkout: moving from dev to dev
+[33ma2b6f6b[m HEAD@{26}: pull --tags origin dev: Fast-forward
+[33m39b6899[m HEAD@{27}: pull --tags origin dev: Fast-forward
+[33m5307094[m HEAD@{28}: merge origin/dev: Fast-forward
+[33m47fb6fb[m HEAD@{29}: checkout: moving from dev to dev
+[33m47fb6fb[m HEAD@{30}: pull --tags origin dev: Fast-forward
+[33mf888199[m HEAD@{31}: checkout: moving from dev to dev
+[33mf888199[m HEAD@{32}: pull --tags origin dev: Fast-forward
+[33mf5bbc1d[m HEAD@{33}: pull --tags origin dev: Fast-forward
+[33mb145410[m HEAD@{34}: pull --tags origin dev: Fast-forward
+[33ma522057[m HEAD@{35}: pull --tags origin dev: Fast-forward
+[33m2a1be60[m HEAD@{36}: checkout: moving from feature/integrating-login-and-signup to dev
+[33mdf50121[m[33m ([m[1;31morigin/feature/integrating-login-and-signup[m[33m, [m[1;32mfeature/integrating-login-and-signup[m[33m)[m HEAD@{37}: commit: Login error fixed
+[33mf474fd0[m HEAD@{38}: pull --tags origin feature/integrating-login-and-signup: Fast-forward
+[33m97966c4[m HEAD@{39}: checkout: moving from 26-sign-up-with-convex-auth-integration to feature/integrating-login-and-signup
+[33m9610337[m[33m ([m[1;32m26-sign-up-with-convex-auth-integration[m[33m)[m HEAD@{40}: commit: ssc
+[33m3f72e3d[m HEAD@{41}: commit: ensuring that only ONE user in the database can have a certain email address
+[33m1be1be5[m HEAD@{42}: checkout: moving from feature/integrating-login-and-signup to 26-sign-up-with-convex-auth-integration
+[33m97966c4[m HEAD@{43}: pull --tags origin feature/integrating-login-and-signup: Fast-forward
+[33mc086374[m HEAD@{44}: checkout: moving from dev to feature/integrating-login-and-signup
+[33m2a1be60[m HEAD@{45}: pull --tags origin dev: Fast-forward
+[33m33bef36[m HEAD@{46}: checkout: moving from feature/integrating-login-and-signup to dev
+[33mc086374[m HEAD@{47}: checkout: moving from dev to feature/integrating-login-and-signup
+[33m33bef36[m HEAD@{48}: checkout: moving from feature/request-ride-backend to dev
+[33m7cb68df[m[33m ([m[1;32mfeature/request-ride-backend[m[33m)[m HEAD@{49}: checkout: moving from dev to feature/request-ride-backend
+[33m33bef36[m HEAD@{50}: pull --tags origin dev: Fast-forward
+[33m5cea238[m HEAD@{51}: checkout: moving from backend/LogIn to dev
+[33maa44a9d[m[33m ([m[1;32mbackend/LogIn[m[33m)[m HEAD@{52}: commit: added sign up with sms still to be implemented
+[33mdd06119[m HEAD@{53}: commit: adding login in with sms file
+[33m7a12d26[m HEAD@{54}: commit: created the login function fot the backend
+[33m1be1be5[m HEAD@{55}: pull origin 26-sign-up-with-convex-auth-integration: Fast-forward
+[33m5cea238[m HEAD@{56}: checkout: moving from 26-sign-up-with-convex-auth-integration to backend/LogIn
+[33m1be1be5[m HEAD@{57}: checkout: moving from backend/LogIn to 26-sign-up-with-convex-auth-integration
+[33m5cea238[m HEAD@{58}: checkout: moving from 26-sign-up-with-convex-auth-integration to backend/LogIn
+[33m1be1be5[m HEAD@{59}: commit: created my signup function and also created a new database for taxiTap users to add to our schema
+[33m5cea238[m HEAD@{60}: checkout: moving from dev to 26-sign-up-with-convex-auth-integration
+[33m5cea238[m HEAD@{61}: checkout: moving from docs-unathi to dev
+[33m7f2f0fd[m[33m ([m[1;32mdocs-unathi[m[33m)[m HEAD@{62}: pull --tags origin docs-unathi: Fast-forward
+[33me695ffe[m HEAD@{63}: checkout: moving from main to docs-unathi
+[33m8fe7073[m HEAD@{64}: clone: from https://github.com/COS301-SE-2025/Taxi-Tap.git
