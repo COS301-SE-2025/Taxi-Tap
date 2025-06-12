@@ -2,10 +2,20 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import DriverHomeScreen from '../../../app/DriverHomeScreen';
 
+interface DriverOfflineProps {
+  onGoOnline: () => void;
+  todaysEarnings: number;
+}
+
+interface DriverOnlineProps {
+  onGoOffline: () => void;
+  todaysEarnings: number;
+}
+
 // Mock dependencies
 jest.mock('../../../app/DriverOffline', () => {
   const { View, TouchableOpacity, Text } = jest.requireActual('react-native');
-  return function MockDriverOffline({ onGoOnline, todaysEarnings }: any) {
+  return function MockDriverOffline({ onGoOnline, todaysEarnings }: DriverOfflineProps) {
     return (
       <View testID="driver-offline-component">
         <TouchableOpacity testID="go-online-button" onPress={onGoOnline}>
@@ -19,7 +29,7 @@ jest.mock('../../../app/DriverOffline', () => {
 
 jest.mock('../../../app/DriverOnline', () => {
   const { View, TouchableOpacity, Text } = jest.requireActual('react-native');
-  return function MockDriverOnline({ onGoOffline, todaysEarnings }: any) {
+  return function MockDriverOnline({ onGoOffline, todaysEarnings }: DriverOnlineProps) {
     return (
       <View testID="driver-online-component">
         <TouchableOpacity testID="go-offline-button" onPress={onGoOffline}>

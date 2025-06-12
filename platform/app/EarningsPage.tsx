@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-unused-styles */
 import React, { useState, useLayoutEffect, useCallback } from 'react';
 import {
   View,
@@ -16,6 +15,15 @@ import { useTheme } from '../contexts/ThemeContext';
 // ============================================================================
 // TYPES & INTERFACES
 // ============================================================================
+
+interface Theme {
+  background: string;
+  surface: string;
+  text: string;
+  primary: string;
+  border: string;
+  shadow: string;
+}
 
 interface EarningsPageProps {
   todaysEarnings?: number;
@@ -153,7 +161,7 @@ const generateWeeklyData = (): WeekData[] => {
 // COMPONENT STYLES
 // ============================================================================
 
-const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
+const createStyles = (theme: Theme, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.background,
