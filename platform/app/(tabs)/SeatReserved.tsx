@@ -322,13 +322,16 @@ export default function SeatReserved() {
 							<View style={dynamicStyles.driverAvatar}>
 								<Icon name="person" size={30} color={isDark ? "#121212" : "#FF9900"} />
 							</View>
-							<View style={{ marginRight: 54 }}>
+							<View style={{ marginRight: 35 }}>
 								<Text style={dynamicStyles.driverName}>
 									{"Tshepo Mthembu"}
 								</Text>
 								<Text style={dynamicStyles.driverVehicle}>
 									{"Hiace-Sesfikile"}
 								</Text>
+								<TouchableOpacity onPress={() => router.push('/TaxiInfoPage')}>
+									<Icon name="information-circle" size={30} color={isDark ? "#121212" : "#FF9900"} />
+								</TouchableOpacity>
 							</View>
 							<Text style={dynamicStyles.ratingText}>
 								{"5.0"}

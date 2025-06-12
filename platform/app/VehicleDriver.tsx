@@ -104,7 +104,7 @@ export default function VehicleDriver() {
                             source={
                             imageUri
                                 ? { uri: imageUri }
-                                : require('../../assets/images/taxi.png')
+                                : require('../assets/images/taxi.png')
                             }
                             resizeMode="contain"
                             style={{ width: '100%', height: 200, borderRadius: 10 }}

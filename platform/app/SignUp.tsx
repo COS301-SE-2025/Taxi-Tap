@@ -56,6 +56,7 @@ function LoginComponent() {
       Alert.alert('Password Mismatch', 'Passwords do not match');
       return;
     }
+
     try {
       // If driver is selected in frontend, send 'both' to backend
       const accountType: 'passenger' | 'driver' | 'both' = selectedRole === 'driver' ? 'both' : selectedRole as 'passenger';
