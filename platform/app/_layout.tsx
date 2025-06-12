@@ -1,21 +1,18 @@
 // app/_layout.tsx
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
-import React from 'react';
-import regular from '../assets/fonts/Amazon_Ember_Display.otf';
-import bold from '../assets/fonts/Amazon_Ember_Display_Bold_Italic.ttf';
-import medium from '../assets/fonts/Amazon_Ember_Display_Medium.ttf';
-import light from '../assets/fonts/Amazon_Ember_Display_Light.ttf';
+import { View, ActivityIndicator } from 'react-native';
 
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { api } from '../convex/_generated/api'; // Adjust path if needed
 
+import { useColorScheme } from '@/components/useColorScheme';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 
 export { ErrorBoundary } from 'expo-router';
@@ -31,10 +28,10 @@ const convex = new ConvexReactClient('https://affable-goose-538.convex.cloud'); 
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    'AmazonEmber-Regular': regular,
-    'AmazonEmber-Bold': bold,
-    'AmazonEmber-Medium': medium,
-    'AmazonEmber-Light': light,
+    'AmazonEmber-Regular': require('../assets/fonts/Amazon_Ember_Display.otf'),
+    'AmazonEmber-Bold': require('../assets/fonts/Amazon_Ember_Display_Bold_Italic.ttf'),
+    'AmazonEmber-Medium': require('../assets/fonts/Amazon_Ember_Display_Medium.ttf'),
+    'AmazonEmber-Light': require('../assets/fonts/Amazon_Ember_Display_Light.ttf'),
     ...FontAwesome.font,
   });
 

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, Image, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import logo from '../assets/images/3.png';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -20,7 +19,7 @@ export default function LandingPage() {
       {/* Logo */}
       <View style={{ width: '100%', marginBottom: 0, marginTop: 50 }}>
         <Image
-          source={logo}
+          source={require('../assets/images/3.png')}
           resizeMode="contain"
           style={{ width: '100%', height: 400 }}
         />

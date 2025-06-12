@@ -7,54 +7,44 @@ import {
   Alert,
   Image,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import validator from 'validator';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
-import { useConvex } from "convex/react";
+import { useConvex  } from "convex/react";
+import { api } from "../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
-import icon from '../assets/images/icon.png';
-import google from '../assets/images/google5.png';
 
 export default function Login() {
-  const [number, setNumber] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const convex = useConvex();
 
   const handleLogin = async () => {
-    if (!number || !password) {
-      Alert.alert('Error', 'Please enter both phone number and password');
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
       return;
     }
-    const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
-    if (!saNumberRegex.test(number)) {
-      Alert.alert('Invalid number', 'Please enter a valid number');
+    if (!validator.isEmail(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
-
-    // TODO: Replace with actual authentication
-    // For now, we'll use a mock role selection
-    Alert.alert(
-      'Select Role',
-      'Please select your role',
-      [
-        {
-          text: 'Driver',
-          onPress: () => {
-            router.replace('/DriverHomeScreen');
-          }
-        },
-        {
-          text: 'Passenger',
-          onPress: () => {
-            router.replace('/HomeScreen');
-          }
-        }
-      ]
-    );
+    try {
+      const result = await convex.query(api.functions.users.UserManagement.logInWithEmail.login, {
+        email,
+        password,
+      });
+      alert(`Welcome back ${result.name}!`);
+      router.push('/HomeScreen');
+    } catch (err) {
+      alert("Email or password is incorrect");
+    }
+    // Alert.alert('Login Successful', `Welcome, ${email}`);
   };
 
   return (
@@ -69,7 +59,7 @@ export default function Login() {
         >
           <View style={{ alignItems: 'center' }}>
             <Image
-              source={icon}
+              source={require('../assets/images/icon.png')}
               style={{ width: '100%', height: 200 }}
             />
           </View>
@@ -88,13 +78,13 @@ export default function Login() {
         >
           {/* Username */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Cellphone number
+              Email
           </Text>
 
           <TextInput
-            value={number}
-            onChangeText={setNumber}
-            placeholder="Cellphone number"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
             placeholderTextColor="#999"
             style={{
               backgroundColor: '#fff',
@@ -183,7 +173,7 @@ export default function Login() {
             }}
           >
             <Image
-              source={google}
+              source={require('../assets/images/google5.png')}
               style={{ width: 24, height: 24 }}
             />
           </Pressable>

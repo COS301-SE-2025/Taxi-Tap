@@ -1,13 +1,13 @@
 import React, { useState, useLayoutEffect } from "react";
 import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, } from "react-native";
 import MapView, { Marker, Polyline } from 'react-native-maps';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
-import taxi from '../../assets/images/Quantum.png';
 
-export default function TaxiInformation() {
-	const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
+export default () => {
+	const [selectedVehicle, setSelectedVehicle] = useState(null);
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
@@ -20,22 +20,22 @@ export default function TaxiInformation() {
 	
 	// Parse location data from params
 	const currentLocation = {
-		latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
-		longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-		name: getParamAsString(params.currentName, "Current Location")
+		latitude: parseFloat(params.currentLat as string) || -25.7479,
+		longitude: parseFloat(params.currentLng as string) || 28.2293,
+		name: params.currentName || 'Current Location'
 	};
-
+	
 	const destination = {
-		latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
-		longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-		name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+		latitude: parseFloat(params.destinationLat as string) || -25.7824,
+		longitude: parseFloat(params.destinationLng as string) || 28.2753,
+		name: params.destinationName || 'Menlyn Taxi Rank'
 	};
 
 	const vehicles = [
 		{
 			id: 1,
 			plate: "VV 87 89 GP",
-			image: taxi,
+			image: require('../../assets/images/Siyaya-Taxi-Avatar.jpg'),
 			time: "8 min away",
 			seats: "2 seats left",
 			price: "R12"
@@ -43,7 +43,7 @@ export default function TaxiInformation() {
 		{
 			id: 2,
 			plate: "YY 87 89 GP", 
-			image: taxi,
+			image: require('../../assets/images/Quantum.png'),
 			time: "3 min away",
 			seats: "1 seat left",
 			price: "R12"
@@ -51,7 +51,7 @@ export default function TaxiInformation() {
 		{
 			id: 3,
 			plate: "YTV 567 GP",
-			image: taxi,
+			image: require('../../assets/images/Siyaya-Taxi-Avatar.jpg'),
 			time: "8 min away",
 			seats: "5 seats left",
 			price: "R12"
@@ -59,14 +59,14 @@ export default function TaxiInformation() {
 		{
 			id: 5,
 			plate: "XYZ 879 GP", 
-			image: taxi,
+			image: require('../../assets/images/Quantum.png'),
 			time: "4 min away",
 			seats: "4 seat left",
 			price: "R12"
 		}
 	];
 
-	const handleVehicleSelect = (vehicleId: number) => {
+	const handleVehicleSelect = (vehicleId) => {
 		setSelectedVehicle(vehicleId);
 	};
 
@@ -75,37 +75,30 @@ export default function TaxiInformation() {
 	};
 
 	const handleReserveSeat = () => {
-		if (selectedVehicle === null) {
+		if (selectedVehicle) {
+			const selected = vehicles.find(vehicle => vehicle.id === selectedVehicle);
+			router.push({
+				pathname: './SeatReserved',
+				params: {
+					destinationName: destination.name,
+					destinationLat: destination.latitude.toString(),
+					destinationLng: destination.longitude.toString(),
+					currentName: currentLocation.name,
+					currentLat: currentLocation.latitude.toString(),
+					currentLng: currentLocation.longitude.toString(),
+
+					// Vehicle details
+					selectedVehicleId: selected.id.toString(),
+					plate: selected.plate,
+					time: selected.time,
+					seats: selected.seats,
+					price: selected.price,
+					image: selected.id.toString(),
+				}
+			});
+		} else {
 			alert('Please select a vehicle first!');
-			return;
 		}
-
-		const selected = vehicles.find(vehicle => vehicle.id === selectedVehicle);
-
-		if (!selected) {
-			alert('Selected vehicle not found!');
-			return;
-		}
-
-		router.push({
-			pathname: './SeatReserved',
-			params: {
-				destinationName: destination.name,
-				destinationLat: destination.latitude.toString(),
-				destinationLng: destination.longitude.toString(),
-				currentName: currentLocation.name,
-				currentLat: currentLocation.latitude.toString(),
-				currentLng: currentLocation.longitude.toString(),
-
-				// Vehicle details
-				selectedVehicleId: selected.id.toString(),
-				plate: selected.plate,
-				time: selected.time,
-				seats: selected.seats,
-				price: selected.price,
-				image: selected.id.toString(),
-			}
-		});
 	};
 
 	// Create dynamic styles based on theme
@@ -420,13 +413,6 @@ export default function TaxiInformation() {
 			]
 		}
 	];
-
-	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
-		if (Array.isArray(param)) {
-			return param[0] || fallback;
-		}
-		return param || fallback;
-	}
 
 	return (
 		<SafeAreaView style={dynamicStyles.container}>

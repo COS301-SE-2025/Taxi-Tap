@@ -9,16 +9,12 @@
       "@/*": [
         "./*"
       ]
-    },
-    "allowUnusedLabels": true
+    }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "global.d.ts",
-    "src",
-    "images.d.ts"
+    "expo-env.d.ts"
   ]
 }

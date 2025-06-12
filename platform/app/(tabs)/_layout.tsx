@@ -4,8 +4,6 @@ import { TouchableOpacity, Image } from 'react-native';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
-import dark from '../../assets/images/icon-dark.png';
-import light from '../../assets/images/icon.png';
 
 // Theme Toggle Button Component (inline)
 const ThemeToggleButton: React.FC = () => {
@@ -63,8 +61,8 @@ export default function TabLayout() {
           headerTitle: () => (
             <Image
               source={isDark 
-                ? dark
-                : light
+                ? require('../../assets/images/icon-dark.png')
+                : require('../../assets/images/icon.png')
               }
               style={{ 
                 width: 150,
