@@ -92,9 +92,16 @@ See Available Seats & As a passenger, I want to see how many seats are available
 Rate Completed Trip & As a passenger, I want to rate my trip after completion, so that I can provide feedback to help improve the service. & Given my ride has ended, When I open the app, Then I should be prompted to leave a 1–5 star rating and optional comments. \\
 & & The rating form appears automatically after the ride ends, and feedback is successfully submitted to the system. \\ \midrule
 Use App Offline or on Low Bandwidth & As a passenger, I want to use the app offline or on low bandwidth, so that I can still interact with core features in areas with poor connectivity. & Given I have limited internet access, When I open the app, Then I should still be able to view saved routes, taxis, and queue a ride request that sends once reconnected. \\
-& & The app functions with cached map data and stores ride requests locally, syncing once connectivity is restored. \\
+& & The app functions with cached map data and stores ride requests locally, syncing once connectivity is restored. \\ \midrule
+Indicate Drop-Off Point Mid-Trip & As a passenger, I should be able to indicate where I want to be dropped off during the trip. & Given that I’m in a running taxi, When I choose a stop or drop-off location mid-trip, Then the driver should receive an update of my chosen point. \\
+& & The app allows drop-off selection, sends update to driver, and displays new estimated drop-off. \\ \midrule
+View All Available Stops & As a passenger, I should be able to see all the available stops that are there during my trip. & Given I’m on a selected route, When I view route details, Then I should see a list or map of all possible stops. \\
+& & A stop list or map view is shown, detailing all available stops along the route. \\ \midrule
+See Estimated Time to Destination & As a passenger, I should be able to see how long it will take to reach my destination or drop-off spot. & Given I’ve set a destination, When I view trip details, Then I should see the estimated time remaining. \\
+& & ETA is shown dynamically on screen and updates with real-time traffic and route changes. \\
 \bottomrule
 \end{longtable}
+
 
 \subsection{Driver User Stories}
 
@@ -121,7 +128,13 @@ Update Seat Availability & As a driver, I want to update how many seats are avai
 Receive Alerts for New Requests or Updates & As a driver, I want to receive real-time notifications, so that I don’t miss ride requests or updates while driving. & Given that I am online, When a new request or important event occurs, Then I receive a push notification with the relevant details. \\
 & & Push and in-app alerts trigger correctly and lead to actionable pages. \\ \midrule
 Work Offline (Partial Functionality) & As a driver, I want to continue using key features even when I’m offline, so that I can operate in areas with poor connectivity. & Given that I am offline or have poor signal, When I open the app, Then I should be able to see cached routes and queue ride requests. \\
-& & The app stores critical data locally and syncs changes once reconnected. \\
+& & The app stores critical data locally and syncs changes once reconnected. \\ \midrule
+Indicate Taxi Association & As a driver, I should be able to indicate which taxi association I am a part of. & Given I am registering or editing my profile, When I select or input my association, Then it should be linked to my driver profile. \\
+& & Association name is stored and reflected in the driver's profile and backend database. \\ \midrule
+Receive Route from Association & As a driver, I should be assigned a route by my taxi association. & Given I belong to a taxi association, When I log in or go online, Then the assigned route from the association should appear. \\
+& & System pulls assigned route from the association records and displays it on the app. \\ \midrule
+Receive Drop-Off Notification & As a driver, I should be notified when a passenger wants to get dropped off. & Given I am currently driving and have active passengers, When a passenger selects a drop-off point, Then I receive an alert with the details. \\
+& & Notification appears in real-time and updates route on the driver’s screen. \\
 \bottomrule
 \end{longtable}
 
