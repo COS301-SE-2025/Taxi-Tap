@@ -16,6 +16,20 @@ export default function PassengerProfile() {
     // Add save logic here
   };
 
+  const handleSignout = () => {
+    Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Yes',
+                onPress: () => router.push('../LandingPage'),
+            },
+        ]
+    );
+  };
+
   const handleSwitchToDriver = () => {
     Alert.alert(
       'Switch Profile',
@@ -215,6 +229,18 @@ export default function PassengerProfile() {
           }}
         >
           <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Switch to Driver Profile</Text>
+        </Pressable>
+        <Pressable
+          onPress={handleSignout}
+          style={{
+          backgroundColor: '#ecd4b5',
+          paddingVertical: 14,
+          borderRadius: 30,
+          alignItems: 'center',
+          marginTop: 20,
+          }}
+        >
+          <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Sign Out</Text>
         </Pressable>
         <Pressable
           onPress={handleSave}
