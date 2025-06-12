@@ -12,7 +12,36 @@ export default function PassengerProfile() {
 
   const handleSave = () => {
     // Add save logic here
-    console.log('Saved:', { name, number, email });
+  };
+
+  const handleSignout = () => {
+    Alert.alert(
+        'Sign Out',
+        'Are you sure you want to sign out?',
+        [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Yes',
+                onPress: () => router.push('../LandingPage'),
+            },
+        ]
+    );
+  };
+
+  const handleSwitchToDriver = () => {
+    Alert.alert(
+      'Switch Profile',
+      'Are you sure you want to switch to the driver profile?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes',
+          onPress: () => {
+            router.push('../DriverHomeScreen');
+          },
+        },
+      ]
+    );
   };
 
   // Create dynamic styles based on theme
@@ -187,7 +216,30 @@ export default function PassengerProfile() {
             </View>
           </View>
         </View>
-
+        <Pressable
+          onPress={handleSwitchToDriver}
+          style={{
+          backgroundColor: '#ecd4b5',
+          paddingVertical: 14,
+          borderRadius: 30,
+          alignItems: 'center',
+          marginTop: 20,
+          }}
+        >
+          <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Switch to Driver Profile</Text>
+        </Pressable>
+        <Pressable
+          onPress={handleSignout}
+          style={{
+          backgroundColor: '#ecd4b5',
+          paddingVertical: 14,
+          borderRadius: 30,
+          alignItems: 'center',
+          marginTop: 20,
+          }}
+        >
+          <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Sign Out</Text>
+        </Pressable>
         <Pressable
           onPress={handleSave}
           style={dynamicStyles.saveButton}
