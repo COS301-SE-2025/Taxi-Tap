@@ -14,7 +14,7 @@ import MapView, { Marker } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { useNavigation } from 'expo-router';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -140,26 +140,38 @@ export default function DriverOnline({
       icon: "person-outline", 
       title: "My Profile", 
       subtitle: "Driver details & documents",
-      onPress: () => console.log('Profile pressed') 
+      onPress: () => {
+        setShowMenu(false);
+        navigation.navigate('DriverProfile' as never);
+      }
     },
     { 
       icon: "car-outline", 
       title: "My Taxi & Route", 
       subtitle: "Vehicle info & route settings",
-      onPress: () => console.log('Vehicle Info pressed') 
+      onPress: () => {
+        setShowMenu(false);
+        navigation.navigate('../DriverRequestPage' as never);
+      }
     },
     { 
       icon: "time-outline", 
       title: "Trip History", 
       subtitle: "Past rides & routes",
-      onPress: () => console.log('Trip History pressed') 
+      onPress: () => {
+        setShowMenu(false);
+        navigation.navigate('../EarningsPage' as never);
+      }
     },
     { 
       icon: "settings-outline", 
       title: "Settings", 
       subtitle: "App preferences",
-      onPress: () => console.log('Settings pressed') 
-    },
+      onPress: () => {
+        setShowMenu(false);
+        navigation.navigate('../Settings' as never);
+      }
+    }
   ];
 
   const safetyOptions: SafetyOption[] = [

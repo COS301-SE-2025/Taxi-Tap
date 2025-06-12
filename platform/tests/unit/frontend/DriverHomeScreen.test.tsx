@@ -1,36 +1,26 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import DriverHomeScreen from '../../../app/(tabs)/DriverHomeScreen';
+import DriverHomeScreen from '../../../app/DriverHomeScreen';
 
-
-
-// Mock the child components
-jest.mock('../../../app/(tabs)/DriverOffline', () => {
-  const { TouchableOpacity, Text } = require('react-native');
+// Mock dependencies
+jest.mock('../../../app/DriverOffline', () => {
   return function MockDriverOffline({ onGoOnline, todaysEarnings }: any) {
     return (
-      <TouchableOpacity 
-        testID="driver-offline-component"
-        onPress={onGoOnline}
-      >
-        <Text testID="offline-earnings">Earnings: R{todaysEarnings.toFixed(2)}</Text>
-        <Text testID="go-online-button">GO ONLINE</Text>
-      </TouchableOpacity>
+      <div data-testid="mock-driver-offline">
+        <button onClick={onGoOnline}>Go Online</button>
+        <span>Earnings: {todaysEarnings}</span>
+      </div>
     );
   };
 });
 
-jest.mock('../../../app/(tabs)/DriverOnline', () => {
-  const { TouchableOpacity, Text } = require('react-native');
+jest.mock('../../../app/DriverOnline', () => {
   return function MockDriverOnline({ onGoOffline, todaysEarnings }: any) {
     return (
-      <TouchableOpacity 
-        testID="driver-online-component"
-        onPress={onGoOffline}
-      >
-        <Text testID="online-earnings">Earnings: R{todaysEarnings.toFixed(2)}</Text>
-        <Text testID="go-offline-button">GO OFFLINE</Text>
-      </TouchableOpacity>
+      <div data-testid="mock-driver-online">
+        <button onClick={onGoOffline}>Go Offline</button>
+        <span>Earnings: {todaysEarnings}</span>
+      </div>
     );
   };
 });

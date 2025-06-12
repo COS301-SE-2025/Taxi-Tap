@@ -25,7 +25,7 @@ export default function PassengerProfile() {
         {
           text: 'Yes',
           onPress: () => {
-            router.push('../DriverProfile');
+            router.push('../DriverHomeScreen');
           },
         },
       ]

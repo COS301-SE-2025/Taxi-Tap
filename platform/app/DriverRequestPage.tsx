@@ -3,7 +3,7 @@ import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet } fr
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default () => {
     const params = useLocalSearchParams();
