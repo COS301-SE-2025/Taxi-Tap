@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from 'expo-router';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface DriverOfflineProps {
   onGoOnline: () => void;
@@ -96,25 +96,25 @@ export default function DriverOffline({
       icon: "person-outline", 
       title: "My Profile", 
       subtitle: "Driver details & documents",
-      onPress: () => console.log('Profile pressed') 
+      onPress: () => navigation.navigate('DriverProfile' as never)
     },
     { 
       icon: "car-outline", 
       title: "My Taxi & Route", 
       subtitle: "Vehicle info & route settings",
-      onPress: () => console.log('Vehicle Info pressed') 
+      onPress: () => navigation.navigate('DriverRequestPage' as never)
     },
     { 
       icon: "time-outline", 
       title: "Trip History", 
       subtitle: "Past rides & routes",
-      onPress: () => console.log('Trip History pressed') 
+      onPress: () => navigation.navigate('EarningsPage' as never)
     },
     { 
       icon: "settings-outline", 
       title: "Settings", 
       subtitle: "App preferences",
-      onPress: () => console.log('Settings pressed') 
+      onPress: () => navigation.navigate('Settings' as never)
     },
   ];
 

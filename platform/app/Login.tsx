@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
-import { useConvex  } from "convex/react";
+import { useConvex } from "convex/react";
 import { ConvexProvider } from 'convex/react';
 import icon from '../assets/images/icon.png';
 import google from '../assets/images/google5.png';
@@ -26,7 +26,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!number || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+      Alert.alert('Error', 'Please enter both phone number and password');
       return;
     }
     const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
@@ -34,21 +34,27 @@ export default function Login() {
       Alert.alert('Invalid number', 'Please enter a valid number');
       return;
     }
-    // try {
-    //   const result = await convex.query(api.functions.users.UserManagement.logInWithSMS.loginSMS, {
-    //     number,
-    //     password,
-    //   });
-    //   alert(`Welcome back ${result.name}!`);
-    //   if (result.role === 'Driver') {
-    //     router.push('/DriverProfile');
-    //   } else if (result.role === 'Passenger') {
-        router.push('/HomeScreen');
-    //   }
-    // } catch (err) {
-    //   alert("Number or password is incorrect");
-    // }
-    // Alert.alert('Login Successful', `Welcome, ${email}`);
+
+    // TODO: Replace with actual authentication
+    // For now, we'll use a mock role selection
+    Alert.alert(
+      'Select Role',
+      'Please select your role',
+      [
+        {
+          text: 'Driver',
+          onPress: () => {
+            router.replace('/DriverHomeScreen');
+          }
+        },
+        {
+          text: 'Passenger',
+          onPress: () => {
+            router.replace('/HomeScreen');
+          }
+        }
+      ]
+    );
   };
 
   return (

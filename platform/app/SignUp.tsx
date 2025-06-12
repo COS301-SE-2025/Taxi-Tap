@@ -23,7 +23,7 @@ const data = [
     { label: 'Driver', value: 'Driver' },
 ];
 
-export default function Login() {
+export default function SignUp() {
   // const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
   const [nameSurname, setNameSurname] = useState('');
   const [number, setNumber] = useState('');
@@ -52,13 +52,16 @@ export default function Login() {
       Alert.alert('Password Mismatch', 'Passwords do not match');
       return;
     }
+
     try {
-      // await signUpWithSMS({ number, name: nameSurname, password, role: selectedRole });
-      alert(`Welcome!`);
+      // TODO: Replace with actual signup logic
+      Alert.alert('Signup Successful', `Welcome, ${nameSurname}!`);
+      
+      // Navigate based on role
       if (selectedRole === 'Driver') {
-        router.push('/DriverProfile');
+        router.replace('/DriverHomeScreen');
       } else if (selectedRole === 'Passenger') {
-        router.push('/HomeScreen');
+        router.replace('/HomeScreen');
       }
     } catch (err) {
       const message =
@@ -70,10 +73,6 @@ export default function Login() {
         Alert.alert("Signup Error", message);
       }
     }
-
-
-    // Alert.alert('Login Successful', `Welcome, ${email}`);
-    
   };
 
   return (
