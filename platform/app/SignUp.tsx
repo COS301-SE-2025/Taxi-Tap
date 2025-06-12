@@ -15,6 +15,9 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { Dropdown } from 'react-native-element-dropdown';
+import { api } from "../convex/_generated/api";
+import { useMutation} from 'convex/react';
+const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
 
 const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
@@ -24,7 +27,6 @@ const data = [
 ];
 
 export default function Login() {
-  // const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
   const [nameSurname, setNameSurname] = useState('');
   const [number, setNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState<'passenger' | 'driver' | null>(null);
