@@ -15,23 +15,27 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { Dropdown } from 'react-native-element-dropdown';
+import { api } from "../convex/_generated/api";
+import { useMutation } from 'convex/react';
 
 const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
 const data = [
-    { label: 'Passenger', value: 'Passenger' },
-    { label: 'Driver', value: 'Driver' },
+  { label: 'Passenger', value: 'passenger' },
+  { label: 'Driver', value: 'driver' },
 ];
 
-export default function SignUp() {
-  // const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
+function LoginComponent() {
+  // Move useMutation inside the component that's wrapped by ConvexProvider
+  const signUpWithSMS = useMutation(api.functions.users.UserManagement.signUpWithSMS.signUpSMS);
+  
   const [nameSurname, setNameSurname] = useState('');
   const [number, setNumber] = useState('');
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'passenger' | 'driver' | null>(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfrimPassword, setShowConfirmPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const handleSignup = async () => {
@@ -54,21 +58,27 @@ export default function SignUp() {
     }
 
     try {
-      // TODO: Replace with actual signup logic
-      Alert.alert('Signup Successful', `Welcome, ${nameSurname}!`);
+      // If driver is selected in frontend, send 'both' to backend
+      const accountType: 'passenger' | 'driver' | 'both' = selectedRole === 'driver' ? 'both' : selectedRole as 'passenger';
       
-      // Navigate based on role
-      if (selectedRole === 'Driver') {
-        router.replace('/DriverHomeScreen');
-      } else if (selectedRole === 'Passenger') {
-        router.replace('/HomeScreen');
+      await signUpWithSMS({ 
+        phoneNumber: number, 
+        name: nameSurname, 
+        password, 
+        accountType: accountType
+      });
+      Alert.alert('Success', 'Welcome!');
+      if (selectedRole === 'driver') {
+        router.push('/DriverOffline');
+      } else if (selectedRole === 'passenger') {
+        router.push('/HomeScreen');
       }
-    } catch (err) {
+    } catch (err: any) {
       const message =
-        (err as any)?.data?.message || (err as any)?.message || "Something went wrong";
+        (err?.data?.message) || (err?.message) || "Something went wrong";
 
-      if (message.includes("Number already exists")) {
-        Alert.alert("Number In Use", "This number is already registered. Try logging in or use a different number.");
+      if (message.includes("Phone number already exists")) {
+        Alert.alert("Phone Number In Use", "This phone number is already registered. Try logging in or use a different number.");
       } else {
         Alert.alert("Signup Error", message);
       }
@@ -76,7 +86,6 @@ export default function SignUp() {
   };
 
   return (
-    <ConvexProvider client={convex}>
     <ScrollView>
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
         {/* Top Section */}
@@ -107,7 +116,7 @@ export default function SignUp() {
         >
           {/* Name and surname */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Name and Surname
+            Name and Surname
           </Text>
 
           <TextInput
@@ -125,9 +134,9 @@ export default function SignUp() {
             }}
           />
 
-          {/* Username */}
+          {/* Phone Number */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Cellphone number
+            Cellphone number
           </Text>
 
           <TextInput
@@ -135,6 +144,7 @@ export default function SignUp() {
             onChangeText={setNumber}
             placeholder="Cellphone number"
             placeholderTextColor="#999"
+            keyboardType="phone-pad"
             style={{
               backgroundColor: '#fff',
               borderRadius: 10,
@@ -145,7 +155,6 @@ export default function SignUp() {
             }}
           />
 
-          {/* Dropdown */}
           {/* Dropdown for Role */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
             Select Role
@@ -162,16 +171,16 @@ export default function SignUp() {
               borderRadius: 10,
               paddingHorizontal: 16,
               paddingVertical: 12,
-              marginBottom: 15
+              marginBottom: 15,
             }}
             selectedTextStyle={{ fontSize: 16, color: '#000' }}
             value={selectedRole}
-            onChange={item => setSelectedRole(item.value)}
+            onChange={(item: { label: string; value: 'passenger' | 'driver' }) => setSelectedRole(item.value)}
           />
 
           {/* Password */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Password
+            Password
           </Text>
 
           <View
@@ -192,9 +201,8 @@ export default function SignUp() {
               placeholderTextColor="#999"
               secureTextEntry={!showPassword}
               style={{
-                  flex: 1,
-                  // paddingVertical: 12,
-                  fontSize: 16,
+                flex: 1,
+                fontSize: 16,
               }}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -208,7 +216,7 @@ export default function SignUp() {
 
           {/* Confirm Password */}
           <Text style={{ color: 'white', fontWeight: '400', fontSize: 20, paddingLeft: 4, paddingBottom: 6 }}>
-              Confirm Password
+            Confirm Password
           </Text>
 
           <View
@@ -225,18 +233,17 @@ export default function SignUp() {
             <TextInput
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              placeholder="Password"
+              placeholder="Confirm Password"
               placeholderTextColor="#999"
-              secureTextEntry={!showConfrimPassword}
+              secureTextEntry={!showConfirmPassword}
               style={{
-                  flex: 1,
-                  // paddingVertical: 12,
-                  fontSize: 16,
+                flex: 1,
+                fontSize: 16,
               }}
             />
-            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfrimPassword)}>
+            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
               <Ionicons
-                name={showConfrimPassword ? 'eye-off' : 'eye'}
+                name={showConfirmPassword ? 'eye-off' : 'eye'}
                 size={20}
                 color="#999"
               />
@@ -285,6 +292,14 @@ export default function SignUp() {
         </View>
       </View>
     </ScrollView>
+  );
+}
+
+// Wrap the component with ConvexProvider
+export default function Login() {
+  return (
+    <ConvexProvider client={convex}>
+      <LoginComponent />
     </ConvexProvider>
   );
 }

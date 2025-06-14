@@ -17,6 +17,7 @@ import light from '../assets/fonts/Amazon_Ember_Display_Light.ttf';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { UserProvider } from '../contexts/UserContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -55,7 +56,9 @@ export default function RootLayout() {
   return (
     <ConvexProvider client={convex}>
       <ThemeProvider>
-        <RootLayoutNav />
+        <UserProvider>
+          <RootLayoutNav />
+        </UserProvider>
       </ThemeProvider>
     </ConvexProvider>
   );
@@ -102,7 +105,6 @@ function RootLayoutNav() {
               headerShown: false
             }} 
           />
-
           
           <Stack.Screen 
             name="(tabs)" 
