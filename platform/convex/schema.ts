@@ -137,6 +137,8 @@ routes: defineTable({
     })),
     fare: v.number(),
     estimatedDuration: v.number(),
-    isActive: v.boolean()
+    isActive: v.boolean(),
+    taxiAssociation: v.string(),
+    taxiAssociationRegistrationNumber: v.string()
   }).index("by_route_id", ["routeId"])
 });
