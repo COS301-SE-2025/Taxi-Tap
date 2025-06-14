@@ -72,7 +72,7 @@ export default function PassengerProfile() {
                                     await updateUserRole('driver');
                                     
                                     Alert.alert('Success', 'Successfully switched to driver mode!');
-                                    router.push('../HomeScreen');
+                                    router.push('../DriverOffline');
                                 } catch (error: any) {
                                     Alert.alert('Error', error.message || 'Failed to switch to driver mode');
                                 }
