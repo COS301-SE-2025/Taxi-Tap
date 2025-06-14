@@ -29,6 +29,9 @@ import type * as functions_users_UserManagement_switchBothtoDriver from "../func
 import type * as functions_users_UserManagement_switchBothtoPassenger from "../functions/users/UserManagement/switchBothtoPassenger.js";
 import type * as functions_users_UserManagement_switchDrivertoBoth from "../functions/users/UserManagement/switchDrivertoBoth.js";
 import type * as functions_users_UserManagement_switchPassengertoBoth from "../functions/users/UserManagement/switchPassengertoBoth.js";
+import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
+import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.js";
+import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -55,6 +58,9 @@ declare const fullApi: ApiFromModules<{
   "functions/users/UserManagement/switchBothtoPassenger": typeof functions_users_UserManagement_switchBothtoPassenger;
   "functions/users/UserManagement/switchDrivertoBoth": typeof functions_users_UserManagement_switchDrivertoBoth;
   "functions/users/UserManagement/switchPassengertoBoth": typeof functions_users_UserManagement_switchPassengertoBoth;
+  "functions/rides/RequestRide": typeof functions_rides_RequestRide;
+  "functions/rides/acceptRide": typeof functions_rides_acceptRide;
+  "functions/rides/cancelRide": typeof functions_rides_cancelRide;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
