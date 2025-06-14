@@ -69,7 +69,7 @@ function LoginComponent() {
       });
       Alert.alert('Success', 'Welcome!');
       if (selectedRole === 'driver') {
-        router.push('/DriverProfile');
+        router.push('/DriverOffline');
       } else if (selectedRole === 'passenger') {
         router.push('/HomeScreen');
       }
