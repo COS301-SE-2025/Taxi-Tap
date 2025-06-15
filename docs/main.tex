@@ -8,6 +8,7 @@
 \usepackage{booktabs}
 \geometry{margin=1in}
 \usepackage{graphicx}
+\usepackage{float}
 
 \title{Software Requirements Specification\\Taxi Tap by Git It Done}
 \date{}
@@ -16,15 +17,17 @@
 
 \maketitle
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.5\textwidth]{LogoGroup.png} 
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.5\textwidth]{LogoTaxiTap.png} 
 \end{figure}
+
+\newpage
 
 \tableofcontents
 \newpage
@@ -389,7 +392,7 @@ Receive Drop-Off Notification & As a driver, I should be notified when a passeng
 
 \section{Domain Model}
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[width=1\textwidth]{Domain Model.jpg} 
 \end{figure}
@@ -495,13 +498,31 @@ Receive Drop-Off Notification & As a driver, I should be notified when a passeng
 \end{itemize}
 
 \section{Use Case Diagrams}
-\begin{itemize}
-    \item Feedback
-    \item Login
-    \item Signup
-    \item Ride Request
-    \item Overall System
-\end{itemize}
+  \subsection*{Overall System}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=1\textwidth]{OverallSystem.png} 
+    \end{figure}
+  \subsection*{Feedback}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=1\textwidth]{UserFeedback.png} 
+    \end{figure}
+  \subsection*{Login}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=1\textwidth]{Login.png} 
+    \end{figure}
+  \subsection*{Signup}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=1\textwidth]{SignUp.png} 
+    \end{figure}
+  \subsection*{Ride Request}
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=1\textwidth]{RideRequest.png} 
+    \end{figure}
 
 \section{Technology Requirements}
 
