@@ -1,189 +1,339 @@
-import React, { useState, useLayoutEffect } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAreaView } from 'react-native';
+
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Pressable, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation } from 'expo-router';
-import { useTheme } from '../contexts/ThemeContext';
+import { useRouter } from 'expo-router';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../convex/_generated/api';
+import { useUser } from '../contexts/UserContext';
+import { Id } from '../convex/_generated/dataModel';
 
 export default function DriverProfile() {
-    const [name, setName] = useState('Tshepo Mthembu');
-    const [experience, setExperience] = useState('5 years');
+    const [driverRating, setDriverRating] = useState('5 years');
+    const [name, setName] = useState('');
     const router = useRouter();
-    const navigation = useNavigation();
-    const { theme, isDark } = useTheme();
+    const { user, logout, updateUserRole, updateUserName, updateAccountType } = useUser();
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerShown: true,
-            headerTitle: 'Driver Profile',
-            headerStyle: {
-                backgroundColor: theme.surface,
-            },
-            headerTintColor: theme.text,
-        });
-    }, [navigation, theme]);
+    // Initialize name from user context
+    useEffect(() => {
+        if (user?.name) {
+            setName(user.name);
+        }
+    }, [user?.name]);
+
+    // Query user data from Convex using the user ID from context
+    // Make sure your getUserById function uses the correct table name (taxiTap_users)
+    const convexUser = useQuery(
+        api.functions.users.UserManagement.getUserById.getUserById, 
+        user?.id ? { userId: user.id as Id<"taxiTap_users"> } : "skip"
+    );
+
+    // Fix the mutation paths to match your actual API structure
+    const switchDriverToBoth = useMutation(api.functions.users.UserManagement.switchDrivertoBoth.switchDriverToBoth);
+    const switchActiveRole = useMutation(api.functions.users.UserManagement.switchActiveRole.switchActiveRole);;
 
     const handleVehicle = () => {
-        router.push('/DriverRequestPage');
+        router.push('../DriverRequestPage');
     };
 
     const handleDocs = () => {
-        router.push('../Documents');
+        //router.push('../Docs'); ->change to real name
     };
 
     const handleEarnings = () => {
-        router.push('../EarningsPage');
+        //router.push('../Earnings'); ->change to real name
     };
 
     const handleRoutes = () => {
-        router.push('../Routes');
+        //router.push('../Routes'); ->change to real name
     };
 
-    const handleSignout = () => {
-        Alert.alert(
-            'Sign Out',
-            'Are you sure you want to sign out?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Yes',
-                    onPress: () => router.push('../LandingPage'),
-                },
-            ]
+    const handleSignout = async () => {
+        await logout();
+        router.push('../LandingPage');
+    };
+
+    const handleNameChange = (newName: string) => {
+        setName(newName);
+    };
+
+    const handleSwitchToPassenger = async () => {
+    try {
+        if (!user?.id) {
+            Alert.alert('Error', 'User data not found');
+            return;
+        }
+
+        // Since we have convexUser data, use it instead of user from context
+        // First time switching - user is currently driver only
+        if ((convexUser?.accountType || user.accountType) === 'driver') {
+            Alert.alert(
+                'First Time Switching',
+                'This is your first time switching to passenger mode. Your account will be upgraded to support both driver and passenger roles.',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Continue',
+                        onPress: async () => {
+                            try {
+                                // Upgrade driver to both first
+                                await switchDriverToBoth({ 
+                                    userId: user.id as Id<"taxiTap_users"> 
+                                });
+                                
+                                // Then switch active role to passenger
+                                await switchActiveRole({ 
+                                    userId: user.id as Id<"taxiTap_users">, 
+                                    newRole: 'passenger' as const
+                                });
+                                
+                                // Update context
+                                await updateAccountType('both');
+                                await updateUserRole('passenger');
+                                
+                                Alert.alert('Success', 'Successfully switched to passenger mode!');
+                                router.push('../HomeScreen');
+                            } catch (error: any) {
+                                console.error('Switch to passenger error (first time):', error);
+                                Alert.alert('Error', error.message || 'Failed to switch to passenger mode');
+                            }
+                        },
+                    },
+                ]
+            );
+        } 
+        // User already has both account types - just switch active role
+        else if ((convexUser?.accountType || user.accountType) === 'both') {
+            Alert.alert(
+                'Switch Profile',
+                'Are you sure you want to switch to the passenger profile?',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Yes',
+                        onPress: async () => {
+                            try {
+                                console.log('Switching active role to passenger...');
+                                
+                                // Switch active role to passenger
+                                const result = await switchActiveRole({ 
+                                    userId: user.id as Id<"taxiTap_users">, 
+                                    newRole: 'passenger' as const
+                                });
+                                
+                                console.log('Switch result:', result);
+                                
+                                // Update context
+                                console.log('Updating user role in context...');
+                                await updateUserRole('passenger');
+                                
+                                console.log('Context updated, showing success alert...');
+                                Alert.alert('Success', 'Switched to passenger mode!');
+                                router.push('../HomeScreen');
+                                
+                            } catch (error: any) {
+                                console.error('Switch to passenger error (both account):', error);
+                                Alert.alert('Error', error.message || 'Failed to switch to passenger mode');
+                            }
+                        },
+                    },
+                ]
+            );
+        } else {
+            Alert.alert('Error', 'Invalid account type for switching to passenger mode');
+        }
+    } catch (error) {
+        console.error('Unexpected error in handleSwitchToPassenger:', error);
+        Alert.alert('Error', 'An unexpected error occurred');
+    }
+};
+
+    const handleSave = async () => {
+        try {
+            if (!user?.id) {
+                Alert.alert('Error', 'User not found');
+                return;
+            }
+
+            // Update name in context
+            if (name !== user.name) {
+                await updateUserName(name);
+            }
+
+            // Here you would also save to your backend if needed
+            // Example: await updateUserProfile({ userId: user.id as Id<"taxiTap_users">, name, experience });
+
+            Alert.alert('Success', 'Profile saved successfully!');
+        } catch (error: any) {
+            Alert.alert('Error', error.message || 'Failed to save profile');
+        }
+    };
+
+    // Show loading or error state if user is not available
+    if (!user) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>Loading user data...</Text>
+            </View>
         );
-    };
-
-    const handleSwitchToPassenger = () => {
-        Alert.alert(
-            'Switch Profile',
-            'Are you sure you want to switch to the passenger profile?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Yes',
-                    onPress: () => router.push('../HomeScreen'),
-                },
-            ]
-        );
-    };
-
-    const handleSave = () => {
-        Alert.alert('Success', 'Profile saved successfully');
-    };
-
-    const styles = StyleSheet.create({
-        container: {
-            backgroundColor: theme.background,
-            padding: 20,
-        },
-        sectionTitle: {
-            color: theme.text,
-            fontSize: 18,
-            fontWeight: '500',
-            marginBottom: 10,
-        },
-        profileCard: {
-            backgroundColor: isDark ? theme.surface : '#ecd4b5',
-            borderRadius: 16,
-            padding: 20,
-            shadowColor: theme.shadow,
-            shadowOpacity: isDark ? 0.3 : 0.15,
-            shadowOffset: { width: 0, height: 4 },
-            shadowRadius: 4,
-            elevation: 5,
-            alignItems: 'center',
-        },
-        inputContainer: {
-            alignSelf: 'stretch',
-            marginBottom: 12,
-        },
-        inputLabel: {
-            marginBottom: 4,
-            fontWeight: 'bold',
-            color: theme.text,
-        },
-        input: {
-            backgroundColor: theme.background,
-            borderRadius: 6,
-            paddingHorizontal: 10,
-            height: 40,
-            fontSize: 16,
-            color: theme.text,
-            borderWidth: 1,
-            borderColor: theme.border,
-        },
-        button: {
-            backgroundColor: isDark ? theme.surface : '#ecd4b5',
-            paddingVertical: 14,
-            borderRadius: 30,
-            alignItems: 'center',
-            marginTop: 20,
-            shadowColor: theme.shadow,
-            shadowOpacity: isDark ? 0.3 : 0.15,
-            shadowOffset: { width: 0, height: 2 },
-            shadowRadius: 4,
-            elevation: 3,
-        },
-        buttonText: {
-            color: theme.text,
-            fontWeight: 'bold',
-            fontSize: 18,
-        },
-    });
+    }
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
-                <Text style={styles.sectionTitle}>Driver Information</Text>
-                <View style={styles.profileCard}>
-                    <Ionicons name="person-circle" size={64} color={theme.text} style={{ marginBottom: 20 }} />
+        <ScrollView>
+            <View style={{ flex: 1, backgroundColor: '#fff', padding: 20, justifyContent: 'space-between' }}>
+                <Text style={{ color: 'black', fontSize: 18, fontWeight: '500', marginBottom: 10 }}>
+                    Driver Information
+                </Text>
+                <View
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        borderRadius: 16,
+                        padding: 20,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 5,
+                        alignItems: 'center',
+                    }}
+                >
+                    <Ionicons name="person-circle" size={64} color="#000" style={{ marginBottom: 20 }} />
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Name:</Text>
+                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
+                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Name:</Text>
                         <TextInput
                             value={name}
-                            onChangeText={setName}
-                            style={styles.input}
+                            onChangeText={handleNameChange}
+                            style={{
+                                backgroundColor: '#fff',
+                                borderRadius: 6,
+                                paddingHorizontal: 10,
+                                height: 40,
+                                fontSize: 16,
+                            }}
                         />
                     </View>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Experience:</Text>
+                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
+                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Driver Rating:</Text>
                         <TextInput
-                            value={experience}
-                            onChangeText={setExperience}
-                            style={styles.input}
+                            value={driverRating}
+                            onChangeText={setDriverRating}
+                            style={{
+                                backgroundColor: '#fff',
+                                borderRadius: 6,
+                                paddingHorizontal: 10,
+                                height: 40,
+                                fontSize: 16,
+                            }}
                         />
+                    </View>
+
+                    {/* Display user info for debugging */}
+                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
+                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>User ID:</Text>
+                        <Text style={{ fontSize: 12, color: '#666' }}>{user.id}</Text>
+                    </View>
+
+                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
+                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Account Type:</Text>
+                        <Text style={{ fontSize: 14, color: '#333' }}>
+                            {convexUser?.accountType || user.accountType || 'N/A'}
+                        </Text>
+                    </View>
+
+                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
+                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Current Role:</Text>
+                        <Text style={{ fontSize: 14, color: '#333' }}>
+                            {convexUser?.currentActiveRole || user.role || 'N/A'}
+                        </Text>
                     </View>
                 </View>
-
-                <Pressable onPress={handleVehicle} style={styles.button}>
-                    <Text style={styles.buttonText}>Vehicle</Text>
+                
+                <Pressable
+                    onPress={handleVehicle}
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        paddingVertical: 14,
+                        borderRadius: 30,
+                        alignItems: 'center',
+                        marginTop: 20,
+                    }}
+                >
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Vehicle</Text>
                 </Pressable>
-
-                <Pressable onPress={handleDocs} style={styles.button}>
-                    <Text style={styles.buttonText}>Documents</Text>
+                <Pressable
+                    onPress={handleDocs}
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        paddingVertical: 14,
+                        borderRadius: 30,
+                        alignItems: 'center',
+                        marginTop: 20,
+                    }}
+                >
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Documents</Text>
                 </Pressable>
-
-                <Pressable onPress={handleEarnings} style={styles.button}>
-                    <Text style={styles.buttonText}>Weekly Earnings</Text>
+                <Pressable
+                    onPress={handleEarnings}
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        paddingVertical: 14,
+                        borderRadius: 30,
+                        alignItems: 'center',
+                        marginTop: 20,
+                    }}
+                >
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Weekly Earnings</Text>
                 </Pressable>
-
-                <Pressable onPress={handleRoutes} style={styles.button}>
-                    <Text style={styles.buttonText}>Routes</Text>
+                <Pressable
+                    onPress={handleRoutes}
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        paddingVertical: 14,
+                        borderRadius: 30,
+                        alignItems: 'center',
+                        marginTop: 20,
+                    }}
+                >
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Routes</Text>
                 </Pressable>
-
-                <Pressable onPress={handleSignout} style={styles.button}>
-                    <Text style={styles.buttonText}>Sign Out</Text>
+                <Pressable
+                    onPress={handleSignout}
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        paddingVertical: 14,
+                        borderRadius: 30,
+                        alignItems: 'center',
+                        marginTop: 20,
+                    }}
+                >
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Sign Out</Text>
                 </Pressable>
-
-                <Pressable onPress={handleSwitchToPassenger} style={styles.button}>
-                    <Text style={styles.buttonText}>Switch to Passenger Profile</Text>
+                <Pressable
+                    onPress={handleSwitchToPassenger}
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        paddingVertical: 14,
+                        borderRadius: 30,
+                        alignItems: 'center',
+                        marginTop: 20,
+                    }}
+                >
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Switch to Passenger Profile</Text>
                 </Pressable>
-
-                <Pressable onPress={handleSave} style={styles.button}>
-                    <Text style={styles.buttonText}>Save Profile</Text>
+                <Pressable
+                    onPress={handleSave}
+                    style={{
+                        backgroundColor: '#ecd4b5',
+                        paddingVertical: 14,
+                        borderRadius: 30,
+                        alignItems: 'center',
+                        marginTop: 20,
+                    }}
+                >
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Save Profile</Text>
                 </Pressable>
-            </ScrollView>
-        </SafeAreaView>
+            </View>
+        </ScrollView>
     );
 }
