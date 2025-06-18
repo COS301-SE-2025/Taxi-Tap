@@ -14,7 +14,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.frontend"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +23,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.frontend"
+      "package": "com.anonymous.frontend",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAMvlvcgnTcgmSCjyK7-nSCsfPwOsqbPSQ"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
