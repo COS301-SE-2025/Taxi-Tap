@@ -1,6 +1,6 @@
 import React, { useState, useLayoutEffect } from "react";
 import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, } from "react-native";
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -436,6 +436,7 @@ export default function TaxiInformation() {
 					<View style={dynamicStyles.map}>
 						<MapView
 							style={{ flex: 1 }}
+							provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
 							initialRegion={{
 								latitude: (currentLocation.latitude + destination.latitude) / 2,
 								longitude: (currentLocation.longitude + destination.longitude) / 2,
