@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.frontend"
+      "bundleIdentifier": "com.anonymous.frontend",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBKMZZ2P_8APLdsgr4sp3bBAjt_CWIUhu8"
+      }
     },
     "android": {
       "adaptiveIcon": {
