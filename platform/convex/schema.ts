@@ -140,5 +140,15 @@ routes: defineTable({
     isActive: v.boolean(),
     taxiAssociation: v.string(),
     taxiAssociationRegistrationNumber: v.string()
-  }).index("by_route_id", ["routeId"])
+  }).index("by_route_id", ["routeId"]),
+
+    locations: defineTable({
+    userId: v.id("taxiTap_users"),
+    latitude: v.number(),
+    longitude: v.number(),
+    updatedAt: v.string(),
+  })
+  .index("by_user", ["userId"]),
+
+
 });
