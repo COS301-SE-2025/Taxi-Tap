@@ -125,4 +125,23 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     //.index("by_driver_id", ["driverID"])
     .index("by_average_rating", ["averageRating"]),
+
+    //Taxis Table - stores information about taxis
+    taxis: defineTable({
+    driverId: v.id("taxiTap_users"),
+    taxiId: v.string(),
+    licensePlate: v.string(),
+    model: v.string(),
+    color: v.string(),
+    year: v.number(),
+    image: v.optional(v.string()),
+    capacity: v.number(),
+    isAvailable: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_driver_id", ["driverId"])
+    .index("by_taxi_id", ["taxiId"])
+    .index("by_is_available", ["isAvailable"])
+    .index("by_created_at", ["createdAt"]),
 });
