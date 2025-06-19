@@ -150,3 +150,105 @@ export const getRouteStops = query({
   },
   handler: getRouteStopsHandler,
 });
+export const getRoutesWithCoordinatesHandler = async ({ db }: { db: DatabaseReader }) => {
+  const routes = await db.query("routes").collect();
+
+  return routes.map((route: { name: string; geometry: { coordinates: any; }; routeId: any; taxiAssociation: any; isActive: any; stops: any; }) => {
+    const { start, destination } = parseRouteName(route.name);
+    const { startCoords, destinationCoords } = extractCoordinates(route.geometry);
+
+    return {
+      // Basic route info
+      routeId: route.routeId,
+      name: route.name,
+      taxiAssociation: route.taxiAssociation,
+      isActive: route.isActive,
+      
+      // Parsed route info
+      start,
+      destination,
+      startCoords,
+      destinationCoords,
+      
+      // Full route data
+      geometry: route.geometry,
+      stops: route.stops,
+    };
+  });
+};
+
+export const getRoutesWithCoordinates = query(getRoutesWithCoordinatesHandler);
+
+// Helper function to get unique start points (consistent with displayRoutes parsing)
+export const getAllStartPointsHandler = async ({ db }: { db: DatabaseReader }) => {
+  const routes = await db.query("routes").collect();
+  
+  const startPoints: string[] = [];
+  
+  routes.forEach((route: { isActive: any; name: string; }) => {
+    if (route.isActive) {
+      const { start } = parseRouteName(route.name);
+      if (!startPoints.includes(start) && start !== "Unknown") {
+        startPoints.push(start);
+      }
+    }
+  });
+  
+  return startPoints.sort();
+};
+
+export const getAllStartPoints = query(getAllStartPointsHandler);
+
+// Helper function to get all taxi associations
+export const getAllTaxiAssociationsHandler = async ({ db }: { db: DatabaseReader }) => {
+  const routes = await db.query("routes").collect();
+  
+  const associations: string[] = [];
+  
+  routes.forEach((route: { isActive: boolean; taxiAssociation: string }) => {
+    if (route.isActive && !associations.includes(route.taxiAssociation)) {
+      associations.push(route.taxiAssociation);
+    }
+  });
+  
+  return associations.sort();
+};
+
+export const getAllTaxiAssociations = query(getAllTaxiAssociationsHandler);
+
+// Get routes by start point (useful for the UI)
+export const getRoutesByStartPointHandler = async ({ db }: { db: DatabaseReader }, args: { startPoint: string }) => {
+  const routes = await db.query("routes").collect();
+  
+  return routes
+    .filter((route: { isActive: any; name: string; }) => {
+      if (!route.isActive) return false;
+      
+      const { start } = parseRouteName(route.name);
+      return start.toLowerCase().includes(args.startPoint.toLowerCase()) || 
+             args.startPoint.toLowerCase().includes(start.toLowerCase());
+    })
+    .map((route: { name: string; geometry: { coordinates: any; }; routeId: any; taxiAssociation: any; stops: any; isActive: any; }) => {
+      const { start, destination } = parseRouteName(route.name);
+      const { startCoords, destinationCoords } = extractCoordinates(route.geometry);
+      
+      return {
+        routeId: route.routeId,
+        name: route.name,
+        taxiAssociation: route.taxiAssociation,
+        start,
+        destination,
+        startCoords,
+        destinationCoords,
+        geometry: route.geometry,
+        stops: route.stops,
+        isActive: route.isActive,
+      };
+    })
+    .sort((a: { destination: string }, b: { destination: string }) => a.destination.localeCompare(b.destination));
+};
+
+export const getRoutesByStartPoint = query({
+  args: { startPoint: v.string() },
+  handler: getRoutesByStartPointHandler,
+});
