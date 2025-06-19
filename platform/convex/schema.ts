@@ -125,4 +125,20 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     //.index("by_driver_id", ["driverID"])
     .index("by_average_rating", ["averageRating"]),
+routes: defineTable({
+    routeId: v.string(),
+    name: v.string(),
+    geometry: v.any(),
+    stops: v.array(v.object({
+      id: v.string(),
+      name: v.string(),
+      coordinates: v.array(v.number()),
+      order: v.number()
+    })),
+    fare: v.number(),
+    estimatedDuration: v.number(),
+    isActive: v.boolean(),
+    taxiAssociation: v.string(),
+    taxiAssociationRegistrationNumber: v.string()
+  }).index("by_route_id", ["routeId"])
 });
