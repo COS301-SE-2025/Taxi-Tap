@@ -41,104 +41,151 @@ The users of the Taxi Tap system are expected to fit into the following groups:
 
 \subsection{Driver User Characteristics}
 
-\begin{longtable}{>{\raggedright}p{5cm} p{10cm}}
-\toprule
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{5cm}|p{10cm}|}
+\hline
 \textbf{Attribute} & \textbf{Description} \\
-\midrule
-Familiarity with Mobile Technology & Varies widely: Some drivers may be tech-comfortable while others may struggle with apps. \\
-Access to Reliable Internet and Data & Often limited or inconsistent, drivers operate in areas with poor signal or data is expensive. \\
-Preferred Language and Communication Style & They may prefer local languages (e.g. Zulu, Xhosa, Sesotho). \\
-Attention Capacity While Driving & Must be able to use the app while operating a vehicle, requiring minimal taps and distractions. \\
-Trust and Skepticism Toward New Technology & May be skeptical of new digital systems due to fear of replacement, surveillance, or fare manipulation. \\
-Goals and Incentives for Using the App & Wants more passengers, quicker pickups, and less idle time without changing their daily routine. \\
-\bottomrule
-\end{longtable}
+\hline
+Familiarity with Mobile Technology & Varies widely; some drivers may be tech-comfortable, while others may struggle with apps. \\
+\hline
+Access to Reliable Internet and Data & Often limited or inconsistent; drivers operate in areas with poor signal or expensive data costs. \\
+\hline
+Preferred Language and Communication Style & Preference for local languages (e.g. Zulu, Xhosa, Sesotho). \\
+\hline
+Attention Capacity While Driving & App must require minimal taps and distractions to ensure safe usage while driving. \\
+\hline
+Trust and Skepticism Toward New Technology & Some skepticism exists due to concerns about surveillance, manipulation, or job security. \\
+\hline
+Goals and Incentives for Using the App & Seeking more passengers, quicker pickups, and less idle time, while maintaining their routine. \\
+\hline
+\end{tabular}
+\caption{Driver User Characteristics and Considerations}
+\label{tab:driver-characteristics}
+\end{table}
 
 \subsection{Passenger User Characteristics}
 
-\begin{longtable}{>{\raggedright}p{5cm} p{10cm}}
-\toprule
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{5cm}|p{10cm}|}
+\hline
 \textbf{Attribute} & \textbf{Description} \\
-\midrule
+\hline
 Digital Literacy & Ranges from students and workers (tech-savvy) to commuters with limited app experience. \\
-Access to Reliable Internet and Data & Frequently encounters low or no connectivity, especially in transit \\
-Reasons for Using the Platform & It seeks reliable transport, less waiting, and a safer way to locate and use taxis. \\
-Preferred Language and Communication Style & They may prefer local languages (e.g. Zulu, Xhosa, Sesotho). \\
+\hline
+Access to Reliable Internet and Data & Frequently encounters low or no connectivity, especially in transit. \\
+\hline
+Reasons for Using the Platform & Seeks reliable transport, less waiting, and a safer way to locate and use taxis. \\
+\hline
+Preferred Language and Communication Style & May prefer local languages (e.g. Zulu, Xhosa, Sesotho). \\
+\hline
 App Usage Context (Where \& When) & Often uses the app in crowded, noisy, or busy settings like taxi ranks. \\
+\hline
 Concerns Around Trust and Safety & Wants to be sure drivers are legitimate and that their location and personal data are protected. \\
-Platform Interaction Needs & Need to discover taxis, request rides, track driver arrival, and receive ride notifications. \\
-\bottomrule
-\end{longtable}
+\hline
+Platform Interaction Needs & Needs to discover taxis, request rides, track driver arrival, and receive ride notifications. \\
+\hline
+\end{tabular}
+\caption{Commuter User Characteristics and Considerations}
+\label{tab:commuter-characteristics}
+\end{table}
 
 \section{User Stories}
 
 \subsection{Passenger User Stories}
 
-\begin{longtable}{>{\raggedright}p{4cm} p{6cm} p{5cm}}
-\toprule
+\begin{longtable}{|p{4cm}|p{6cm}|p{5cm}|}
+\hline
 \textbf{User Story} & \textbf{Acceptance Criteria} & \textbf{Definition of Done} \\
-\midrule
-Account Registration \& Login & As a passenger, I want to sign up and log in to my account, so that I can securely access and use the Taxi Tap app. & Given that I am on the app’s welcome screen, When I choose “Sign Up” or “Log In” and enter valid details, Then I should be authenticated and taken to the home screen. \\
-& & Based on my input criteria, I am taken to the home page of Taxi Tap \\ \midrule
-View Available Taxis and Routes & As a passenger, I want to view available taxis and their routes on a map, so that I can choose one that matches my travel needs. & Given I am logged in, When I open the home screen, Then I should see nearby taxis on a map with route or destination labels. \\
-& & The map displays icons of nearby taxis, including route or destination tags, when available. \\ \midrule
-Set Pickup and Destination & As a passenger, I want to share my location and set a destination, so that drivers can find and pick me up efficiently. & Given that I have granted location access, When I enter or select a pickup and destination point, Then the app should confirm my trip details and show nearby taxis. \\
-& & Pickup and destination are confirmed and displayed; nearby taxis are suggested based on the selected route. \\ \midrule
+\hline
+Account Registration \& Login & As a passenger, I want to sign up and log in to my account, so that I can securely access and use the Taxi Tap app. & Given that I am on the app’s welcome screen, When I choose “Sign Up” or “Log In” and enter valid details, then I should be authenticated and taken to the home screen. \\
+& & Based on my input criteria, I am taken to the home page of Taxi Tap. \\
+\hline
+View Available Taxis and Routes & As a passenger, I want to view available taxis and their routes on a map, so that I can choose one that matches my travel needs. & Given I am logged in, When I open the home screen, then I should see nearby taxis on a map with route or destination labels. \\
+& & The map displays icons of nearby taxis, including route or destination tags, when available. \\
+\hline
+Set Pickup and Destination & As a passenger, I want to share my location and set a destination, so that drivers can find me and pick me up efficiently. & Given that I have granted location access, when I enter or select a pickup and destination point, then the app should confirm my trip details and show nearby taxis. \\
+& & Pickup and destination are confirmed and displayed; nearby taxis are suggested based on the selected route. \\
+\hline
 Book a Seat and Get Confirmation & As a passenger, I want to book a seat on a taxi and receive confirmation, so that I’m guaranteed a spot before the taxi arrives. & Given I’ve selected a taxi, When I tap “Book Seat” and confirm, Then I should receive a booking confirmation and a ride status update. \\
-& & A booking confirmation message appears with the selected taxi details and current ride status. \\ \midrule
-Track Assigned Taxi in Real-Time & As a passenger, I want to track my assigned taxi in real time, so that I know when and where to expect pickup. & Given my booking is confirmed, When I open the tracking screen, Then I should see the taxi’s live location and estimated time of arrival. \\
-& & The assigned taxi is visible on the map with a live location marker and updated ETA. \\ \midrule
-Receiving Alerts When Taxi is Nearby & As a passenger, I want to receive alerts when the taxi is nearby, so that I can be ready at the pickup location. & Given the assigned taxi is approaching, When it is within 500 meters, Then I should receive a push notification that it’s nearby. \\
-& & A push alert is triggered and received once the taxi enters the defined proximity radius. \\ \midrule
-See Available Seats & As a passenger, I want to see how many seats are available, so that I can decide whether to book a seat or wait. & Given I view a taxi on the map or booking screen, When I open its details, Then I should see the number of available seats. \\
-& & The number of available seats is clearly shown for each listed or selected taxi. \\ \midrule
-Rate Completed Trip & As a passenger, I want to rate my trip after completion, so that I can provide feedback to help improve the service. & Given my ride has ended, When I open the app, Then I should be prompted to leave a 1–5 star rating and optional comments. \\
-& & The rating form appears automatically after the ride ends, and feedback is successfully submitted to the system. \\ \midrule
-Use App Offline or on Low Bandwidth & As a passenger, I want to use the app offline or on low bandwidth, so that I can still interact with core features in areas with poor connectivity. & Given I have limited internet access, When I open the app, Then I should still be able to view saved routes, taxis, and queue a ride request that sends once reconnected. \\
-& & The app functions with cached map data and stores ride requests locally, syncing once connectivity is restored. \\ \midrule
-Indicate Drop-Off Point Mid-Trip & As a passenger, I should be able to indicate where I want to be dropped off during the trip. & Given that I’m in a running taxi, When I choose a stop or drop-off location mid-trip, Then the driver should receive an update of my chosen point. \\
-& & The app allows drop-off selection, sends update to driver, and displays new estimated drop-off. \\ \midrule
-View All Available Stops & As a passenger, I should be able to see all the available stops that are there during my trip. & Given I’m on a selected route, When I view route details, Then I should see a list or map of all possible stops. \\
-& & A stop list or map view is shown, detailing all available stops along the route. \\ \midrule
-See Estimated Time to Destination & As a passenger, I should be able to see how long it will take to reach my destination or drop-off spot. & Given I’ve set a destination, When I view trip details, Then I should see the estimated time remaining. \\
-& & ETA is shown dynamically on screen and updates with real-time traffic and route changes. \\
-\bottomrule
+& & A booking confirmation message appears with the selected taxi details and current ride status. \\
+\hline
+Track Assigned Taxi in Real-Time & As a passenger, I want to track my assigned taxi in real time, so that I know when and where to expect pickup. & Given my booking is confirmed, When I open the tracking screen, then I should see the taxi’s live location and estimated time of arrival. \\
+& & The assigned taxi is visible on the map with a live location marker and updated ETA. \\
+\hline
+Receiving Alerts When Taxi is Nearby & As a passenger, I want to receive alerts when the taxi is nearby, so that I can be ready at the pickup location. & Given the assigned taxi is approaching, When it is within 500 meters, then I should receive a push notification that it’s nearby. \\
+& & A push alert is triggered and received once the taxi enters the defined proximity radius. \\
+\hline
+See Available Seats & As a passenger, I want to see how many seats are available, so that I can decide whether to book a seat or wait. & Given I view a taxi on the map or booking screen, When I open its details, then I should see the number of available seats. \\
+& & The number of available seats is clearly shown for each listed or selected taxi. \\
+\hline
+Rate Completed Trip & As a passenger, I want to rate my trip after completion, so that I can provide feedback to help improve the service. & Given my ride has ended, When I open the app, then I should be prompted to leave a 1–5 star rating and optional comments. \\
+& & The rating form appears automatically after the ride ends, and feedback is successfully submitted to the system. \\
+\hline
+Use App Offline or on Low Bandwidth & As a passenger, I want to use the app offline or on low bandwidth, so that I can still interact with core features in areas with poor connectivity. & Given I have limited internet access, When I open the app, then I should still be able to view saved routes, taxis, and queue a ride request that sends once reconnected. \\
+& & The app functions with cached map data and stores ride requests locally, syncing once connectivity is restored. \\
+\hline
+Indicate Drop-Off Point Mid-Trip & As a passenger, I should be able to indicate where I want to be dropped off during the trip. & Given that I’m in a running taxi, when I choose a stop or drop-off location mid-trip, then the driver should receive an update of my chosen point. \\
+& & The app allows drop-off selection, sends update to driver, and displays new estimated drop-off. \\
+\hline
+View All Available Stops & As a passenger, I should be able to see all the available stops that are there during my trip. & Given I’m on a selected route, when I view route details, then I should see a list or map of all possible stops. \\
+& & A stop list or map view is shown, detailing all available stops along the route. \\
+\hline
+See Estimated Time to Destination & As a passenger, I should be able to see how long it will take to reach my destination or drop-off spot. & Given I’ve set a destination, when I view trip details, then I should see the estimated time remaining. \\
+& & ETA is shown dynamically on screen and is updated with real-time traffic and route changes. \\
+\hline
+\caption{Commuter user stories}
+\label{tab:commuter-user-stories}
 \end{longtable}
-
 
 \subsection{Driver User Stories}
 
-\begin{longtable}{>{\raggedright}p{4cm} p{6cm} p{5cm}}
-\toprule
+\begin{longtable}{|p{4cm}|p{6cm}|p{5cm}|}
+\hline
 \textbf{User Story} & \textbf{Acceptance Criteria} & \textbf{Definition of Done} \\
-\midrule
-Account Registration \& Login & As a driver, I want to sign up and log in to my account, so that I can securely access and use the Taxi Tap app. & Given that I am on the app’s welcome screen, When I choose “Sign Up” or “Log In” and enter valid details, Then I should be authenticated and taken to the home screen. \\
-& & Based on my input criteria, I am taken to the home page of Taxi Tap \\ \midrule
-Announce Route \& Destination & As a driver, I want to input the route I will be taking and the destination, so that passengers can see if I’m heading in their direction. & Given that I’m logged in, When I set my starting point and destination, Then the route is visible to nearby passengers. \\
-& & The route is stored and displayed to the eligible passenger's interface. \\ \midrule
-Go Online/Offline & As a driver, I want to go online or offline as needed, so that I can control when I am available to receive ride requests. & Given that I’m on the driver dashboard, When I tap “Go Online” or “Go Offline”, Then my status is updated accordingly and affects request visibility. \\
-& & The driver's online/offline status is reflected, and the passenger can no longer see the taxi on the map. \\ \midrule
-Receive Ride Requests & As a driver, I want to receive ride requests from nearby passengers, so that I can choose which pickups to accept. & Given that I am online and have an active route, When a passenger requests a ride, Then I receive a notification with request details. \\
-& & Ride requests from matching passengers are delivered in real-time to the driver’s interface. \\ \midrule
-Accept or Decline Requests & As a driver, I want to accept or decline a ride request, so that I can manage my route and taxi capacity efficiently. & Given I have received a ride request, When I tap “Accept” or “Decline”, Then the system updates the request status and notifies the passenger. \\
-& & Accepted rides appear on the active list; declined requests are logged and cleared. \\ \midrule
-View Passenger Pickup Details & As a driver, I want to see the passenger’s pickup point and basic information, so that I know where to stop and who I’m picking up. & Given that I’ve accepted a booking, When I view the trip summary, Then I should see the passenger’s location and name or contact info. \\
-& & Pickup details are accurately displayed on the driver's map and trip screen. \\ \midrule
-View Map \& Navigation & As a driver, I want to see a map with passenger pickup and route directions, so that I can navigate efficiently. & Given that I have one or more assigned pickups, When I open the map view, Then I should see my location and passenger's location. \\
-& & Live maps with GPS and routing is functional and accurate within the app. \\ \midrule
-Update Seat Availability & As a driver, I want to update how many seats are available in my taxi, so that passengers can decide whether to book or wait. & Given that I’ve started a trip or gone online, When I adjust seat count manually, Then, passengers see the updated availability. \\
-& & Seat count updates in real time and is reflected in the passenger’s booking screen. \\ \midrule
-Receive Alerts for New Requests or Updates & As a driver, I want to receive real-time notifications, so that I don’t miss ride requests or updates while driving. & Given that I am online, When a new request or important event occurs, Then I receive a push notification with the relevant details. \\
-& & Push and in-app alerts trigger correctly and lead to actionable pages. \\ \midrule
-Work Offline (Partial Functionality) & As a driver, I want to continue using key features even when I’m offline, so that I can operate in areas with poor connectivity. & Given that I am offline or have poor signal, When I open the app, Then I should be able to see cached routes and queue ride requests. \\
-& & The app stores critical data locally and syncs changes once reconnected. \\ \midrule
-Indicate Taxi Association & As a driver, I should be able to indicate which taxi association I am a part of. & Given I am registering or editing my profile, When I select or input my association, Then it should be linked to my driver profile. \\
-& & Association name is stored and reflected in the driver's profile and backend database. \\ \midrule
-Receive Route from Association & As a driver, I should be assigned a route by my taxi association. & Given I belong to a taxi association, When I log in or go online, Then the assigned route from the association should appear. \\
-& & System pulls assigned route from the association records and displays it on the app. \\ \midrule
-Receive Drop-Off Notification & As a driver, I should be notified when a passenger wants to get dropped off. & Given I am currently driving and have active passengers, When a passenger selects a drop-off point, Then I receive an alert with the details. \\
+\hline
+Account Registration \& Login & As a driver, I want to sign up and log in to my account, so that I can securely access and use the Taxi Tap app. & Given that I am on the app’s welcome screen, when I choose “Sign Up” or “Log In” and enter valid details, then I should be authenticated and taken to the home screen. \\
+& & Based on my input criteria, I am taken to the home page of Taxi Tap \\
+\hline
+Announce Route \& Destination & As a driver, I want to input the route I will be taking and the destination, so that passengers can see if I’m heading in their direction. & Given that I’m logged in, when I set my starting point and destination, then the route is visible to nearby passengers. \\
+& & The route is stored and displayed to the eligible passenger's interface. \\
+\hline
+Go Online/Offline & As a driver, I want to go online or offline as needed, so that I can control when I am available to receive ride requests. & Given that I’m on the driver dashboard, when I tap “Go Online” or “Go Offline”, then my status is updated accordingly and affects request visibility. \\
+& & The driver's online/offline status is reflected, and the passenger can no longer see the taxi on the map. \\
+\hline
+Receive Ride Requests & As a driver, I want to receive ride requests from nearby passengers, so that I can choose which pickups to accept. & Given that I am online and have an active route, when a passenger requests a ride, then I receive a notification with request details. \\
+& & Ride requests from matching passengers are delivered in real-time to the driver’s interface. \\
+\hline
+Accept or Decline Requests & As a driver, I want to accept or decline a ride request, so that I can manage my route and taxi capacity efficiently. & Given I have received a ride request, when I tap “Accept” or “Decline”, then the system updates the request status and notifies the passenger. \\
+& & Accepted rides appear on the active list; declined requests are logged and cleared. \\
+\hline
+View Passenger Pickup Details & As a driver, I want to see the passenger’s pickup point and basic information, so that I know where to stop and who I’m picking up. & Given that I’ve accepted a booking, when I view the trip summary, then I should see the passenger’s location and name or contact info. \\
+& & Pickup details are accurately displayed on the driver's map and trip screen. \\
+\hline
+View Map \& Navigation & As a driver, I want to see a map with passenger pickup and route directions, so that I can navigate efficiently. & Given that I have one or more assigned pickups, When I open the map view, then I should see my location and passenger's location. \\
+& & Live maps with GPS and routing is functional and accurate within the app. \\
+\hline
+Update Seat Availability & As a driver, I want to update how many seats are available in my taxi, so that passengers can decide whether to book or wait. & Given that I’ve started a trip or gone online, when I adjust seat count manually, Then, passengers see the updated availability. \\
+& & Seat count updates in real time and is reflected in the passenger’s booking screen. \\
+\hline
+Receive Alerts for New Requests or Updates & As a driver, I want to receive real-time notifications, so that I don’t miss ride requests or updates while driving. & Given that I am online, when a new request or important event occurs, then I receive a push notification with the relevant details. \\
+& & Push and in-app alerts trigger correctly and lead to actionable pages. \\
+\hline
+Work Offline (Partial Functionality) & As a driver, I want to continue using key features even when I’m offline, so that I can operate in areas with poor connectivity. & Given that I am offline or have poor signal, when I open the app, then I should be able to see cached routes and queue ride requests. \\
+& & The app stores critical data locally and syncs changes once reconnected. \\
+\hline
+Indicate Taxi Association & As a driver, I should be able to indicate which taxi association I am a part of. & Given I am registering or editing my profile, when I select or input my association, then it should be linked to my driver profile. \\
+& & Association name is stored and reflected in the driver's profile and backend database. \\
+\hline
+Receive Route from Association & As a driver, I should be assigned a route by my taxi association. & Given I belong to a taxi association, when I log in or go online, then the assigned route from the association should appear. \\
+& & System pulls assigned route from the association records and displays it on the app. \\
+\hline
+Receive Drop-Off Notification & As a driver, I should be notified when a passenger wants to get dropped off. & Given I am currently driving and have active passengers, when a passenger selects a drop-off point, then I receive an alert with the details. \\
 & & Notification appears in real-time and updates route on the driver’s screen. \\
-\bottomrule
+\hline
+\caption{Driver user stories}
+\label{tab:driver-user-stories}
 \end{longtable}
 
 \section{Service Contracts}
