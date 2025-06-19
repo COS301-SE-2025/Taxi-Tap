@@ -114,3 +114,39 @@ export const getDestinationsByStartPoint = query({
   args: { startPoint: v.string() },
   handler: getDestinationsByStartPointHandler,
 });
+
+
+
+// 4. Get route stops given start and end points
+export const getRouteStopsHandler = async ({ db }: { db: DatabaseReader }, args: { startPoint: string; endPoint: string }) => {
+  const routes = await db.query("routes").collect();
+  
+  // Find the route that matches both start and end points
+  const matchingRoute = routes.find((route: { isActive: any; name: string; }) => {
+    if (!route.isActive) return false;
+    
+    const { start, destination } = parseRouteName(route.name);
+    
+    const startMatches = start.toLowerCase().includes(args.startPoint.toLowerCase()) || 
+                        args.startPoint.toLowerCase().includes(start.toLowerCase());
+    const endMatches = destination.toLowerCase().includes(args.endPoint.toLowerCase()) || 
+                      args.endPoint.toLowerCase().includes(destination.toLowerCase());
+    
+    return startMatches && endMatches;
+  });
+  
+  if (!matchingRoute) {
+    return [];
+  }
+  
+  // Return the stops for the matching route, sorted by order
+  return matchingRoute.stops.sort((a: { order: number; }, b: { order: number; }) => a.order - b.order);
+};
+
+export const getRouteStops = query({
+  args: { 
+    startPoint: v.string(),
+    endPoint: v.string()
+  },
+  handler: getRouteStopsHandler,
+});
