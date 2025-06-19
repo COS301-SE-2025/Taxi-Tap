@@ -8,11 +8,17 @@ export const updateLocation = mutation({
     longitude: v.number(),
   },
   handler: async (ctx, { userId, latitude, longitude }) => {
-    await ctx.db.insert("locations", {
-      userId,
-      latitude,
-      longitude,
-      updatedAt: new Date().toISOString(),
-    });
+    const existing = await ctx.db
+      .query("locations")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    const updatedAt = new Date().toISOString();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { latitude, longitude, updatedAt });
+    } else {
+      await ctx.db.insert("locations", { userId, latitude, longitude, updatedAt });
+    }
   },
 });
