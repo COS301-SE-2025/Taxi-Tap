@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { router, useNavigation } from 'expo-router';
@@ -262,6 +262,7 @@ export default function HomeScreen() {
         <MapView
           ref={mapRef}
           style={dynamicStyles.map}
+          provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
           initialRegion={{
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
@@ -372,7 +373,7 @@ export default function HomeScreen() {
   );
 }
 
-// Dark map style for better dark mode experience
+// Dark map style for better dark mode experience (Google Maps compatible)
 const darkMapStyle = [
   {
     "elementType": "geometry",

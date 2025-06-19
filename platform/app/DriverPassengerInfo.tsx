@@ -1,6 +1,6 @@
 import React, { useLayoutEffect } from "react";
 import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
@@ -200,6 +200,7 @@ export default () => {
 					<View style={{ height: 300, position: 'relative' }}>
 						<MapView
 							style={{ flex: 1 }}
+							provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
 							initialRegion={{
 								latitude: (currentLocation.latitude + destination.latitude) / 2,
 								longitude: (currentLocation.longitude + destination.longitude) / 2,

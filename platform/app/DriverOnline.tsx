@@ -10,7 +10,7 @@ import {
   StatusBar,
   SafeAreaView,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { useNavigation } from 'expo-router';
@@ -470,6 +470,7 @@ export default function DriverOnline({
               <MapView
                 ref={mapRef}
                 style={dynamicStyles.map}
+                provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
                 initialRegion={{
                   latitude: currentLocation.latitude,
                   longitude: currentLocation.longitude,
