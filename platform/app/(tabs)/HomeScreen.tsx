@@ -355,8 +355,8 @@ export default function HomeScreen() {
                 style={{ marginRight: 12 }} 
               />
               <View style={{ flex: 1 }}>
-                <Text style={dynamicStyles.routeTitle}>{route.start}</Text>
-                <Text style={dynamicStyles.routeSubtitle}>{route.destination}</Text>
+                <Text style={dynamicStyles.routeTitle}>{route.destination}</Text>
+                <Text style={dynamicStyles.routeSubtitle}>Pickup: {route.start}</Text>
               </View>
             </TouchableOpacity>
           ))}
