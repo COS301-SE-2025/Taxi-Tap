@@ -8,14 +8,14 @@ module.exports = {
   roots: ['<rootDir>/tests/unit/backend'],
 
   // Only match .test.ts files
-  testMatch: ['**/*.test.ts'],
+  testMatch: ['**/*.test.tsx'],
 
   // Transform TS → JS with ts-jest
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.(ts|tsx)$': 'ts-jest'
   },
 
-  moduleFileExtensions: ['ts','js','json','node'],
+  moduleFileExtensions: ['ts','tsx','js','json','node'],
 
   // NO setupFilesAfterEnv here
 };
