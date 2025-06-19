@@ -63,3 +63,54 @@ export const getAllRoutesHandler = async ({ db }: { db: DatabaseReader }) => {
 };
 
 export const getAllRoutes = query(getAllRoutesHandler);
+
+// 2. Get all routes for a specific taxi association
+export const getRoutesByTaxiAssociationHandler = async ({ db }: { db: DatabaseReader }, args: { taxiAssociation: string }) => {
+  const routes = await db
+    .query("routes")
+    .filter((q) => q.eq(q.field("taxiAssociation"), args.taxiAssociation))
+    .collect();
+  
+  // Return only the essential fields
+  return routes.map((route: { geometry: any; isActive: boolean; name: string; routeId: string; stops: any; taxiAssociation: string }) => ({
+    geometry: route.geometry,
+    isActive: route.isActive,
+    name: route.name,
+    routeId: route.routeId,
+    stops: route.stops,
+    taxiAssociation: route.taxiAssociation
+  }));
+};
+
+export const getRoutesByTaxiAssociation = query({
+  args: { taxiAssociation: v.string() },
+  handler: getRoutesByTaxiAssociationHandler,
+});
+
+// 3. Get all destinations (end points) for a specific start point
+export const getDestinationsByStartPointHandler = async ({ db }: { db: DatabaseReader }, args: { startPoint: string }) => {
+  const routes = await db.query("routes").collect();
+  
+  const destinations: string[] = [];
+  
+  routes.forEach((route: { isActive: any; name: string; }) => {
+    if (route.isActive) {
+      const { start, destination } = parseRouteName(route.name);
+      
+      // Check if the start point matches (case-insensitive)
+      if (start.toLowerCase().includes(args.startPoint.toLowerCase()) || 
+          args.startPoint.toLowerCase().includes(start.toLowerCase())) {
+        if (!destinations.includes(destination) && destination !== "Unknown") {
+          destinations.push(destination);
+        }
+      }
+    }
+  });
+  
+  return destinations.sort();
+};
+
+export const getDestinationsByStartPoint = query({
+  args: { startPoint: v.string() },
+  handler: getDestinationsByStartPointHandler,
+});
