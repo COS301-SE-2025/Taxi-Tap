@@ -21,7 +21,7 @@ export function useLocationSystem(userId: string) {
         {
           accuracy: Location.Accuracy.High,
           timeInterval: 1000,
-          distanceInterval: 10,
+          distanceInterval: 0,
         },
         (location) => {
           const { latitude, longitude } = location.coords;
