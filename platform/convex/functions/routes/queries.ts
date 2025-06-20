@@ -1,6 +1,7 @@
-import { query, QueryCtx } from "../../_generated/server";
+import { query, QueryCtx, mutation } from "../../_generated/server";
 import { v } from "convex/values";
 import { DatabaseReader } from "../../_generated/server";
+
 
 
 function parseRouteName(routeName: string) {
@@ -251,4 +252,83 @@ export const getRoutesByStartPointHandler = async ({ db }: { db: DatabaseReader 
 export const getRoutesByStartPoint = query({
   args: { startPoint: v.string() },
   handler: getRoutesByStartPointHandler,
+});
+
+export const assignRandomRouteToDriver = mutation({
+  args: { 
+    userId: v.id("taxiTap_users"),
+    taxiAssociation: v.string()
+  },
+  handler: async (ctx, args) => {
+    // Get all active routes for the driver's taxi association
+    const availableRoutes = await ctx.db
+      .query("routes")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("taxiAssociation"), args.taxiAssociation),
+          q.eq(q.field("isActive"), true)
+        )
+      )
+      .collect();
+
+    if (availableRoutes.length === 0) {
+      throw new Error(`No active routes available for taxi association: ${args.taxiAssociation}`);
+    }
+
+    // Select a random route
+    const randomIndex = Math.floor(Math.random() * availableRoutes.length);
+    const selectedRoute = availableRoutes[randomIndex];
+
+    // Check if driver already exists in drivers table
+    const existingDriver = await ctx.db
+      .query("drivers")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (existingDriver) {
+      // Update existing driver with assigned route
+      await ctx.db.patch(existingDriver._id, {
+        assignedRoute: selectedRoute._id,
+        activeRoute: selectedRoute._id,
+        taxiAssociation: args.taxiAssociation,
+        routeAssignedAt: Date.now(),
+      });
+    } else {
+      // Create new driver record
+      await ctx.db.insert("drivers", {
+        userId: args.userId,
+        numberOfRidesCompleted: 0,
+        totalDistance: 0,
+        totalFare: 0,
+        assignedRoute: selectedRoute._id,
+        activeRoute: selectedRoute._id,
+        taxiAssociation: args.taxiAssociation,
+        routeAssignedAt: Date.now(),
+      });
+    }
+
+    return {
+      success: true,
+      assignedRoute: selectedRoute,
+      message: `Route assigned: ${selectedRoute.name}`
+    };
+  },
+});
+
+// Create a query to get driver's assigned route
+export const getDriverAssignedRoute = query({
+  args: { userId: v.id("taxiTap_users") },
+  handler: async (ctx, args) => {
+    const driver = await ctx.db
+      .query("drivers")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (!driver || !driver.assignedRoute) {
+      return null;
+    }
+
+    const route = await ctx.db.get(driver.assignedRoute);
+    return route;
+  },
 });

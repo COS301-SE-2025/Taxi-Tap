@@ -13,8 +13,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as functions_migrate_addTaxiAssociationToDrivers from "../functions/migrate/addTaxiAssociationToDrivers.js";
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
 import type * as functions_routes_queries from "../functions/routes/queries.js";
+import type * as functions_users_UserManagement_driverRouteManagement from "../functions/users/UserManagement/driverRouteManagement.js";
 import type * as functions_users_UserManagement_getUserById from "../functions/users/UserManagement/getUserById.js";
 import type * as functions_users_UserManagement_logInWithSMS from "../functions/users/UserManagement/logInWithSMS.js";
 import type * as functions_users_UserManagement_signUpWithSMS from "../functions/users/UserManagement/signUpWithSMS.js";
@@ -33,8 +35,10 @@ import type * as functions_users_UserManagement_switchPassengertoBoth from "../f
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "functions/migrate/addTaxiAssociationToDrivers": typeof functions_migrate_addTaxiAssociationToDrivers;
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
   "functions/routes/queries": typeof functions_routes_queries;
+  "functions/users/UserManagement/driverRouteManagement": typeof functions_users_UserManagement_driverRouteManagement;
   "functions/users/UserManagement/getUserById": typeof functions_users_UserManagement_getUserById;
   "functions/users/UserManagement/logInWithSMS": typeof functions_users_UserManagement_logInWithSMS;
   "functions/users/UserManagement/signUpWithSMS": typeof functions_users_UserManagement_signUpWithSMS;
