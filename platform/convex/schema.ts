@@ -129,7 +129,6 @@ export default defineSchema({
     //Taxis Table - stores information about taxis
     taxis: defineTable({
     driverId: v.id("drivers"),
-    taxiId: v.string(),
     licensePlate: v.string(),
     model: v.string(),
     color: v.string(),
