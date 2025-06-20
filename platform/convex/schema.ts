@@ -113,17 +113,23 @@ export default defineSchema({
     .index("by_created_at", ["createdAt"]),
   
     //drivers table
-    drivers: defineTable({
+drivers: defineTable({
     userId: v.id("taxiTap_users"),
-    //driverID: v.string(),
     numberOfRidesCompleted: v.number(),
     totalDistance: v.number(),
     totalFare: v.number(),
-      
+
+    // Optional association info you already have on some docs:
+    taxiAssociation: v.optional(v.string()),
+
+    // NEW: these fields appear on your existing driver docs:
+    activeRoute: v.optional(v.id("routes")),
+    assignedRoute: v.optional(v.id("routes")),
+    routeAssignedAt: v.optional(v.number()),
+
     averageRating: v.optional(v.number()),
-    })
+  })
     .index("by_user_id", ["userId"])
-    //.index("by_driver_id", ["driverID"])
     .index("by_average_rating", ["averageRating"]),
 routes: defineTable({
     routeId: v.string(),
@@ -149,6 +155,4 @@ locations: defineTable({
   updatedAt: v.string(),
 })
 .index("by_user", ["userId"]),
-
-
 });

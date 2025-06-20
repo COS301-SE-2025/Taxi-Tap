@@ -23,28 +23,36 @@ export const signUpSMSHandler = async (
     throw new Error("Phone number already exists");
   }
 
-
   const now = Date.now();
 
   try {
+    // ✅ 1. Insert user into taxiTap_users table
     const userId = await ctx.db.insert("taxiTap_users", {
       phoneNumber: args.phoneNumber,
       name: args.name,
       password: args.password,
-      email: args.email || "", // Default empty string if not provided
-      age: args.age || 18, // Default age if not provided
+      email: args.email || "",
+      age: args.age || 18,
       accountType: args.accountType,
-      currentActiveRole: args.accountType === "both" ? "passenger" : args.accountType, // Default to passenger for "both", otherwise use the account type
-      isVerified: false, // New SMS users start unverified
-      isActive: true, // New users are active by default
+      currentActiveRole: args.accountType === "both" ? "passenger" : args.accountType,
+      isVerified: false,
+      isActive: true,
       createdAt: now,
       updatedAt: now,
     });
 
-    // Create corresponding passenger/driver records based on account type
+    // ✅ 2. Insert default location
+    await ctx.db.insert("locations", {
+      userId,
+      latitude: 0,
+      longitude: 0,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // ✅ 3. Insert passenger or driver metadata
     if (args.accountType === "passenger" || args.accountType === "both") {
       await ctx.db.insert("passengers", {
-        userId: userId,
+        userId,
         numberOfRidesTaken: 0,
         totalDistance: 0,
         totalFare: 0,
@@ -55,17 +63,16 @@ export const signUpSMSHandler = async (
 
     if (args.accountType === "driver" || args.accountType === "both") {
       await ctx.db.insert("drivers", {
-        userId: userId,
+        userId,
         numberOfRidesCompleted: 0,
         totalDistance: 0,
         totalFare: 0,
       });
     }
 
-    return { success: true, userId: userId };
+    return { success: true, userId };
 
   } catch (e) {
-    // Optional: Check again if the failure was due to race condition
     const exists = await ctx.db
       .query("taxiTap_users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
@@ -78,7 +85,7 @@ export const signUpSMSHandler = async (
   }
 };
 
-// Use the handler in your Convex mutation
+// Convex mutation
 export const signUpSMS = mutation({
   args: {
     phoneNumber: v.string(),

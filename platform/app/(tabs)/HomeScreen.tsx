@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, LatLng } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { router, useNavigation } from 'expo-router';
@@ -15,18 +15,25 @@ import { useTheme } from '../../contexts/ThemeContext';
 import loading from '../../assets/images/loading4.png';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { useLocalSearchParams } from 'expo-router';
 
 export default function HomeScreen() {
   const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
-
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
+  const { userId } = useLocalSearchParams<{ userId: string }>();
 
+  useEffect(() => {
+   console.log('🚀 HomeScreen got userId:', userId);
+  }, [userId]);
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
     name: string;
   } | null>(null);
+
+  // For streaming raw GPS debug coords
+  const [streamedCoords, setStreamedCoords] = useState<LatLng | null>(null);
 
   const [destination, setDestination] = useState<{
     latitude: number;
@@ -37,12 +44,10 @@ export default function HomeScreen() {
   const mapRef = useRef<MapView | null>(null);
 
   useLayoutEffect(() => {
-    navigation.setOptions({
-      title: "Home",
-    });
+    navigation.setOptions({ title: "Home" });
   }, [navigation]);
 
-  // Get current location on mount
+  // On mount: get initial location + reverse geocode
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -51,11 +56,10 @@ export default function HomeScreen() {
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
+      const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Highest,
       });
-
-      const { latitude, longitude } = location.coords;
+      const { latitude, longitude } = loc.coords;
       const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
       const placeName = `${place.name || ''} ${place.street || ''}, ${place.city || place.region || ''}`.trim();
 
@@ -64,23 +68,39 @@ export default function HomeScreen() {
         longitude,
         name: placeName || 'Unknown Location',
       };
-
       setCurrentLocation(currentLoc);
-      setDestination(null);
 
       mapRef.current?.animateToRegion(
-        {
-          latitude,
-          longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
+        { latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
         1000
       );
     })();
   }, []);
 
-  // Navigate to TaxiInformation after destination selection
+  // Start streaming GPS coordinates for debugging
+  useEffect(() => {
+    let subscriber: Location.LocationSubscription;
+    (async () => {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      subscriber = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 2000,
+          distanceInterval: 1,
+        },
+        ({ coords }) => {
+          setStreamedCoords({ latitude: coords.latitude, longitude: coords.longitude });
+        }
+      );
+    })();
+
+    return () => {
+      subscriber?.remove();
+    };
+  }, []);
+
   const handleDestinationSelect = (route: {
     destination: string;
     start: string;
@@ -96,20 +116,11 @@ export default function HomeScreen() {
       longitude: route.destinationCoords.longitude,
       name: route.destination,
     };
-
     setDestination(newDestination);
-
     mapRef.current?.animateToRegion(
-      {
-        latitude: newDestination.latitude,
-        longitude: newDestination.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      },
+      { latitude: newDestination.latitude, longitude: newDestination.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
       1000
     );
-
-    // Navigate to TaxiInformation after a short delay to show the map animation
     setTimeout(() => {
       router.push({
         pathname: './TaxiInformation',
@@ -125,15 +136,9 @@ export default function HomeScreen() {
     }, 1500);
   };
 
-  // Create dynamic styles based on theme
-  const dynamicStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    map: {
-      height: '40%',
-    },
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    map: { height: '40%' },
     bottomSheet: {
       flex: 1,
       backgroundColor: theme.background,
@@ -142,221 +147,63 @@ export default function HomeScreen() {
       padding: 16,
       paddingTop: 24,
     },
-    locationBox: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: isDark ? theme.surface : "#ECD9C3",
-      borderColor: isDark ? theme.border : "#D4A57D",
-      borderRadius: 20,
-      borderWidth: 1,
-      paddingVertical: 11,
-      paddingHorizontal: 13,
-      marginBottom: 36,
-      width: '100%',
-      alignSelf: 'center',
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.15,
-      shadowOffset: {
-        width: 0,
-        height: 4
-      },
-      shadowRadius: 4,
-      elevation: 4,
+    debugBox: {
+      padding: 8,
+      backgroundColor: isDark ? '#333' : '#eee',
+      margin: 8,
+      borderRadius: 6,
     },
-    locationIndicator: {
-      marginRight: 10,
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      paddingTop: 5
-    },
-    currentLocationCircle: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: theme.primary,
-      borderWidth: 2,
-      borderColor: isDark ? '#FFB84D' : '#FFB84D',
-      marginBottom: 8,
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
-    currentLocationDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      backgroundColor: theme.primary
-    },
-    dottedLineContainer: {
-      height: 35,
-      width: 1,
-      marginBottom: 8,
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    },
-    dottedLineDot: {
-      width: 2,
-      height: 3,
-      backgroundColor: theme.primary,
-      borderRadius: 1
-    },
-    locationTextContainer: {
-      flex: 1,
-    },
-    currentLocationText: {
-      color: isDark ? theme.primary : "#A66400",
-      fontSize: 14,
-      fontWeight: "bold",
-      marginBottom: 17,
-    },
-    locationSeparator: {
-      height: 1,
-      backgroundColor: isDark ? theme.border : "#D4A57D",
-      marginBottom: 19,
-      marginHorizontal: 2,
-    },
-    destinationText: {
-      color: theme.text,
-      fontSize: 14,
-      fontWeight: "bold",
-      marginLeft: 2,
-    },
-    savedRoutesTitle: {
-      fontWeight: 'bold',
-      fontSize: 16,
-      marginBottom: 8,
-      color: theme.text,
-    },
-    routeCard: {
-      backgroundColor: theme.card,
-      borderRadius: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 12,
-      marginBottom: 12,
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.05,
-      shadowRadius: 4,
-      elevation: 2,
-      borderWidth: isDark ? 1 : 0,
-      borderColor: isDark ? theme.border : 'transparent',
-    },
-    routeTitle: {
-      fontWeight: 'bold',
-      fontSize: 14,
-      color: theme.text,
-    },
-    routeSubtitle: {
-      fontSize: 12,
-      color: theme.textSecondary,
-    },
-    loadingContainer: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.background,
-    }
+    debugText: { color: isDark ? '#fff' : '#000', fontSize: 12 },
+    // ... (rest of your existing styles)
   });
 
   return (
-    <View style={dynamicStyles.container}>
-      {/* Map Section */}
+    <View style={styles.container}>
       {!currentLocation ? (
-        <View style={[dynamicStyles.map, dynamicStyles.loadingContainer]}>
-          <Image
-            source={loading}
-            style={{ width: 120, height: 120 }}
-            resizeMode="contain"
-          />
+        <View style={[styles.map, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Image source={loading} style={{ width: 120, height: 120 }} resizeMode="contain" />
         </View>
       ) : (
         <MapView
           ref={mapRef}
-          style={dynamicStyles.map}
-          provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
+          style={styles.map}
+          provider={PROVIDER_GOOGLE}
           initialRegion={{
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
-          // Use dark map style when in dark mode
           customMapStyle={isDark ? darkMapStyle : []}
         >
-          <Marker
-            coordinate={{
-              latitude: currentLocation.latitude,
-              longitude: currentLocation.longitude,
-            }}
-            title="You are here"
-            pinColor="blue"
-          />
+          <Marker coordinate={currentLocation} title="You are here" pinColor="blue" />
           {destination && (
-            <Marker
-              coordinate={{
-                latitude: destination.latitude,
-                longitude: destination.longitude,
-              }}
-              title={destination.name}
-              pinColor="orange"
-            />
+            <Marker coordinate={destination} title={destination.name} pinColor="orange" />
           )}
         </MapView>
       )}
 
-      {/* Bottom Section */}
-      <View style={dynamicStyles.bottomSheet}>
-        {/* Location Box */}
-        <View style={dynamicStyles.locationBox}>
-          {/* Current Location and Destination indicators */}
-          <View style={dynamicStyles.locationIndicator}>
-            {/* Current Location Circle */}
-            <View style={dynamicStyles.currentLocationCircle}>
-              <View style={dynamicStyles.currentLocationDot} />
-            </View>
-            
-            {/* Dotted Line Container */}
-            <View style={dynamicStyles.dottedLineContainer}>
-              {[...Array(8)].map((_, index) => (
-                <View key={index} style={dynamicStyles.dottedLineDot} />
-              ))}
-            </View>
-            
-            {/* Destination Pin */}
-            <Icon 
-              name="location" 
-              size={18} 
-              color={isDark ? theme.text : "#121212"} 
-            />
-          </View>
-          
-          <View style={dynamicStyles.locationTextContainer}>
-            <Text style={dynamicStyles.currentLocationText}>
-              {currentLocation ? currentLocation.name : 'Getting current location...'}
-            </Text>
-            <View style={dynamicStyles.locationSeparator} />
-            <Text style={dynamicStyles.destinationText}>
-              {destination ? destination.name : 'No destination selected'}
-            </Text>
-          </View>
+      {/* Debug: streamed coordinates */}
+      {streamedCoords && (
+        <View style={styles.debugBox}>
+          <Text style={styles.debugText}>
+            Streaming GPS → Lat: {streamedCoords.latitude.toFixed(6)}, Lng: {streamedCoords.longitude.toFixed(6)}
+          </Text>
         </View>
+      )}
 
-        {/* Saved Routes */}
-        <Text style={dynamicStyles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
-        <ScrollView style={{ marginTop: 10 }}>
-          {routes?.map((route, index) => (
-            <TouchableOpacity
-              key={index}
-              style={dynamicStyles.routeCard}
-              onPress={() => handleDestinationSelect(route)}
-            >
-              <Icon 
-                name="location-sharp" 
-                size={20} 
-                color={theme.primary} 
-                style={{ marginRight: 12 }} 
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={dynamicStyles.routeTitle}>{route.destination}</Text>
-                <Text style={dynamicStyles.routeSubtitle}>Pickup: {route.start}</Text>
+      {/* Bottom section (saved routes, location box, etc.) */}
+      <View style={styles.bottomSheet}>
+        {/* ... your existing bottom sheet UI ... */}
+        <Text style={{ color: theme.text, fontWeight: 'bold', marginBottom: 8 }}>
+          Recently Used Taxi Ranks
+        </Text>
+        <ScrollView>
+          {routes?.map((route, idx) => (
+            <TouchableOpacity key={idx} onPress={() => handleDestinationSelect(route)}>
+              <View style={{ padding: 12, backgroundColor: theme.card, borderRadius: 8, marginBottom: 12 }}>
+                <Text style={{ color: theme.text, fontWeight: 'bold' }}>{route.destination}</Text>
+                <Text style={{ color: theme.textSecondary }}>Pickup: {route.start}</Text>
               </View>
             </TouchableOpacity>
           ))}

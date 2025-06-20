@@ -17,8 +17,9 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { Dropdown } from 'react-native-element-dropdown';
 import { api } from "../convex/_generated/api";
 import { useMutation } from 'convex/react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
+const convex = new ConvexReactClient("https://proficient-clam-975.convex.cloud");
 
 const data = [
   { label: 'Passenger', value: 'passenger' },
@@ -38,52 +39,58 @@ function LoginComponent() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
-  const handleSignup = async () => {
-    if (!number || !password || !nameSurname || !confirmPassword) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
-    if (!selectedRole) {
-      Alert.alert('Error', 'Please select a role');
-      return;
-    }
-    const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
-    if (!saNumberRegex.test(number)) {
-      Alert.alert('Invalid number', 'Please enter a valid number');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Password Mismatch', 'Passwords do not match');
-      return;
-    }
+const handleSignup = async () => {
+  if (!number || !password || !nameSurname || !confirmPassword) {
+    Alert.alert('Error', 'Please fill all fields');
+    return;
+  }
+  if (!selectedRole) {
+    Alert.alert('Error', 'Please select a role');
+    return;
+  }
+  const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
+  if (!saNumberRegex.test(number)) {
+    Alert.alert('Invalid number', 'Please enter a valid number');
+    return;
+  }
+  if (password !== confirmPassword) {
+    Alert.alert('Password Mismatch', 'Passwords do not match');
+    return;
+  }
 
-    try {
-      // If driver is selected in frontend, send 'both' to backend
-      const accountType: 'passenger' | 'driver' | 'both' = selectedRole === 'driver' ? 'both' : selectedRole as 'passenger';
-      
-      await signUpWithSMS({ 
-        phoneNumber: number, 
-        name: nameSurname, 
-        password, 
-        accountType: accountType
-      });
-      Alert.alert('Success', 'Welcome!');
-      if (selectedRole === 'driver') {
-        router.push('/DriverOffline');
-      } else if (selectedRole === 'passenger') {
-        router.push('/HomeScreen');
-      }
-    } catch (err: any) {
-      const message =
-        (err?.data?.message) || (err?.message) || "Something went wrong";
+  try {
+    const accountType: 'passenger' | 'driver' | 'both' = selectedRole === 'driver' ? 'both' : selectedRole;
 
-      if (message.includes("Phone number already exists")) {
-        Alert.alert("Phone Number In Use", "This phone number is already registered. Try logging in or use a different number.");
-      } else {
-        Alert.alert("Signup Error", message);
-      }
+    const result = await signUpWithSMS({
+      phoneNumber: number,
+      name: nameSurname,
+      password,
+      accountType: accountType,
+    });
+
+    // Store userId in AsyncStorage
+    await AsyncStorage.setItem('userId', result.userId);
+    const userId = await AsyncStorage.getItem('userId');
+    console.log('🚀 Retrieved userId from storage:', userId);
+
+    Alert.alert('Success', 'Welcome!');
+if (selectedRole === 'driver') {
+  router.push('/DriverOffline');
+} else if (selectedRole === 'passenger') {
+  router.push({
+    pathname: '/HomeScreen',
+    params: { userId: result.userId }
+  });
+}
+  } catch (err: any) {
+    const message = (err?.data?.message) || (err?.message) || "Something went wrong";
+    if (message.includes("Phone number already exists")) {
+      Alert.alert("Phone Number In Use", "This phone number is already registered. Try logging in or use a different number.");
+    } else {
+      Alert.alert("Signup Error", message);
     }
-  };
+  }
+};
 
   return (
     <ScrollView>
