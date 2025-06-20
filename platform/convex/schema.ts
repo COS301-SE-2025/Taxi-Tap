@@ -140,7 +140,6 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_driver_id", ["driverId"])
-    .index("by_taxi_id", ["taxiId"])
     .index("by_is_available", ["isAvailable"])
     .index("by_created_at", ["createdAt"]),
 });
