@@ -20,7 +20,7 @@ export function useLocationSystem(userId: string) {
       await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 5000,
+          timeInterval: 1000,
           distanceInterval: 10,
         },
         (location) => {
