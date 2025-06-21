@@ -7,7 +7,6 @@ export default defineSchema({
     email: v.string(),
     password: v.string(),
     age: v.number(),
-    
     phoneNumber: v.string(),
     
     isVerified: v.boolean(),
@@ -112,18 +111,20 @@ export default defineSchema({
     //.index("by_passenger_id", ["passengerID"])
     .index("by_created_at", ["createdAt"]),
   
-    //drivers table
     drivers: defineTable({
-    userId: v.id("taxiTap_users"),
-    //driverID: v.string(),
-    numberOfRidesCompleted: v.number(),
-    totalDistance: v.number(),
-    totalFare: v.number(),
-      
-    averageRating: v.optional(v.number()),
+      userId: v.id("taxiTap_users"),
+      numberOfRidesCompleted: v.number(),
+      totalDistance: v.number(),
+      totalFare: v.number(),
+      averageRating: v.optional(v.number()),
+      activeRoute: v.optional(v.id("routes")),
+      assignedRoute: v.optional(v.id("routes")),
+      taxiAssociation: v.optional(v.string()),
+      routeAssignedAt: v.optional(v.number()), 
     })
     .index("by_user_id", ["userId"])
-    //.index("by_driver_id", ["driverID"])
+    .index("by_taxi_association", ["taxiAssociation"])
+    .index("by_assigned_route", ["assignedRoute"])
     .index("by_average_rating", ["averageRating"]),
 
     //Taxis Table - stores information about taxis
@@ -142,4 +143,57 @@ export default defineSchema({
     .index("by_driver_id", ["driverId"])
     .index("by_is_available", ["isAvailable"])
     .index("by_created_at", ["createdAt"]),
+    
+routes: defineTable({
+    routeId: v.string(),
+    name: v.string(),
+    geometry: v.any(),
+    stops: v.array(v.object({
+      id: v.string(),
+      name: v.string(),
+      coordinates: v.array(v.number()),
+      order: v.number()
+    })),
+    fare: v.number(),
+    estimatedDuration: v.number(),
+    isActive: v.boolean(),
+    taxiAssociation: v.string(),
+    taxiAssociationRegistrationNumber: v.string()
+  }).index("by_route_id", ["routeId"]),
+
+  routeStops: defineTable({
+    routeId: v.string(), 
+    stopId: v.string(), 
+    name: v.string(), 
+    coordinates: v.array(v.number()), 
+    order: v.number(), 
+    isStartPoint: v.boolean(), 
+    isEndPoint: v.boolean(),
+    estimatedTime: v.optional(v.number()), 
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+  .index("by_route_id", ["routeId"])
+  .index("by_stop_name", ["name"])
+  .index("by_coordinates", ["coordinates"]),
+
+  enrichedRouteStops: defineTable({
+    routeId: v.string(),
+    stops: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        coordinates: v.array(v.number()),
+        order: v.number(),
+      })
+    ),
+    updatedAt: v.number(),
+  }).index("by_route_id", ["routeId"]),
+
+  reverseGeocodedStops: defineTable({
+    id: v.string(),
+    name: v.string(),
+    lastUsed: v.number(),
+  }).index("by_stop_id", ["id"]),
 });
+

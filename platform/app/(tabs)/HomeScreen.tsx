@@ -13,8 +13,12 @@ import * as Location from 'expo-location';
 import { router, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import loading from '../../assets/images/loading4.png';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 export default function HomeScreen() {
+  const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
+
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
 
@@ -78,14 +82,19 @@ export default function HomeScreen() {
 
   // Navigate to TaxiInformation after destination selection
   const handleDestinationSelect = (route: {
-    coords: { latitude: number; longitude: number };
-    title: string;
-    subtitle?: string;
+    destination: string;
+    start: string;
+    startCoords: { latitude: number; longitude: number } | null;
+    destinationCoords: { latitude: number; longitude: number } | null;
   }) => {
+    if (!route.destinationCoords) {
+      console.warn("No destination coordinates found");
+      return;
+    }
     const newDestination = {
-      latitude: route.coords.latitude,
-      longitude: route.coords.longitude,
-      name: route.title,
+      latitude: route.destinationCoords.latitude,
+      longitude: route.destinationCoords.longitude,
+      name: route.destination,
     };
 
     setDestination(newDestination);
@@ -333,23 +342,7 @@ export default function HomeScreen() {
         {/* Saved Routes */}
         <Text style={dynamicStyles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
         <ScrollView style={{ marginTop: 10 }}>
-          {[
-            {
-              title: 'Bosman Taxi Rank',
-              subtitle: 'Pretoria Central, 0002',
-              coords: { latitude: -25.746111, longitude: 28.187222 },
-            },
-            {
-              title: 'Menlyn Taxi Rank',
-              subtitle: 'Menlyn Park Shopping Center, 0181',
-              coords: { latitude: -25.7824, longitude: 28.2753 },
-            },
-            {
-              title: 'Corner prospect & Hilda',
-              subtitle: '',
-              coords: { latitude: -25.754, longitude: 28.234 },
-            },
-          ].map((route, index) => (
+          {routes?.map((route, index) => (
             <TouchableOpacity
               key={index}
               style={dynamicStyles.routeCard}
@@ -362,8 +355,8 @@ export default function HomeScreen() {
                 style={{ marginRight: 12 }} 
               />
               <View style={{ flex: 1 }}>
-                <Text style={dynamicStyles.routeTitle}>{route.title}</Text>
-                <Text style={dynamicStyles.routeSubtitle}>{route.subtitle}</Text>
+                <Text style={dynamicStyles.routeTitle}>{route.destination}</Text>
+                <Text style={dynamicStyles.routeSubtitle}>Pickup: {route.start}</Text>
               </View>
             </TouchableOpacity>
           ))}

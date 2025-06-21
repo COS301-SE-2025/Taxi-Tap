@@ -13,15 +13,15 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
+import { useRouteContext } from '../contexts/RouteContext';
 
 const { width, height } = Dimensions.get('window');
 
 interface DriverOnlineProps {
   onGoOffline: () => void;
   todaysEarnings: number;
-  currentRoute?: string;
   availableSeats?: number;
 }
 
@@ -47,12 +47,12 @@ interface SafetyOption {
 }
 
 export default function DriverOnline({ 
-  onGoOffline, 
+  onGoOffline,
   todaysEarnings,
-  currentRoute = "Not Set",
   availableSeats = 4,
 }: DriverOnlineProps) {
   const navigation = useNavigation();
+  const router = useRouter();
   const { theme, isDark } = useTheme();
 
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
@@ -520,10 +520,6 @@ export default function DriverOnline({
               <View style={dynamicStyles.bottomContainer}>
                 <View style={dynamicStyles.quickStatus}>
                   <View style={dynamicStyles.quickStatusItem}>
-                    <Text style={dynamicStyles.quickStatusValue}>{currentRoute}</Text>
-                    <Text style={dynamicStyles.quickStatusLabel}>Current Route</Text>
-                  </View>
-                  <View style={dynamicStyles.quickStatusItem}>
                     <Text style={dynamicStyles.quickStatusValue}>{availableSeats}</Text>
                     <Text style={dynamicStyles.quickStatusLabel}>Available Seats</Text>
                   </View>
@@ -531,7 +527,7 @@ export default function DriverOnline({
 
                 <TouchableOpacity
                   style={dynamicStyles.offlineButton}
-                  onPress={onGoOffline}
+                  onPress={() => router.replace('/DriverOffline')}
                   activeOpacity={0.8}
                   accessibilityLabel="Go offline"
                 >

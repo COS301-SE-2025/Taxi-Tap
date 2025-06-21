@@ -18,6 +18,7 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react';
 
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { UserProvider } from '../contexts/UserContext';
+import { RouteProvider } from '../contexts/RouteContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -57,7 +58,9 @@ export default function RootLayout() {
     <ConvexProvider client={convex}>
       <ThemeProvider>
         <UserProvider>
-          <RootLayoutNav />
+          <RouteProvider>
+            <RootLayoutNav />
+          </RouteProvider>
         </UserProvider>
       </ThemeProvider>
     </ConvexProvider>

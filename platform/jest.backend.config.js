@@ -8,14 +8,28 @@ module.exports = {
   roots: ['<rootDir>/tests/unit/backend'],
 
   // Only match .test.ts files
-  testMatch: ['**/*.test.ts'],
+  testMatch: ['**/*.test.tsx'],
 
   // Transform TS → JS with ts-jest
   transform: {
-    '^.+\\.ts$': 'ts-jest'
+    '^.+\\.(ts|tsx|js|jsx)$': ['ts-jest', {
+      useESM: true
+    }]
   },
 
-  moduleFileExtensions: ['ts','js','json','node'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'json', 'node'],
 
-  // NO setupFilesAfterEnv here
+  // Handle ES modules
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+
+  // Transform node_modules that use ES modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(convex|@convex|@testing-library)/)'
+  ],
+
+  // Mock Convex generated files
+  moduleNameMapper: {
+    '^../../_generated/server$': '<rootDir>/tests/mocks/convex-server.ts',
+    '^convex/values$': '<rootDir>/tests/mocks/convex-values.ts'
+  }
 };
