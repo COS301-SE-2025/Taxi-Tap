@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as functions_taxis_getTaxiForDriver from "../functions/taxis/getTaxiForDriver.js";
 import type * as functions_taxis_viewTaxiInfo from "../functions/taxis/viewTaxiInfo.js";
 import type * as functions_users_UserManagement_getUserById from "../functions/users/UserManagement/getUserById.js";
 import type * as functions_users_UserManagement_logInWithSMS from "../functions/users/UserManagement/logInWithSMS.js";
@@ -32,6 +33,7 @@ import type * as functions_users_UserManagement_switchPassengertoBoth from "../f
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "functions/taxis/getTaxiForDriver": typeof functions_taxis_getTaxiForDriver;
   "functions/taxis/viewTaxiInfo": typeof functions_taxis_viewTaxiInfo;
   "functions/users/UserManagement/getUserById": typeof functions_users_UserManagement_getUserById;
   "functions/users/UserManagement/logInWithSMS": typeof functions_users_UserManagement_logInWithSMS;
