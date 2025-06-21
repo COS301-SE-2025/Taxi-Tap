@@ -1,25 +1,48 @@
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { useUser } from '../contexts/UserContext';
 import { Id } from '../convex/_generated/dataModel';
+import { useTheme } from '../contexts/ThemeContext';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function DriverProfile() {
-    const [driverRating, setDriverRating] = useState('5 years');
     const [name, setName] = useState('');
+    const [number, setNumber] = useState('');
     const router = useRouter();
     const { user, logout, updateUserRole, updateUserName, updateAccountType } = useUser();
+    const { updateNumber } = useUser();
+    const { theme, isDark } = useTheme();
+    const [imageUri, setImageUri] = useState<string | null>(null);
 
     // Initialize name from user context
     useEffect(() => {
-        if (user?.name) {
-            setName(user.name);
+        if (user) {
+            setName(user.name || '');
+            setNumber(user.phoneNumber || '');
         }
-    }, [user?.name]);
+    }, [user]);
+
+    const handleUploadPhoto = async () => {
+        try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: 'images',
+            allowsEditing: true,
+            quality: 1,
+        });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+            const uri = result.assets[0].uri;
+            console.log('Selected image URI:', uri);
+            setImageUri(uri);
+        }
+        } catch (error) {
+            console.error('Image upload error:', error);
+        }
+    };
 
     // Query user data from Convex using the user ID from context
     // Make sure your getUserById function uses the correct table name (taxiTap_users)
@@ -33,7 +56,7 @@ export default function DriverProfile() {
     const switchActiveRole = useMutation(api.functions.users.UserManagement.switchActiveRole.switchActiveRole);;
 
     const handleVehicle = () => {
-        router.push('../DriverRequestPage');
+        router.push('../VehicleDriver');
     };
 
     const handleDocs = () => {
@@ -41,7 +64,7 @@ export default function DriverProfile() {
     };
 
     const handleEarnings = () => {
-        //router.push('../Earnings'); ->change to real name
+        router.push('../EarningsPage');
     };
 
     const handleRoutes = () => {
@@ -55,6 +78,10 @@ export default function DriverProfile() {
 
     const handleNameChange = (newName: string) => {
         setName(newName);
+    };
+
+    const handleNumberChange = (newNumber: string) => {
+        setNumber(newNumber);
     };
 
     const handleSwitchToPassenger = async () => {
@@ -159,6 +186,10 @@ export default function DriverProfile() {
             if (name !== user.name) {
                 await updateUserName(name);
             }
+            // Update number if changed
+            if (number !== user.phoneNumber) {
+                await updateNumber(number);
+            }
 
             // Here you would also save to your backend if needed
             // Example: await updateUserProfile({ userId: user.id as Id<"taxiTap_users">, name, experience });
@@ -169,171 +200,172 @@ export default function DriverProfile() {
         }
     };
 
-    // Show loading or error state if user is not available
+   const dynamicStyles = StyleSheet.create({
+        safeArea: {
+            flex: 1,
+            backgroundColor: theme.background,
+        },
+        container: {
+            backgroundColor: theme.background,
+            padding: 20,
+            paddingBottom: 40,
+            flexGrow: 1,
+        },
+        headerText: {
+            color: theme.text,
+            fontSize: 22,
+            fontWeight: '600',
+            marginBottom: 16,
+        },
+        card: {
+            backgroundColor: theme.card,
+            borderRadius: 16,
+            padding: 20,
+            shadowColor: theme.shadow,
+            shadowOpacity: isDark ? 0.3 : 0.1,
+            shadowRadius: 4,
+            elevation: 4,
+            alignItems: 'center',
+            marginBottom: 30,
+            borderWidth: isDark ? 1 : 0,
+            borderColor: theme.border,
+        },
+        fieldContainer: {
+            alignSelf: 'stretch',
+            marginBottom: 12,
+        },
+        label: {
+            fontWeight: 'bold',
+            fontSize: 16,
+            marginBottom: 4,
+            color: theme.text,
+        },
+        input: {
+            backgroundColor: isDark ? theme.surface : '#fff',
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            height: 44,
+            fontSize: 16,
+            borderColor: isDark ? theme.border : '#ddd',
+            borderWidth: 1,
+            color: theme.text,
+        },
+        button: {
+            backgroundColor: theme.primary,
+            paddingVertical: 16,
+            borderRadius: 30,
+            alignItems: 'center',
+            marginBottom: 16,
+            shadowColor: theme.shadow,
+            shadowOpacity: isDark ? 0.3 : 0.15,
+            shadowRadius: 4,
+            elevation: 3,
+        },
+        buttonText: {
+            color: isDark ? '#121212' : '#fff',
+            fontWeight: 'bold',
+            fontSize: 18,
+        },
+        loadingText: {
+            color: theme.text,
+            fontSize: 16,
+            textAlign: 'center',
+            marginTop: 50,
+        }
+    });
+
     if (!user) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Loading user data...</Text>
-            </View>
+            <SafeAreaView style={dynamicStyles.safeArea}>
+                <View style={dynamicStyles.container}>
+                    <Text style={dynamicStyles.loadingText}>Loading user data...</Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
+    // Inside your return statement:
     return (
-        <ScrollView>
-            <View style={{ flex: 1, backgroundColor: '#fff', padding: 20, justifyContent: 'space-between' }}>
-                <Text style={{ color: 'black', fontSize: 18, fontWeight: '500', marginBottom: 10 }}>
-                    Driver Information
-                </Text>
-                <View
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        borderRadius: 16,
-                        padding: 20,
-                        shadowColor: '#000',
-                        shadowOpacity: 0.2,
-                        shadowRadius: 4,
-                        elevation: 5,
-                        alignItems: 'center',
-                    }}
-                >
-                    <Ionicons name="person-circle" size={64} color="#000" style={{ marginBottom: 20 }} />
+        <SafeAreaView style={dynamicStyles.safeArea}>
+            <ScrollView>
+                <View style={dynamicStyles.container}>
+                    <Text style={dynamicStyles.headerText}>Driver Profile</Text>
 
-                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
-                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Name:</Text>
+                    <View style={dynamicStyles.card}>
+                        <Pressable
+                        onPress={handleUploadPhoto}
+                        style={{
+                            paddingVertical: 14,
+                            borderRadius: 30,
+                            alignItems: 'center',
+                            marginTop: 20,
+                        }}
+                        >
+                        {imageUri ? (
+                            <Image
+                            source={{ uri: imageUri }}
+                            resizeMode="cover"
+                            style={{ width: 150, height: 150, borderRadius: 75 }}
+                            />
+                        ) : (
+                            <Ionicons name="person-circle" size={150} color={theme.text} />
+                        )}
+                        </Pressable>
+        
+                        <View style={dynamicStyles.fieldContainer}>
+                        <Text style={dynamicStyles.label}>Name:</Text>
                         <TextInput
                             value={name}
                             onChangeText={handleNameChange}
-                            style={{
-                                backgroundColor: '#fff',
-                                borderRadius: 6,
-                                paddingHorizontal: 10,
-                                height: 40,
-                                fontSize: 16,
-                            }}
+                            style={dynamicStyles.input}
+                            placeholder="Enter name"
+                            placeholderTextColor={isDark ? '#999' : '#aaa'}
                         />
-                    </View>
-
-                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
-                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Driver Rating:</Text>
+                        </View>
+        
+                        <View style={dynamicStyles.fieldContainer}>
+                        <Text style={dynamicStyles.label}>Number:</Text>
                         <TextInput
-                            value={driverRating}
-                            onChangeText={setDriverRating}
-                            style={{
-                                backgroundColor: '#fff',
-                                borderRadius: 6,
-                                paddingHorizontal: 10,
-                                height: 40,
-                                fontSize: 16,
-                            }}
+                            value={number}
+                            onChangeText={handleNumberChange}
+                            style={dynamicStyles.input}
+                            placeholder="Enter number"
+                            placeholderTextColor={isDark ? '#999' : '#aaa'}
                         />
+                        </View>
                     </View>
 
-                    {/* Display user info for debugging */}
-                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
-                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>User ID:</Text>
-                        <Text style={{ fontSize: 12, color: '#666' }}>{user.id}</Text>
-                    </View>
+                    {/* FULL BUTTON SET BELOW */}
+                    <Pressable style={dynamicStyles.button} onPress={handleVehicle}>
+                        <Text style={dynamicStyles.buttonText}>Vehicle</Text>
+                    </Pressable>
 
-                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
-                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Account Type:</Text>
-                        <Text style={{ fontSize: 14, color: '#333' }}>
-                            {convexUser?.accountType || user.accountType || 'N/A'}
-                        </Text>
-                    </View>
+                    <Pressable style={dynamicStyles.button} onPress={handleDocs}>
+                        <Text style={dynamicStyles.buttonText}>Documents</Text>
+                    </Pressable>
 
-                    <View style={{ alignSelf: 'stretch', marginBottom: 12 }}>
-                        <Text style={{ marginBottom: 4, fontWeight: 'bold' }}>Current Role:</Text>
-                        <Text style={{ fontSize: 14, color: '#333' }}>
-                            {convexUser?.currentActiveRole || user.role || 'N/A'}
-                        </Text>
-                    </View>
+                    <Pressable style={dynamicStyles.button} onPress={handleEarnings}>
+                        <Text style={dynamicStyles.buttonText}>Weekly Earnings</Text>
+                    </Pressable>
+
+                    <Pressable style={dynamicStyles.button} onPress={handleRoutes}>
+                        <Text style={dynamicStyles.buttonText}>Routes</Text>
+                    </Pressable>
+
+                    <Pressable style={dynamicStyles.button} onPress={handleSave}>
+                        <Text style={dynamicStyles.buttonText}>Save Profile</Text>
+                    </Pressable>
+
+                    <Pressable style={dynamicStyles.button} onPress={handleSwitchToPassenger}>
+                        <Text style={dynamicStyles.buttonText}>Switch to Passenger</Text>
+                    </Pressable>
+
+                    <Pressable style={dynamicStyles.button} onPress={handleSignout}>
+                        <Text style={dynamicStyles.buttonText}>Sign Out</Text>
+                    </Pressable>
+
                 </View>
-                
-                <Pressable
-                    onPress={handleVehicle}
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        paddingVertical: 14,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                        marginTop: 20,
-                    }}
-                >
-                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Vehicle</Text>
-                </Pressable>
-                <Pressable
-                    onPress={handleDocs}
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        paddingVertical: 14,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                        marginTop: 20,
-                    }}
-                >
-                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Documents</Text>
-                </Pressable>
-                <Pressable
-                    onPress={handleEarnings}
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        paddingVertical: 14,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                        marginTop: 20,
-                    }}
-                >
-                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Weekly Earnings</Text>
-                </Pressable>
-                <Pressable
-                    onPress={handleRoutes}
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        paddingVertical: 14,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                        marginTop: 20,
-                    }}
-                >
-                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Routes</Text>
-                </Pressable>
-                <Pressable
-                    onPress={handleSignout}
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        paddingVertical: 14,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                        marginTop: 20,
-                    }}
-                >
-                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Sign Out</Text>
-                </Pressable>
-                <Pressable
-                    onPress={handleSwitchToPassenger}
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        paddingVertical: 14,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                        marginTop: 20,
-                    }}
-                >
-                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Switch to Passenger Profile</Text>
-                </Pressable>
-                <Pressable
-                    onPress={handleSave}
-                    style={{
-                        backgroundColor: '#ecd4b5',
-                        paddingVertical: 14,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                        marginTop: 20,
-                    }}
-                >
-                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Save Profile</Text>
-                </Pressable>
-            </View>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 }

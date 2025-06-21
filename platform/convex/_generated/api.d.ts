@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
+import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_users_UserManagement_getUserById from "../functions/users/UserManagement/getUserById.js";
 import type * as functions_users_UserManagement_logInWithSMS from "../functions/users/UserManagement/logInWithSMS.js";
 import type * as functions_users_UserManagement_signUpWithSMS from "../functions/users/UserManagement/signUpWithSMS.js";
@@ -33,6 +34,7 @@ import type * as functions_users_UserManagement_switchPassengertoBoth from "../f
  */
 declare const fullApi: ApiFromModules<{
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
+  "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/users/UserManagement/getUserById": typeof functions_users_UserManagement_getUserById;
   "functions/users/UserManagement/logInWithSMS": typeof functions_users_UserManagement_logInWithSMS;
   "functions/users/UserManagement/signUpWithSMS": typeof functions_users_UserManagement_signUpWithSMS;
