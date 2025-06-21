@@ -51,7 +51,10 @@ export default function Login() {
       if (result.currentActiveRole === 'driver') {
         router.push('/DriverOffline');
       } else if (result.currentActiveRole === 'passenger') {
-        router.push('/HomeScreen');
+        router.push({
+        pathname: '/HomeScreen',
+        params: { userId: result.id.toString() }
+      });
       }
     } catch (err) {
       alert("Phone number or password is incorrect");
