@@ -52,7 +52,7 @@ export default function DriverOffline({
   availableSeats = 4,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
-  const { theme, isDark } = useTheme();
+  const { theme, isDark, themeMode, setThemeMode } = useTheme();
   
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
@@ -70,6 +70,11 @@ export default function DriverOffline({
 
   const handleSafetyPress = () => {
     setShowSafetyMenu(!showSafetyMenu);
+  };
+
+  const handleToggleTheme = () => {
+    const newMode = isDark ? 'light' : 'dark';
+    setThemeMode(newMode);
   };
 
   const handleEmergency = () => {
@@ -190,6 +195,19 @@ export default function DriverOffline({
       flexDirection: 'row',
       alignItems: 'center',
     },
+    darkModeToggle: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: isDark ? '#FFA500' : '#4A90E2',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 8,
+    },
     statusContainer: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -199,6 +217,7 @@ export default function DriverOffline({
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 20,
+      marginRight: 12,
     },
     statusDot: {
       width: 10,
@@ -504,6 +523,19 @@ export default function DriverOffline({
               <View style={dynamicStyles.statusDot} />
               <Text style={dynamicStyles.statusText}>OFFLINE</Text>
             </View>
+            
+            <TouchableOpacity 
+              style={dynamicStyles.darkModeToggle}
+              onPress={handleToggleTheme}
+              activeOpacity={0.8}
+              accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+            >
+              <Icon 
+                name={isDark ? 'sunny' : 'moon'} 
+                size={28} 
+                color="#FFFFFF" 
+              />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -536,7 +568,7 @@ export default function DriverOffline({
             </Text>
             <TouchableOpacity
               style={dynamicStyles.goOnlineButton}
-              onPress={onGoOnline}
+              onPress={() => navigation.navigate('DriverOnline' as never)}
               activeOpacity={0.8}
               accessibilityLabel="Go online to accept passengers"
             >
