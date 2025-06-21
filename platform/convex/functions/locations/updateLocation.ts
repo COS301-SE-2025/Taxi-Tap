@@ -8,17 +8,21 @@ export const updateLocation = mutation({
     longitude: v.number(),
   },
   handler: async (ctx, { userId, latitude, longitude }) => {
-    const existing = await ctx.db
+    // Lookup the existing location record (must exist)
+    const loc = await ctx.db
       .query("locations")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    const updatedAt = new Date().toISOString();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { latitude, longitude, updatedAt });
-    } else {
-      await ctx.db.insert("locations", { userId, latitude, longitude, updatedAt });
+    if (!loc) {
+      throw new Error(`No location record found for user ${userId}`);
     }
+
+    // Patch only the coords & timestamp
+    await ctx.db.patch(loc._id, {
+      latitude,
+      longitude,
+      updatedAt: new Date().toISOString(),
+    });
   },
 });

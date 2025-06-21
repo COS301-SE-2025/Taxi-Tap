@@ -13,43 +13,46 @@ export const signUpSMSHandler = async (
     age?: number;
   }
 ) => {
-  // Check if phone number already exists
+  // 1️⃣ Check if phone number already exists
   const existingByPhone = await ctx.db
     .query("taxiTap_users")
     .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
     .first();
-
   if (existingByPhone) {
     throw new Error("Phone number already exists");
   }
 
   const now = Date.now();
+  // Determine the “active” role for location purposes
+  const effectiveRole: "passenger" | "driver" =
+    args.accountType === "both" ? "passenger" : args.accountType;
 
   try {
-    // ✅ 1. Insert user into taxiTap_users table
+    // 2️⃣ Insert new user
     const userId = await ctx.db.insert("taxiTap_users", {
       phoneNumber: args.phoneNumber,
       name: args.name,
       password: args.password,
       email: args.email || "",
-      age: args.age || 18,
+      age: args.age ?? 18,
       accountType: args.accountType,
-      currentActiveRole: args.accountType === "both" ? "passenger" : args.accountType,
+      currentActiveRole: effectiveRole,
       isVerified: false,
       isActive: true,
       createdAt: now,
       updatedAt: now,
     });
 
-    // ✅ 2. Insert default location
+    // 3️⃣ Insert default location with role
     await ctx.db.insert("locations", {
       userId,
       latitude: 0,
       longitude: 0,
       updatedAt: new Date().toISOString(),
+      role: effectiveRole,
     });
 
-    // ✅ 3. Insert passenger or driver metadata
+    // 4️⃣ Insert passenger/driver metadata
     if (args.accountType === "passenger" || args.accountType === "both") {
       await ctx.db.insert("passengers", {
         userId,
@@ -60,7 +63,6 @@ export const signUpSMSHandler = async (
         updatedAt: now,
       });
     }
-
     if (args.accountType === "driver" || args.accountType === "both") {
       await ctx.db.insert("drivers", {
         userId,
@@ -71,13 +73,12 @@ export const signUpSMSHandler = async (
     }
 
     return { success: true, userId };
-
   } catch (e) {
+    // Handle potential race condition
     const exists = await ctx.db
       .query("taxiTap_users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
       .first();
-
     if (exists) {
       throw new Error("Phone number already exists (race condition)");
     }
@@ -85,13 +86,17 @@ export const signUpSMSHandler = async (
   }
 };
 
-// Convex mutation
+// Expose the mutation to your frontend
 export const signUpSMS = mutation({
   args: {
     phoneNumber: v.string(),
     name: v.string(),
     password: v.string(),
-    accountType: v.union(v.literal("passenger"), v.literal("driver"), v.literal("both")),
+    accountType: v.union(
+      v.literal("passenger"),
+      v.literal("driver"),
+      v.literal("both")
+    ),
     email: v.optional(v.string()),
     age: v.optional(v.number()),
   },
