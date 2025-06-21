@@ -1,5 +1,13 @@
-// SetRoute component
-import React, { useState, useLayoutEffect, useEffect } from 'react';
+/**
+ * SetRoute.tsx
+ * 
+ * Route assignment screen for drivers to select their taxi association and get assigned a route.
+ * Handles both new route assignments and activation of existing assigned routes.
+ * 
+ * @author Moyahabo Hamese
+ */
+
+import React, { useState, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -19,11 +27,26 @@ import { api } from '../convex/_generated/api';
 import { useUser } from '../contexts/UserContext';
 import { Id } from '../convex/_generated/dataModel';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/** Props for the SetRoute component */
 interface SetRouteProps {
   onRouteSet?: (route: string) => void;
 }
 
-// Helper to parse route name into start and destination
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Parses route name into start and destination locations
+ * Route names are expected to be in format "Start - Destination"
+ * 
+ * @param routeName - The route name to parse
+ * @returns Object containing start and destination locations
+ */
 function parseRouteName(routeName: string) {
   const parts = routeName?.split("-").map(part => part.trim()) ?? ["Unknown", "Unknown"];
   return {
@@ -32,14 +55,35 @@ function parseRouteName(routeName: string) {
   };
 }
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+/**
+ * SetRoute - Main component for driver route assignment
+ * 
+ * Features:
+ * - Display existing assigned route with activation option
+ * - Taxi association selection for new route assignment
+ * - Random route assignment based on selected association
+ * - Integration with route context for app-wide route state
+ */
 export default function SetRoute({ onRouteSet }: SetRouteProps) {
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
   const { setCurrentRoute } = useRouteContext();
   const { user } = useUser();
   
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+  
   const [isAssigning, setIsAssigning] = useState(false);
   const [taxiAssociation, setTaxiAssociation] = useState<string>('');
+
+  // ============================================================================
+  // DATA FETCHING
+  // ============================================================================
 
   // Get driver's assigned route
   const assignedRoute = useQuery(
@@ -48,11 +92,16 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
   );
 
   // Mutation to assign random route
-  const assignRandomRoute = useMutation(api.functions.routes.queries.assignRandomRouteToDriver);
+  const assignRandomRoute = useMutation(api.functions.routes.mutations.assignRandomRouteToDriver);
 
   // Get all taxi associations for selection
   const allTaxiAssociations = useQuery(api.functions.routes.queries.getAllTaxiAssociations);
 
+  // ============================================================================
+  // LIFECYCLE EFFECTS
+  // ============================================================================
+
+  // Configure navigation header
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -60,6 +109,14 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
     });
   }, [navigation]);
 
+  // ============================================================================
+  // EVENT HANDLERS
+  // ============================================================================
+
+  /**
+   * Handles new route assignment for drivers
+   * Validates input, assigns random route, and updates context
+   */
   const handleAssignRoute = async () => {
     if (!taxiAssociation) {
       Alert.alert(
@@ -83,24 +140,22 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
         taxiAssociation: taxiAssociation
       });
 
-      if (result.success) {
-        const { start, destination } = parseRouteName(result.assignedRoute.name);
-        const routeString = `${start} → ${destination}`;
-        
-        setCurrentRoute(routeString);
-        if (onRouteSet) {
-          onRouteSet(routeString);
-        }
-
-        Alert.alert(
-          "Route Assigned Successfully!",
-          `You have been assigned to:\n\n${routeString}\n\nAssociation: ${taxiAssociation}\n\nThis is now your permanent route.`,
-          [{
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          }]
-        );
+      const { start, destination } = parseRouteName(result.assignedRoute.name);
+      const routeString = `${start} → ${destination}`;
+      
+      setCurrentRoute(routeString);
+      if (onRouteSet) {
+        onRouteSet(routeString);
       }
+
+      Alert.alert(
+        "Route Assigned Successfully!",
+        `You have been assigned to:\n\n${routeString}\n\nAssociation: ${taxiAssociation}\n\nThis is now your permanent route.`,
+        [{
+          text: "OK",
+          onPress: () => navigation.goBack(),
+        }]
+      );
     } catch (error) {
       console.error("Error assigning route:", error);
       Alert.alert(
@@ -112,6 +167,10 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
     }
   };
 
+  /**
+   * Activates an existing assigned route
+   * Updates route context and navigates back
+   */
   const handleActivateExistingRoute = () => {
     if (!assignedRoute) return;
 
@@ -132,6 +191,10 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
       }]
     );
   };
+
+  // ============================================================================
+  // STYLES
+  // ============================================================================
 
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -310,7 +373,11 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
     },
   });
 
-  // If driver already has an assigned route
+  // ============================================================================
+  // RENDER LOGIC
+  // ============================================================================
+
+  // If driver already has an assigned route, show activation screen
   if (assignedRoute) {
     const { start, destination } = parseRouteName(assignedRoute.name);
     
@@ -321,6 +388,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
           backgroundColor={theme.surface} 
         />
         <View style={dynamicStyles.container}>
+          {/* Header */}
           <View style={dynamicStyles.header}>
             <View style={dynamicStyles.headerLeft}>
               <TouchableOpacity 
@@ -333,18 +401,21 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
             </View>
           </View>
 
+          {/* Content */}
           <View style={dynamicStyles.content}>
             <Text style={dynamicStyles.sectionTitle}>Your Assigned Route</Text>
             <Text style={dynamicStyles.sectionSubtitle}>
               This is your permanent route assignment. Activate it to start receiving passengers.
             </Text>
 
+            {/* Route Information Card */}
             <View style={dynamicStyles.routeCard}>
               <Text style={dynamicStyles.routeCardTitle}>Current Route</Text>
               <Text style={dynamicStyles.routeText}>{start} → {destination}</Text>
               <Text style={dynamicStyles.associationText}>{assignedRoute.taxiAssociation}</Text>
             </View>
 
+            {/* Activation Button */}
             <TouchableOpacity
               style={dynamicStyles.primaryButton}
               onPress={handleActivateExistingRoute}
@@ -357,7 +428,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
     );
   }
 
-  // If driver doesn't have an assigned route yet
+  // If driver doesn't have an assigned route yet, show assignment screen
   return (
     <SafeAreaView style={dynamicStyles.safeArea}>
       <StatusBar 
@@ -365,6 +436,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
         backgroundColor={theme.surface} 
       />
       <View style={dynamicStyles.container}>
+        {/* Header */}
         <View style={dynamicStyles.header}>
           <View style={dynamicStyles.headerLeft}>
             <TouchableOpacity 
@@ -377,16 +449,18 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
           </View>
         </View>
 
+        {/* Content */}
         <View style={dynamicStyles.content}>
           <Text style={dynamicStyles.sectionTitle}>Route Assignment</Text>
           <Text style={dynamicStyles.sectionSubtitle}>
             Select your taxi association and we'll assign you a route automatically. This will be your permanent route.
           </Text>
 
+          {/* Taxi Association Selection */}
           <View style={dynamicStyles.selectionCard}>
             <Text style={dynamicStyles.selectionTitle}>Select Your Taxi Association</Text>
             
-            {allTaxiAssociations?.map((association, index) => (
+            {allTaxiAssociations?.map((association: string, index: number) => (
               <TouchableOpacity
                 key={index}
                 style={[
@@ -403,6 +477,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
             ))}
           </View>
 
+          {/* Assignment Button */}
           <TouchableOpacity
             style={[
               dynamicStyles.primaryButton,

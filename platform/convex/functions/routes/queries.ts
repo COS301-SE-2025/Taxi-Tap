@@ -1,7 +1,27 @@
+/**
+ * queries.ts
+ * 
+ * Convex queries for route data retrieval and management.
+ * Provides functions for fetching routes, stops, and driver assignments.
+ * 
+ * @author Moyahabo Hamese
+ */
+
 import { query } from "../../_generated/server";
 import { v } from "convex/values";
 
-// Helper function to check if a location matches a route point
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Checks if a location matches a route point
+ * Performs case-insensitive substring matching
+ * 
+ * @param routePoint - Route point name
+ * @param searchPoint - Search term
+ * @returns True if locations match
+ */
 function locationMatches(routePoint: string, searchPoint: string): boolean {
   const routeLower = routePoint.toLowerCase();
   const searchLower = searchPoint.toLowerCase();
@@ -9,7 +29,13 @@ function locationMatches(routePoint: string, searchPoint: string): boolean {
   return routeLower.includes(searchLower) || searchLower.includes(routeLower);
 }
 
-// Helper function to parse route names
+/**
+ * Parses route names into start and destination components
+ * Expects route names in format "Start - Destination"
+ * 
+ * @param routeName - Route name to parse
+ * @returns Object with start and destination locations
+ */
 function parseRouteName(routeName: string) {
   const parts = routeName.split(' to ');
   return {
@@ -18,7 +44,18 @@ function parseRouteName(routeName: string) {
   };
 }
 
-// Get route stops with enrichment fallback
+// ============================================================================
+// ROUTE STOPS QUERIES
+// ============================================================================
+
+/**
+ * Gets route stops with enrichment fallback
+ * First attempts to get enriched stops, falls back to original stops if not available
+ * 
+ * @param routeId - ID of the route to get stops for
+ * @returns Object containing stops and enrichment status
+ * @throws Error if route not found
+ */
 export const getRouteStopsWithEnrichment = query({
   args: { routeId: v.string() },
   handler: async (ctx, { routeId }) => {
@@ -56,7 +93,16 @@ export const getRouteStopsWithEnrichment = query({
   },
 });
 
-// Get all routes with enrichment status
+// ============================================================================
+// ROUTE LISTING QUERIES
+// ============================================================================
+
+/**
+ * Gets all routes with enrichment status(cleaned up stops)
+ * Returns routes with a flag indicating whether enriched stops are available
+ * 
+ * @returns Array of routes with enrichment status(cleaned up stops)
+ */
 export const getAllRoutesWithEnrichmentStatus = query({
   args: {},
   handler: async (ctx) => {
@@ -72,7 +118,12 @@ export const getAllRoutesWithEnrichmentStatus = query({
   },
 });
 
-// Get all available routes for a passenger to browse
+/**
+ * Gets all available routes for passengers to browse
+ * Returns only active routes with processed information
+ * 
+ * @returns Array of available routes sorted by start location
+ */
 export const getAllAvailableRoutesForPassenger = query({
   handler: async (ctx) => {
     const routes = await ctx.db
@@ -99,7 +150,13 @@ export const getAllAvailableRoutesForPassenger = query({
   },
 });
 
-// Get routes by taxi association for passengers
+/**
+ * Gets routes filtered by taxi association for passengers
+ * Returns only active routes from the specified association
+ * 
+ * @param taxiAssociation - Taxi association name to filter by
+ * @returns Array of routes for the specified association
+ */
 export const getRoutesByTaxiAssociationForPassenger = query({
   args: { taxiAssociation: v.string() },
   handler: async (ctx, args) => {
@@ -132,7 +189,17 @@ export const getRoutesByTaxiAssociationForPassenger = query({
   },
 });
 
-// Get detailed route information including active drivers
+// ============================================================================
+// ROUTE DETAIL QUERIES
+// ============================================================================
+
+/**
+ * Gets detailed route information including active drivers
+ * Provides comprehensive route data with driver information
+ * 
+ * @param routeId - ID of the route to get details for
+ * @returns Object containing route details and active drivers
+ */
 export const getRouteDetailsWithDrivers = query({
   args: { routeId: v.string() },
   handler: async (ctx, args) => {
@@ -195,7 +262,17 @@ export const getRouteDetailsWithDrivers = query({
   },
 });
 
-// Get driver's assigned route
+// ============================================================================
+// DRIVER ASSIGNMENT QUERIES
+// ============================================================================
+
+/**
+ * Gets a driver's assigned route
+ * Returns the route object if the driver has an assigned route
+ * 
+ * @param userId - Driver's user ID
+ * @returns Route object or null if no assignment
+ */
 export const getDriverAssignedRoute = query({
   args: { userId: v.id("taxiTap_users") },
   handler: async (ctx, args) => {
@@ -210,5 +287,27 @@ export const getDriverAssignedRoute = query({
 
     const route = await ctx.db.get(driver.assignedRoute);
     return route;
+  },
+});
+
+/**
+ * Gets all unique taxi associations
+ * Returns a sorted list of all taxi associations in the system
+ * 
+ * @returns Array of unique taxi association names
+ */
+export const getAllTaxiAssociations = query({
+  args: {},
+  handler: async (ctx) => {
+    const routes = await ctx.db.query("routes").collect();
+    const associations = new Set<string>();
+    
+    routes.forEach(route => {
+      if (route.taxiAssociation) {
+        associations.add(route.taxiAssociation);
+      }
+    });
+    
+    return Array.from(associations).sort();
   },
 }); 
