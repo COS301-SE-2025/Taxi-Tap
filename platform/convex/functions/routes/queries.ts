@@ -1,267 +1,109 @@
-import { query, QueryCtx, mutation } from "../../_generated/server";
+import { query } from "../../_generated/server";
 import { v } from "convex/values";
-import { DatabaseReader } from "../../_generated/server";
 
+// Helper function to check if a location matches a route point
+function locationMatches(routePoint: string, searchPoint: string): boolean {
+  const routeLower = routePoint.toLowerCase();
+  const searchLower = searchPoint.toLowerCase();
+  
+  return routeLower.includes(searchLower) || searchLower.includes(routeLower);
+}
 
-
+// Helper function to parse route names
 function parseRouteName(routeName: string) {
-  const parts = routeName?.split("-").map(part => part.trim()) ?? ["Unknown", "Unknown"];
+  const parts = routeName.split(' to ');
   return {
-    start: parts[0] ?? "Unknown",
-    destination: parts[1] ?? "Unknown"
+    start: parts[0]?.trim() || '',
+    destination: parts[1]?.trim() || ''
   };
 }
 
-// Helper function to safely extract coordinates from geometry
-function extractCoordinates(geometry: { coordinates: any; }) {
-  const coordinates = geometry?.coordinates;
+// Get route stops with enrichment fallback
+export const getRouteStopsWithEnrichment = query({
+  args: { routeId: v.string() },
+  handler: async (ctx, { routeId }) => {
+    // First, try to get enriched stops
+    const enrichedRoute = await ctx.db
+      .query("enrichedRouteStops")
+      .withIndex("by_route_id", (q) => q.eq("routeId", routeId))
+      .unique();
 
-  if (!Array.isArray(coordinates) || coordinates.length === 0) {
-    return {
-      startCoords: null,
-      destinationCoords: null,
-    };
-  }
-
-  const firstCoord = coordinates[0];
-  const lastCoord = coordinates[coordinates.length - 1];
-
-  if (!Array.isArray(firstCoord) || firstCoord.length < 2 || !Array.isArray(lastCoord) || lastCoord.length < 2) {
-    return {
-      startCoords: null,
-      destinationCoords: null,
-    };
-  }
-
-  const [startLatitude, startLongitude] = firstCoord;
-  const [destLatitude, destLongitude] = lastCoord;
-
-  return {
-    startCoords: {
-      latitude: startLatitude,
-      longitude: startLongitude,
-    },
-    destinationCoords: {
-      latitude: destLatitude,
-      longitude: destLongitude,
-    },
-  };
-}
-
-// 1. Get all routes
-export const getAllRoutesHandler = async ({ db }: { db: DatabaseReader }) => {
-  const routes = await db.query("routes").collect();
-  
-  // Return only the essential fields
-  return routes.map((route: { geometry: any; isActive: any; name: any; routeId: any; stops: any; taxiAssociation: any; }) => ({
-    geometry: route.geometry,
-    isActive: route.isActive,
-    name: route.name,
-    routeId: route.routeId,
-    stops: route.stops,
-    taxiAssociation: route.taxiAssociation
-  }));
-};
-
-export const getAllRoutes = query(getAllRoutesHandler);
-
-// 2. Get all routes for a specific taxi association
-export const getRoutesByTaxiAssociationHandler = async ({ db }: { db: DatabaseReader }, args: { taxiAssociation: string }) => {
-  const routes = await db
-    .query("routes")
-    .filter((q) => q.eq(q.field("taxiAssociation"), args.taxiAssociation))
-    .collect();
-  
-  // Return only the essential fields
-  return routes.map((route: { geometry: any; isActive: boolean; name: string; routeId: string; stops: any; taxiAssociation: string }) => ({
-    geometry: route.geometry,
-    isActive: route.isActive,
-    name: route.name,
-    routeId: route.routeId,
-    stops: route.stops,
-    taxiAssociation: route.taxiAssociation
-  }));
-};
-
-export const getRoutesByTaxiAssociation = query({
-  args: { taxiAssociation: v.string() },
-  handler: getRoutesByTaxiAssociationHandler,
-});
-
-// 3. Get all destinations (end points) for a specific start point
-export const getDestinationsByStartPointHandler = async ({ db }: { db: DatabaseReader }, args: { startPoint: string }) => {
-  const routes = await db.query("routes").collect();
-  
-  const destinations: string[] = [];
-  
-  routes.forEach((route: { isActive: any; name: string; }) => {
-    if (route.isActive) {
-      const { start, destination } = parseRouteName(route.name);
-      
-      // Check if the start point matches (case-insensitive)
-      if (start.toLowerCase().includes(args.startPoint.toLowerCase()) || 
-          args.startPoint.toLowerCase().includes(start.toLowerCase())) {
-        if (!destinations.includes(destination) && destination !== "Unknown") {
-          destinations.push(destination);
-        }
-      }
+    if (enrichedRoute) {
+      console.log(`Found enriched stops for route ${routeId}`);
+      return {
+        stops: enrichedRoute.stops,
+        isEnriched: true,
+        updatedAt: enrichedRoute.updatedAt,
+      };
     }
-  });
-  
-  return destinations.sort();
-};
 
-export const getDestinationsByStartPoint = query({
-  args: { startPoint: v.string() },
-  handler: getDestinationsByStartPointHandler,
-});
+    // Fallback to original route stops
+    const originalRoute = await ctx.db
+      .query("routes")
+      .withIndex("by_route_id", (q) => q.eq("routeId", routeId))
+      .unique();
 
+    if (!originalRoute) {
+      throw new Error(`Route ${routeId} not found`);
+    }
 
-
-// 4. Get route stops given start and end points
-export const getRouteStopsHandler = async ({ db }: { db: DatabaseReader }, args: { startPoint: string; endPoint: string }) => {
-  const routes = await db.query("routes").collect();
-  
-  // Find the route that matches both start and end points
-  const matchingRoute = routes.find((route: { isActive: any; name: string; }) => {
-    if (!route.isActive) return false;
-    
-    const { start, destination } = parseRouteName(route.name);
-    
-    const startMatches = start.toLowerCase().includes(args.startPoint.toLowerCase()) || 
-                        args.startPoint.toLowerCase().includes(start.toLowerCase());
-    const endMatches = destination.toLowerCase().includes(args.endPoint.toLowerCase()) || 
-                      args.endPoint.toLowerCase().includes(destination.toLowerCase());
-    
-    return startMatches && endMatches;
-  });
-  
-  if (!matchingRoute) {
-    return [];
-  }
-  
-  // Return the stops for the matching route, sorted by order
-  return matchingRoute.stops.sort((a: { order: number; }, b: { order: number; }) => a.order - b.order);
-};
-
-export const getRouteStops = query({
-  args: { 
-    startPoint: v.string(),
-    endPoint: v.string()
+    console.log(`Using original stops for route ${routeId}`);
+    return {
+      stops: originalRoute.stops,
+      isEnriched: false,
+      updatedAt: null,
+    };
   },
-  handler: getRouteStopsHandler,
 });
-export const getRoutesWithCoordinatesHandler = async ({ db }: { db: DatabaseReader }) => {
-  const routes = await db.query("routes").collect();
 
-  return routes.map((route: { name: string; geometry: { coordinates: any; }; routeId: any; taxiAssociation: any; isActive: any; stops: any; }) => {
-    const { start, destination } = parseRouteName(route.name);
-    const { startCoords, destinationCoords } = extractCoordinates(route.geometry);
+// Get all routes with enrichment status
+export const getAllRoutesWithEnrichmentStatus = query({
+  args: {},
+  handler: async (ctx) => {
+    const routes = await ctx.db.query("routes").collect();
+    const enrichedRoutes = await ctx.db.query("enrichedRouteStops").collect();
+    
+    const enrichedRouteIds = new Set(enrichedRoutes.map(r => r.routeId));
+    
+    return routes.map(route => ({
+      ...route,
+      hasEnrichedStops: enrichedRouteIds.has(route.routeId),
+    }));
+  },
+});
 
-    return {
-      // Basic route info
-      routeId: route.routeId,
-      name: route.name,
-      taxiAssociation: route.taxiAssociation,
-      isActive: route.isActive,
-      
-      // Parsed route info
-      start,
-      destination,
-      startCoords,
-      destinationCoords,
-      
-      // Full route data
-      geometry: route.geometry,
-      stops: route.stops,
-    };
-  });
-};
-
-export const getRoutesWithCoordinates = query(getRoutesWithCoordinatesHandler);
-
-// Helper function to get unique start points (consistent with displayRoutes parsing)
-export const getAllStartPointsHandler = async ({ db }: { db: DatabaseReader }) => {
-  const routes = await db.query("routes").collect();
-  
-  const startPoints: string[] = [];
-  
-  routes.forEach((route: { isActive: any; name: string; }) => {
-    if (route.isActive) {
-      const { start } = parseRouteName(route.name);
-      if (!startPoints.includes(start) && start !== "Unknown") {
-        startPoints.push(start);
-      }
-    }
-  });
-  
-  return startPoints.sort();
-};
-
-export const getAllStartPoints = query(getAllStartPointsHandler);
-
-// Helper function to get all taxi associations
-export const getAllTaxiAssociationsHandler = async ({ db }: { db: DatabaseReader }) => {
-  const routes = await db.query("routes").collect();
-  
-  const associations: string[] = [];
-  
-  routes.forEach((route: { isActive: boolean; taxiAssociation: string }) => {
-    if (route.isActive && !associations.includes(route.taxiAssociation)) {
-      associations.push(route.taxiAssociation);
-    }
-  });
-  
-  return associations.sort();
-};
-
-export const getAllTaxiAssociations = query(getAllTaxiAssociationsHandler);
-
-// Get routes by start point (useful for the UI)
-export const getRoutesByStartPointHandler = async ({ db }: { db: DatabaseReader }, args: { startPoint: string }) => {
-  const routes = await db.query("routes").collect();
-  
-  return routes
-    .filter((route: { isActive: any; name: string; }) => {
-      if (!route.isActive) return false;
-      
-      const { start } = parseRouteName(route.name);
-      return start.toLowerCase().includes(args.startPoint.toLowerCase()) || 
-             args.startPoint.toLowerCase().includes(start.toLowerCase());
-    })
-    .map((route: { name: string; geometry: { coordinates: any; }; routeId: any; taxiAssociation: any; stops: any; isActive: any; }) => {
+// Get all available routes for a passenger to browse
+export const getAllAvailableRoutesForPassenger = query({
+  handler: async (ctx) => {
+    const routes = await ctx.db
+      .query("routes")
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+    
+    return routes.map(route => {
       const { start, destination } = parseRouteName(route.name);
-      const { startCoords, destinationCoords } = extractCoordinates(route.geometry);
+      const sortedStops = route.stops.sort((a: { order: number }, b: { order: number }) => a.order - b.order);
       
       return {
         routeId: route.routeId,
-        name: route.name,
-        taxiAssociation: route.taxiAssociation,
+        routeName: route.name,
         start,
         destination,
-        startCoords,
-        destinationCoords,
-        geometry: route.geometry,
-        stops: route.stops,
-        isActive: route.isActive,
+        taxiAssociation: route.taxiAssociation,
+        fare: route.fare,
+        estimatedDuration: route.estimatedDuration,
+        stops: sortedStops,
+        totalStops: sortedStops.length
       };
-    })
-    .sort((a: { destination: string }, b: { destination: string }) => a.destination.localeCompare(b.destination));
-};
-
-export const getRoutesByStartPoint = query({
-  args: { startPoint: v.string() },
-  handler: getRoutesByStartPointHandler,
+    }).sort((a, b) => a.start.localeCompare(b.start));
+  },
 });
 
-export const assignRandomRouteToDriver = mutation({
-  args: { 
-    userId: v.id("taxiTap_users"),
-    taxiAssociation: v.string()
-  },
+// Get routes by taxi association for passengers
+export const getRoutesByTaxiAssociationForPassenger = query({
+  args: { taxiAssociation: v.string() },
   handler: async (ctx, args) => {
-    // Get all active routes for the driver's taxi association
-    const availableRoutes = await ctx.db
+    const routes = await ctx.db
       .query("routes")
       .filter((q) => 
         q.and(
@@ -270,52 +112,90 @@ export const assignRandomRouteToDriver = mutation({
         )
       )
       .collect();
+    
+    return routes.map(route => {
+      const { start, destination } = parseRouteName(route.name);
+      const sortedStops = route.stops.sort((a: { order: number }, b: { order: number }) => a.order - b.order);
+      
+      return {
+        routeId: route.routeId,
+        routeName: route.name,
+        start,
+        destination,
+        taxiAssociation: route.taxiAssociation,
+        fare: route.fare,
+        estimatedDuration: route.estimatedDuration,
+        stops: sortedStops,
+        totalStops: sortedStops.length
+      };
+    });
+  },
+});
 
-    if (availableRoutes.length === 0) {
-      throw new Error(`No active routes available for taxi association: ${args.taxiAssociation}`);
-    }
-
-    // Select a random route
-    const randomIndex = Math.floor(Math.random() * availableRoutes.length);
-    const selectedRoute = availableRoutes[randomIndex];
-
-    // Check if driver already exists in drivers table
-    const existingDriver = await ctx.db
-      .query("drivers")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+// Get detailed route information including active drivers
+export const getRouteDetailsWithDrivers = query({
+  args: { routeId: v.string() },
+  handler: async (ctx, args) => {
+    // Get the route
+    const route = await ctx.db
+      .query("routes")
+      .filter((q) => q.eq(q.field("routeId"), args.routeId))
       .first();
-
-    if (existingDriver) {
-      // Update existing driver with assigned route
-      await ctx.db.patch(existingDriver._id, {
-        assignedRoute: selectedRoute._id,
-        activeRoute: selectedRoute._id,
-        taxiAssociation: args.taxiAssociation,
-        routeAssignedAt: Date.now(),
-      });
-    } else {
-      // Create new driver record
-      await ctx.db.insert("drivers", {
-        userId: args.userId,
-        numberOfRidesCompleted: 0,
-        totalDistance: 0,
-        totalFare: 0,
-        assignedRoute: selectedRoute._id,
-        activeRoute: selectedRoute._id,
-        taxiAssociation: args.taxiAssociation,
-        routeAssignedAt: Date.now(),
-      });
+    
+    if (!route) {
+      return {
+        success: false,
+        message: "Route not found",
+        route: null,
+        activeDrivers: []
+      };
     }
-
+    
+    // Get drivers assigned to this route
+    const driversOnRoute = await ctx.db
+      .query("drivers")
+      .filter((q) => q.eq(q.field("assignedRoute"), route._id))
+      .collect();
+    
+    // Get user details for the drivers
+    const activeDrivers = await Promise.all(
+      driversOnRoute.map(async (driver) => {
+        const user = await ctx.db.get(driver.userId);
+        return {
+          driverId: driver.userId,
+          driverName: user?.name || "Unknown",
+          averageRating: driver.averageRating,
+          totalRides: driver.numberOfRidesCompleted,
+          isActive: user?.isActive || false
+        };
+      })
+    );
+    
+    const { start, destination } = parseRouteName(route.name);
+    const sortedStops = route.stops.sort((a: { order: number }, b: { order: number }) => a.order - b.order);
+    
     return {
       success: true,
-      assignedRoute: selectedRoute,
-      message: `Route assigned: ${selectedRoute.name}`
+      route: {
+        routeId: route.routeId,
+        routeName: route.name,
+        start,
+        destination,
+        taxiAssociation: route.taxiAssociation,
+        fare: route.fare,
+        estimatedDuration: route.estimatedDuration,
+        stops: sortedStops,
+        geometry: route.geometry,
+        totalStops: sortedStops.length,
+        isActive: route.isActive
+      },
+      activeDrivers: activeDrivers.filter(driver => driver.isActive),
+      message: `Route details retrieved successfully`
     };
   },
 });
 
-// Create a query to get driver's assigned route
+// Get driver's assigned route
 export const getDriverAssignedRoute = query({
   args: { userId: v.id("taxiTap_users") },
   handler: async (ctx, args) => {
@@ -331,4 +211,4 @@ export const getDriverAssignedRoute = query({
     const route = await ctx.db.get(driver.assignedRoute);
     return route;
   },
-});
+}); 
