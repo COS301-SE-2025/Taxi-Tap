@@ -263,12 +263,12 @@ export default function TaxiInformation() {
 		});
 	};
 
-	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
-		if (Array.isArray(param)) {
-			return param[0] || fallback;
-		}
-		return param || fallback;
-	}
+	// function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
+	// 	if (Array.isArray(param)) {
+	// 		return param[0] || fallback;
+	// 	}
+	// 	return param || fallback;
+	// }
 
 	// Create dynamic styles based on theme
 	const dynamicStyles = StyleSheet.create({
