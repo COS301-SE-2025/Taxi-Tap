@@ -16,6 +16,7 @@ export interface ThemeColors {
   headerBackground: string;
   card: string;
   shadow: string;
+  buttonText: string;
 }
 
 export const lightTheme: ThemeColors = {
@@ -31,6 +32,7 @@ export const lightTheme: ThemeColors = {
   headerBackground: '#FFFFFF',
   card: '#FFFFFF',
   shadow: '#000000',
+  buttonText: '#FFFFFF',
 };
 
 export const darkTheme: ThemeColors = {
@@ -46,6 +48,7 @@ export const darkTheme: ThemeColors = {
   headerBackground: '#232F3E',
   card: '#232F3E',
   shadow: '#FFFFFF',
+  buttonText: '#FFFFFF',
 };
 
 type ThemeMode = 'light' | 'dark' | 'system';

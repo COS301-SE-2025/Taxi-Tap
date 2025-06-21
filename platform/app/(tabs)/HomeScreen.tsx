@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  Animated,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -41,14 +42,14 @@ export default function HomeScreen() {
     name: string;
   } | null>(null);
 
-  // Add state for route coordinates
   const [routeCoordinates, setRouteCoordinates] = useState<{
     latitude: number;
     longitude: number;
   }[]>([]);
 
-  // Add loading state for route fetching
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [routeLoaded, setRouteLoaded] = useState(false);
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
 
   const mapRef = useRef<MapView | null>(null);
 
@@ -58,7 +59,37 @@ export default function HomeScreen() {
     });
   }, [navigation]);
 
-  // Function to get route from Google Directions API
+  const handleReserveSeat = () => {
+    if (!destination || !currentLocation) {
+      Alert.alert('Error', 'Please select a destination first');
+      return;
+    }
+
+    router.push({
+      pathname: './TaxiInformation',
+      params: {
+        destinationName: destination.name,
+        destinationLat: destination.latitude.toString(),
+        destinationLng: destination.longitude.toString(),
+        currentName: currentLocation.name,
+        currentLat: currentLocation.latitude.toString(),
+        currentLng: currentLocation.longitude.toString(),
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (routeLoaded) {
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      buttonOpacity.setValue(0);
+    }
+  }, [routeLoaded]);
+
   const getRoute = async (origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }) => {
     if (!GOOGLE_MAPS_API_KEY) {
       console.error('Google Maps API key is not configured');
@@ -67,6 +98,7 @@ export default function HomeScreen() {
     }
 
     setIsLoadingRoute(true);
+    setRouteLoaded(false);
     
     try {
       const originStr = `${origin.latitude},${origin.longitude}`;
@@ -75,22 +107,18 @@ export default function HomeScreen() {
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${GOOGLE_MAPS_API_KEY}`;
       
       console.log('Fetching route from:', url);
-      console.log('Platform:', Platform.OS);
       
       const response = await fetch(url);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('HTTP Error Response:', response.status, errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
       
-      console.log('Directions API response status:', data.status);
+      console.log('Directions API response:', data);
       
       if (data.status !== 'OK') {
-        console.error('Directions API Error:', data);
         throw new Error(`Directions API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
       }
       
@@ -105,13 +133,13 @@ export default function HomeScreen() {
         console.log('Decoded coordinates count:', decodedCoords.length);
         
         setRouteCoordinates(decodedCoords);
-        
-        // Fit the map to show the entire route
         const coordinates = [origin, destination, ...decodedCoords];
         mapRef.current?.fitToCoordinates(coordinates, {
           edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
           animated: true,
         });
+        
+        setRouteLoaded(true);
       } else {
         throw new Error('No routes found');
       }
@@ -119,7 +147,6 @@ export default function HomeScreen() {
       console.error('Error fetching route:', error);
       Alert.alert('Route Error', `Failed to get route: ${error instanceof Error ? error.message : 'Unknown error'}`);
       
-      // Fallback: just center the map to show both points
       if (mapRef.current) {
         const coordinates = [origin, destination];
         mapRef.current.fitToCoordinates(coordinates, {
@@ -132,7 +159,6 @@ export default function HomeScreen() {
     }
   };
 
-  // Function to decode Google's polyline format
   const decodePolyline = (encoded: string) => {
     const points = [];
     let index = 0;
@@ -168,7 +194,6 @@ export default function HomeScreen() {
     return points;
   };
 
-  // Get current location on mount
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -197,7 +222,8 @@ export default function HomeScreen() {
 
         setCurrentLocation(currentLoc);
         setDestination(null);
-        setRouteCoordinates([]); // Clear any existing route
+        setRouteCoordinates([]);
+        setRouteLoaded(false);
 
         mapRef.current?.animateToRegion(
           {
@@ -215,7 +241,6 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  // Navigate to TaxiInformation after destination selection
   const handleDestinationSelect = (route: {
     destination: string;
     start: string;
@@ -240,31 +265,10 @@ export default function HomeScreen() {
       name: route.destination,
     };
 
-    console.log('Selected destination:', newDestination);
-    console.log('Current location:', currentLocation);
-
     setDestination(newDestination);
-
-    // Get and display the route
     getRoute(currentLocation, newDestination);
-
-    // Navigate to TaxiInformation after a delay to show the route
-    setTimeout(() => {
-      router.push({
-        pathname: './TaxiInformation',
-        params: {
-          destinationName: newDestination.name,
-          destinationLat: newDestination.latitude.toString(),
-          destinationLng: newDestination.longitude.toString(),
-          currentName: currentLocation.name,
-          currentLat: currentLocation.latitude.toString(),
-          currentLng: currentLocation.longitude.toString(),
-        }
-      });
-    }, 3000); // Increased delay to show route
   };
 
-  // Create dynamic styles based on theme
   const dynamicStyles = StyleSheet.create({
     container: {
       flex: 1,
@@ -398,12 +402,32 @@ export default function HomeScreen() {
       fontSize: 12,
       fontStyle: 'italic',
       marginTop: 4,
+    },
+    reserveButton: {
+      position: 'absolute',
+      bottom: 80,
+      left: 20,
+      right: 20,
+      backgroundColor: theme.primary,
+      borderRadius: 25,
+      paddingVertical: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: 0.3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    reserveButtonText: {
+      color: theme.buttonText || '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
     }
   });
 
   return (
     <View style={dynamicStyles.container}>
-      {/* Map Section */}
       {!currentLocation ? (
         <View style={[dynamicStyles.map, dynamicStyles.loadingContainer]}>
           <Image
@@ -416,14 +440,13 @@ export default function HomeScreen() {
         <MapView
           ref={mapRef}
           style={dynamicStyles.map}
-          provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
+          provider={PROVIDER_GOOGLE}
           initialRegion={{
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
-          // Use dark map style when in dark mode
           customMapStyle={isDark ? darkMapStyle : []}
         >
           <Marker
@@ -444,8 +467,7 @@ export default function HomeScreen() {
               pinColor="orange"
             />
           )}
-          {/* Render the route polyline */}
-          {routeCoordinates.length > 0 && (
+          {routeLoaded && routeCoordinates.length > 0 && (
             <Polyline
               coordinates={routeCoordinates}
               strokeColor={theme.primary}
@@ -455,25 +477,19 @@ export default function HomeScreen() {
         </MapView>
       )}
 
-      {/* Bottom Section */}
       <View style={dynamicStyles.bottomSheet}>
-        {/* Location Box */}
         <View style={dynamicStyles.locationBox}>
-          {/* Current Location and Destination indicators */}
           <View style={dynamicStyles.locationIndicator}>
-            {/* Current Location Circle */}
             <View style={dynamicStyles.currentLocationCircle}>
               <View style={dynamicStyles.currentLocationDot} />
             </View>
             
-            {/* Dotted Line Container */}
             <View style={dynamicStyles.dottedLineContainer}>
               {[...Array(8)].map((_, index) => (
                 <View key={index} style={dynamicStyles.dottedLineDot} />
               ))}
             </View>
             
-            {/* Destination Pin */}
             <Icon 
               name="location" 
               size={18} 
@@ -494,10 +510,14 @@ export default function HomeScreen() {
                 Loading route...
               </Text>
             )}
+            {routeLoaded && !isLoadingRoute && (
+              <Text style={[dynamicStyles.routeLoadingText, { color: theme.primary }]}>
+                Route loaded ✓
+              </Text>
+            )}
           </View>
         </View>
 
-        {/* Saved Routes */}
         <Text style={dynamicStyles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
         <ScrollView style={{ marginTop: 10 }}>
           {routes?.map((route, index) => (
@@ -520,11 +540,21 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       </View>
+
+      {routeLoaded && !isLoadingRoute && (
+        <Animated.View style={{ opacity: buttonOpacity }}>
+          <TouchableOpacity 
+            style={dynamicStyles.reserveButton}
+            onPress={handleReserveSeat}
+          >
+            <Text style={dynamicStyles.reserveButtonText}>Reserve a Seat</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </View>
   );
 }
 
-// Dark map style for better dark mode experience (Google Maps compatible)
 const darkMapStyle = [
   {
     "elementType": "geometry",
