@@ -6,8 +6,10 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  Alert,
+  Platform,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { router, useNavigation } from 'expo-router';
@@ -15,6 +17,11 @@ import { useTheme } from '../../contexts/ThemeContext';
 import loading from '../../assets/images/loading4.png';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+
+// Get platform-specific API key
+const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
+  ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
+  : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function HomeScreen() {
   const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
@@ -34,6 +41,15 @@ export default function HomeScreen() {
     name: string;
   } | null>(null);
 
+  // Add state for route coordinates
+  const [routeCoordinates, setRouteCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  }[]>([]);
+
+  // Add loading state for route fetching
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+
   const mapRef = useRef<MapView | null>(null);
 
   useLayoutEffect(() => {
@@ -42,41 +58,156 @@ export default function HomeScreen() {
     });
   }, [navigation]);
 
+  // Function to get route from Google Directions API
+  const getRoute = async (origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }) => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.error('Google Maps API key is not configured');
+      Alert.alert('Error', 'Google Maps API key is not configured');
+      return;
+    }
+
+    setIsLoadingRoute(true);
+    
+    try {
+      const originStr = `${origin.latitude},${origin.longitude}`;
+      const destinationStr = `${destination.latitude},${destination.longitude}`;
+      
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${GOOGLE_MAPS_API_KEY}`;
+      
+      console.log('Fetching route from:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      console.log('Directions API response:', data);
+      
+      if (data.status !== 'OK') {
+        throw new Error(`Directions API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
+      }
+      
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        
+        if (!route.overview_polyline || !route.overview_polyline.points) {
+          throw new Error('No polyline data in route');
+        }
+        
+        const decodedCoords = decodePolyline(route.overview_polyline.points);
+        console.log('Decoded coordinates count:', decodedCoords.length);
+        
+        setRouteCoordinates(decodedCoords);
+        
+        // Fit the map to show the entire route
+        const coordinates = [origin, destination, ...decodedCoords];
+        mapRef.current?.fitToCoordinates(coordinates, {
+          edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      } else {
+        throw new Error('No routes found');
+      }
+    } catch (error) {
+      console.error('Error fetching route:', error);
+      Alert.alert('Route Error', `Failed to get route: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Fallback: just center the map to show both points
+      if (mapRef.current) {
+        const coordinates = [origin, destination];
+        mapRef.current.fitToCoordinates(coordinates, {
+          edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        });
+      }
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  };
+
+  // Function to decode Google's polyline format
+  const decodePolyline = (encoded: string) => {
+    const points = [];
+    let index = 0;
+    const len = encoded.length;
+    let lat = 0;
+    let lng = 0;
+
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charAt(index++).charCodeAt(0) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charAt(index++).charCodeAt(0) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.push({
+        latitude: lat / 1e5,
+        longitude: lng / 1e5,
+      });
+    }
+    return points;
+  };
+
   // Get current location on mount
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.warn('Permission to access location was denied');
+        Alert.alert('Permission Denied', 'Location permission is required to show your current location');
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
-      });
+      try {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Highest,
+        });
 
-      const { latitude, longitude } = location.coords;
-      const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
-      const placeName = `${place.name || ''} ${place.street || ''}, ${place.city || place.region || ''}`.trim();
+        const { latitude, longitude } = location.coords;
+        console.log('Current location:', { latitude, longitude });
+        
+        const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
+        const placeName = `${place.name || ''} ${place.street || ''}, ${place.city || place.region || ''}`.trim();
 
-      const currentLoc = {
-        latitude,
-        longitude,
-        name: placeName || 'Unknown Location',
-      };
-
-      setCurrentLocation(currentLoc);
-      setDestination(null);
-
-      mapRef.current?.animateToRegion(
-        {
+        const currentLoc = {
           latitude,
           longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000
-      );
+          name: placeName || 'Unknown Location',
+        };
+
+        setCurrentLocation(currentLoc);
+        setDestination(null);
+        setRouteCoordinates([]); // Clear any existing route
+
+        mapRef.current?.animateToRegion(
+          {
+            latitude,
+            longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          1000
+        );
+      } catch (error) {
+        console.error('Error getting location:', error);
+        Alert.alert('Location Error', 'Failed to get your current location');
+      }
     })();
   }, []);
 
@@ -89,27 +220,31 @@ export default function HomeScreen() {
   }) => {
     if (!route.destinationCoords) {
       console.warn("No destination coordinates found");
+      Alert.alert('Error', 'Destination coordinates not available');
       return;
     }
+
+    if (!currentLocation) {
+      console.warn("No current location available");
+      Alert.alert('Error', 'Current location not available');
+      return;
+    }
+
     const newDestination = {
       latitude: route.destinationCoords.latitude,
       longitude: route.destinationCoords.longitude,
       name: route.destination,
     };
 
+    console.log('Selected destination:', newDestination);
+    console.log('Current location:', currentLocation);
+
     setDestination(newDestination);
 
-    mapRef.current?.animateToRegion(
-      {
-        latitude: newDestination.latitude,
-        longitude: newDestination.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      },
-      1000
-    );
+    // Get and display the route
+    getRoute(currentLocation, newDestination);
 
-    // Navigate to TaxiInformation after a short delay to show the map animation
+    // Navigate to TaxiInformation after a delay to show the route
     setTimeout(() => {
       router.push({
         pathname: './TaxiInformation',
@@ -117,12 +252,12 @@ export default function HomeScreen() {
           destinationName: newDestination.name,
           destinationLat: newDestination.latitude.toString(),
           destinationLng: newDestination.longitude.toString(),
-          currentName: currentLocation?.name || '',
-          currentLat: currentLocation?.latitude.toString() || '',
-          currentLng: currentLocation?.longitude.toString() || '',
+          currentName: currentLocation.name,
+          currentLat: currentLocation.latitude.toString(),
+          currentLng: currentLocation.longitude.toString(),
         }
       });
-    }, 1500);
+    }, 3000); // Increased delay to show route
   };
 
   // Create dynamic styles based on theme
@@ -253,6 +388,12 @@ export default function HomeScreen() {
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: theme.background,
+    },
+    routeLoadingText: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontStyle: 'italic',
+      marginTop: 4,
     }
   });
 
@@ -299,6 +440,14 @@ export default function HomeScreen() {
               pinColor="orange"
             />
           )}
+          {/* Render the route polyline */}
+          {routeCoordinates.length > 0 && (
+            <Polyline
+              coordinates={routeCoordinates}
+              strokeColor={theme.primary}
+              strokeWidth={4}
+            />
+          )}
         </MapView>
       )}
 
@@ -336,6 +485,11 @@ export default function HomeScreen() {
             <Text style={dynamicStyles.destinationText}>
               {destination ? destination.name : 'No destination selected'}
             </Text>
+            {isLoadingRoute && (
+              <Text style={dynamicStyles.routeLoadingText}>
+                Loading route...
+              </Text>
+            )}
           </View>
         </View>
 
