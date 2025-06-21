@@ -1,11 +1,21 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
-import taxi from '../../assets/images/taxi.png';
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useLocalSearchParams } from 'expo-router';
 
 export default function DriverProfile() {
   const { theme, isDark } = useTheme();
+  const { userId } = useLocalSearchParams();
+
+  const driverDetails = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
+
+  console.log(driverDetails);
+
+  console.log("Params received:", useLocalSearchParams());
+console.log("userId param:", userId);
 
   const styles = StyleSheet.create({
     container: {
@@ -54,6 +64,25 @@ export default function DriverProfile() {
     },
   });
 
+    if (driverDetails === undefined) {
+        return <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 50 }} />;
+    }
+
+    const taxi = driverDetails.find((item) => item.userId === userId);
+
+    if (!taxi) {
+        return <Text>No matching taxi found.</Text>;
+    }
+
+  if (driverDetails === undefined) {
+    return <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 50 }} />;
+  }
+
+  if (driverDetails === null) {
+    return <Text style={{ color: theme.text, padding: 20 }}>Driver not found.</Text>;
+  }
+
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.sectionTitle}>Driver Information</Text>
@@ -61,7 +90,7 @@ export default function DriverProfile() {
         <Ionicons name="person-circle" size={64} color={theme.primary} style={{ marginBottom: 20 }} />
         <View style={styles.row}>
           <Text style={styles.label}>Name:</Text>
-          <Text style={styles.value}>Tshepo Mthembu</Text>
+          <Text style={styles.value}>{taxi.driverName}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Experience:</Text>
@@ -73,17 +102,25 @@ export default function DriverProfile() {
       <View style={styles.card}>
         <View style={styles.row}>
           <Text style={styles.label}>Vehicle type:</Text>
-          <Text style={styles.value}>Toyota</Text>
+          <Text style={styles.value}>{taxi.model}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>License plate:</Text>
-          <Text style={styles.value}>VV 78 98 GP</Text>
+          <Text style={styles.value}>{taxi.licensePlate}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Total seats:</Text>
-          <Text style={styles.value}>12</Text>
+          <Text style={styles.value}>{taxi.seats}</Text>
         </View>
-        <Image source={taxi} resizeMode="contain" style={styles.image} />
+        {taxi.image ? (
+            <Image
+                source={{ uri: taxi.image }}
+                resizeMode="contain"
+                style={styles.image}
+            />
+            ) : (
+            <Text style={{ color: 'red' }}>No Image</Text>
+        )}
       </View>
     </ScrollView>
   );

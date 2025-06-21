@@ -67,7 +67,8 @@ export default function TaxiInformation() {
 
 				// Vehicle details
 				plate: selected.licensePlate,
-				image: selected.licensePlate,
+				image: selected.image,
+				userId: selected.userId,
 			}
 		});
 	};
