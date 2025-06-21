@@ -75,18 +75,22 @@ export default function HomeScreen() {
       const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${GOOGLE_MAPS_API_KEY}`;
       
       console.log('Fetching route from:', url);
+      console.log('Platform:', Platform.OS);
       
       const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('HTTP Error Response:', response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
       
-      console.log('Directions API response:', data);
+      console.log('Directions API response status:', data.status);
       
       if (data.status !== 'OK') {
+        console.error('Directions API Error:', data);
         throw new Error(`Directions API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
       }
       
