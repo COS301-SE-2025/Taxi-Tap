@@ -49,7 +49,10 @@ export default function Login() {
       alert(`Welcome back ${result.name}!`);
       
       if (result.currentActiveRole === 'driver') {
-        router.push('/DriverOffline');
+        router.push({
+        pathname: '/DriverOffline',
+        params: { userId: result.id.toString() }
+      });
       } else if (result.currentActiveRole === 'passenger') {
         router.push({
         pathname: '/HomeScreen',

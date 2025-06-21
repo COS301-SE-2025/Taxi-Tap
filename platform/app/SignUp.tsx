@@ -75,7 +75,10 @@ const handleSignup = async () => {
 
     Alert.alert('Success', 'Welcome!');
 if (selectedRole === 'driver') {
-  router.push('/DriverOffline');
+  router.push({
+    pathname: '/DriverOffline',
+    params: { userId: result.userId }
+  });
 } else if (selectedRole === 'passenger') {
   router.push({
     pathname: '/HomeScreen',

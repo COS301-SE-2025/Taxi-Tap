@@ -29,15 +29,23 @@ import { api } from '../../convex/_generated/api';
 import { useLocationSystem } from '../../hooks/useLocationSystem';
 
 export default function HomeScreen() {
-  // 1) Grab userId from params and stream your location + update Convex
+  // 1) Grab userId from params and log it
   const { userId } = useLocalSearchParams<{ userId: string }>();
   useEffect(() => {
     console.log('🚀 HomeScreen got userId:', userId);
   }, [userId]);
 
+  // 2) Stream your location → Convex every 5s
   const { userLocation } = useLocationSystem(userId || '');
 
-  // 2) One-time fetch of nearby taxis
+  // Log each time our location updates
+  useEffect(() => {
+    if (userLocation) {
+      console.log('✅ Sent location to Convex:', userLocation);
+    }
+  }, [userLocation]);
+
+  // 3) One-time fetch of nearby taxis, then log them
   const convex = useConvex();
   const [taxis, setTaxis] = useState<
     { _id: string; latitude: number; longitude: number }[]
@@ -56,13 +64,14 @@ export default function HomeScreen() {
         )
         .then((results) => {
           setTaxis(results);
+          console.log('👀 Nearby taxis:', results);
         })
         .catch(console.error);
       setLoadedTaxis(true);
     }
-  }, [userLocation, loadedTaxis]);
+  }, [userLocation, loadedTaxis, convex]);
 
-  // 3) Fetch your saved routes (unchanged)
+  // 4) Fetch your saved routes (unchanged)
   const routes = useQuery(
     api.functions.routes.displayRoutes.displayRoutes
   );
@@ -86,7 +95,7 @@ export default function HomeScreen() {
     navigation.setOptions({ title: 'Home' });
   }, [navigation]);
 
-  // initial centering + reverse-geocode (unchanged)
+  // initial centering + reverse-geocode
   useEffect(() => {
     (async () => {
       const { status } =
