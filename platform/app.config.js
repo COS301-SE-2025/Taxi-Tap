@@ -13,6 +13,11 @@ export default {
       resizeMode: "contain",
       backgroundColor: "#ffffff"
     },
+    // Add extra field for easier access to environment variables
+    extra: {
+      googleMapsIosApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY,
+      googleMapsAndroidApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY,
+    },
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.anonymous.frontend",

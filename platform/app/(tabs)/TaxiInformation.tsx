@@ -1,17 +1,42 @@
-import React, { useState, useLayoutEffect } from "react";
-import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useState, useLayoutEffect, useRef, useEffect, useCallback } from "react";
+import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, Alert, Platform, ActivityIndicator } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useMapContext, createRouteKey } from '../../contexts/MapContext';
 import { useQuery } from "convex/react";
 import { api } from '../../convex/_generated/api';
 
+// Get platform-specific API key
+const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
+  ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
+  : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
+
 export default function TaxiInformation() {
 	const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+	const [routeError, setRouteError] = useState<string | null>(null);
+	
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
+	const mapRef = useRef<MapView | null>(null);
+	
+	// Use MapContext instead of local state
+	const {
+		currentLocation,
+		destination,
+		routeCoordinates,
+		isLoadingRoute,
+		routeLoaded,
+		setCurrentLocation,
+		setDestination,
+		setRouteCoordinates,
+		setIsLoadingRoute,
+		setRouteLoaded,
+		getCachedRoute,
+		setCachedRoute
+	} = useMapContext();
 
 	const availableTaxis = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
 
@@ -21,18 +46,178 @@ export default function TaxiInformation() {
 		});
 	});
 	
-	// Parse location data from params
-	const currentLocation = {
-		latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
-		longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-		name: getParamAsString(params.currentName, "Current Location")
-	};
+	// Parse location data from params and set in context
+	useEffect(() => {
+		const parsedCurrentLocation = {
+			latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
+			longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
+			name: getParamAsString(params.currentName, "Current Location")
+		};
 
-	const destination = {
-		latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
-		longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-		name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
-	};
+		const parsedDestination = {
+			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
+			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
+			name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+		};
+
+		setCurrentLocation(parsedCurrentLocation);
+		setDestination(parsedDestination);
+	}, [params.currentLat, params.currentLng, params.currentName, params.destinationLat, params.destinationLng, params.destinationName, setCurrentLocation, setDestination]);
+
+	// Function to decode Google's polyline format
+	const decodePolyline = useCallback((encoded: string) => {
+		const points = [];
+		let index = 0;
+		const len = encoded.length;
+		let lat = 0;
+		let lng = 0;
+
+		while (index < len) {
+			let b, shift = 0, result = 0;
+			do {
+				b = encoded.charAt(index++).charCodeAt(0) - 63;
+				result |= (b & 0x1f) << shift;
+				shift += 5;
+			} while (b >= 0x20);
+			const dlat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+			lat += dlat;
+
+			shift = 0;
+			result = 0;
+			do {
+				b = encoded.charAt(index++).charCodeAt(0) - 63;
+				result |= (b & 0x1f) << shift;
+				shift += 5;
+			} while (b >= 0x20);
+			const dlng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+			lng += dlng;
+
+			points.push({
+				latitude: lat / 1e5,
+				longitude: lng / 1e5,
+			});
+		}
+		return points;
+	}, []);
+
+	// Function to get route from Google Directions API - memoized with useCallback
+	const getRoute = useCallback(async (origin: { latitude: number; longitude: number; name: string }, dest: { latitude: number; longitude: number; name: string }) => {
+		if (!GOOGLE_MAPS_API_KEY) {
+			console.error('Google Maps API key is not configured');
+			setRouteError('Google Maps API key is not configured');
+			return;
+		}
+
+		// Check cache first
+		const routeKey = createRouteKey(origin, dest);
+		const cachedRoute = getCachedRoute(routeKey);
+		
+		if (cachedRoute && cachedRoute.length > 0) {
+			console.log('Using cached route');
+			setRouteCoordinates(cachedRoute);
+			setRouteLoaded(true);
+			
+			// Fit the map to show the entire route
+			setTimeout(() => {
+				if (mapRef.current) {
+					const coordinates = [origin, dest, ...cachedRoute];
+					mapRef.current.fitToCoordinates(coordinates, {
+						edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+						animated: true,
+					});
+				}
+			}, 100);
+			return;
+		}
+
+		setIsLoadingRoute(true);
+		setRouteError(null);
+		setRouteLoaded(false);
+		
+		try {
+			const originStr = `${origin.latitude},${origin.longitude}`;
+			const destinationStr = `${dest.latitude},${dest.longitude}`;
+			
+			const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${GOOGLE_MAPS_API_KEY}`;
+			
+			console.log('Fetching route from:', url);
+			console.log('Platform:', Platform.OS);
+			
+			const response = await fetch(url);
+			
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('HTTP Error Response:', response.status, errorText);
+				throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+			}
+			
+			const data = await response.json();
+			
+			console.log('Directions API response status:', data.status);
+			
+			if (data.status !== 'OK') {
+				console.error('Directions API Error:', data);
+				throw new Error(`Directions API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
+			}
+			
+			if (data.routes && data.routes.length > 0) {
+				const route = data.routes[0];
+				
+				if (!route.overview_polyline || !route.overview_polyline.points) {
+					throw new Error('No polyline data in route');
+				}
+				
+				const decodedCoords = decodePolyline(route.overview_polyline.points);
+				console.log('Decoded coordinates count:', decodedCoords.length);
+				
+				// Update context and cache
+				setRouteCoordinates(decodedCoords);
+				setCachedRoute(routeKey, decodedCoords);
+				setRouteLoaded(true);
+				
+				// Fit the map to show the entire route after a small delay
+				setTimeout(() => {
+					if (mapRef.current) {
+						const coordinates = [origin, dest, ...decodedCoords];
+						mapRef.current.fitToCoordinates(coordinates, {
+							edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+							animated: true,
+						});
+					}
+				}, 100);
+			} else {
+				throw new Error('No routes found');
+			}
+		} catch (error) {
+			console.error('Error fetching route:', error);
+			setRouteError(error instanceof Error ? error.message : 'Unknown error');
+			
+			// Just fit the map to show both points without any polyline
+			setTimeout(() => {
+				if (mapRef.current) {
+					const coordinates = [origin, dest];
+					mapRef.current.fitToCoordinates(coordinates, {
+						edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+						animated: true,
+					});
+				}
+			}, 100);
+		} finally {
+			setIsLoadingRoute(false);
+		}
+	}, [GOOGLE_MAPS_API_KEY, getCachedRoute, setRouteCoordinates, setRouteLoaded, setIsLoadingRoute, setCachedRoute, decodePolyline]);
+
+	// Fetch route when locations are available
+	useEffect(() => {
+		if (currentLocation && destination) {
+			// Add a small delay to ensure the map is fully loaded
+			const timer = setTimeout(() => {
+				getRoute(currentLocation, destination);
+			}, 500);
+			
+			return () => clearTimeout(timer);
+		}
+	}, [currentLocation, destination, getRoute]);
 
 	const handleVehicleSelect = (plate: string) => {
 		setSelectedVehicle(plate);
@@ -52,6 +237,11 @@ export default function TaxiInformation() {
 
 		if (!selected) {
 			alert('Selected vehicle not found!');
+			return;
+		}
+
+		if (!currentLocation || !destination) {
+			alert('Location data not available!');
 			return;
 		}
 
@@ -112,6 +302,22 @@ export default function TaxiInformation() {
 			color: theme.textSecondary,
 			fontSize: 16,
 			fontWeight: "bold",
+		},
+		routeLoadingText: {
+			color: theme.textSecondary,
+			fontSize: 12,
+			fontStyle: 'italic',
+			marginBottom: 20,
+			alignSelf: 'flex-start',
+			paddingHorizontal: 12,
+		},
+		routeErrorText: {
+			color: '#FF6B6B',
+			fontSize: 12,
+			fontStyle: 'italic',
+			marginBottom: 20,
+			alignSelf: 'flex-start',
+			paddingHorizontal: 12,
 		},
 		vehicleScrollContainer: {
 			marginBottom: 46,
@@ -392,12 +598,42 @@ export default function TaxiInformation() {
 			]
 		}
 	];
+	
+	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
+		if (Array.isArray(param)) {
+			return param[0] || fallback;
+		}
+		return param || fallback;
+	}
+
 
 	if (availableTaxis === undefined) {
 		return (
 			<SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
 				<ActivityIndicator size="large" color={theme.primary} />
 				<Text style={{ color: theme.text, marginTop: 10 }}>Loading available taxis...</Text>
+			</SafeAreaView>
+		);
+	}
+
+	// Don't render if locations aren't loaded yet
+	if (!currentLocation || !destination) {
+		return (
+			<SafeAreaView style={dynamicStyles.container}>
+				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+					<Text style={{ color: theme.text }}>Loading...</Text>
+				</View>
+			</SafeAreaView>
+		);
+	}
+
+	// Don't render if locations aren't loaded yet
+	if (!currentLocation || !destination) {
+		return (
+			<SafeAreaView style={dynamicStyles.container}>
+				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+					<Text style={{ color: theme.text }}>Loading...</Text>
+				</View>
 			</SafeAreaView>
 		);
 	}
@@ -409,6 +645,7 @@ export default function TaxiInformation() {
 					{/* Map Section */}
 					<View style={dynamicStyles.map}>
 						<MapView
+							ref={mapRef}
 							style={{ flex: 1 }}
 							provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
 							initialRegion={{
@@ -431,11 +668,14 @@ export default function TaxiInformation() {
 								pinColor="orange"
 							>
 							</Marker>
-							<Polyline
-								coordinates={[currentLocation, destination]}
-								strokeColor={theme.primary}
-								strokeWidth={4}
-							/>
+							{/* Only render the route polyline if we have valid route coordinates */}
+							{routeCoordinates.length > 0 && (
+								<Polyline
+									coordinates={routeCoordinates}
+									strokeColor={theme.primary}
+									strokeWidth={4}
+								/>
+							)}
 						</MapView>
 					</View>
 
@@ -456,6 +696,20 @@ export default function TaxiInformation() {
 								{"Change Destination"}
 							</Text>
 						</TouchableOpacity>
+
+						{/* Show loading text when fetching route */}
+						{isLoadingRoute && (
+							<Text style={dynamicStyles.routeLoadingText}>
+								Loading route...
+							</Text>
+						)}
+
+						{/* Show error text if route loading failed */}
+						{routeError && !isLoadingRoute && (
+							<Text style={dynamicStyles.routeErrorText}>
+								Route loading failed. Showing map view only.
+							</Text>
+						)}
 						
 						{/* Horizontal ScrollView for vehicle list */}
 						<ScrollView 
