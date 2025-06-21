@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { router, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useMapContext, createRouteKey } from '../../contexts/MapContext';
 import loading from '../../assets/images/loading4.png';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -29,28 +30,22 @@ export default function HomeScreen() {
 
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
+  const {
+    currentLocation,
+    destination,
+    routeCoordinates,
+    isLoadingRoute,
+    routeLoaded,
+    setCurrentLocation,
+    setDestination,
+    setRouteCoordinates,
+    setIsLoadingRoute,
+    setRouteLoaded,
+    getCachedRoute,
+    setCachedRoute,
+  } = useMapContext();
 
-  const [currentLocation, setCurrentLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    name: string;
-  } | null>(null);
-
-  const [destination, setDestination] = useState<{
-    latitude: number;
-    longitude: number;
-    name: string;
-  } | null>(null);
-
-  const [routeCoordinates, setRouteCoordinates] = useState<{
-    latitude: number;
-    longitude: number;
-  }[]>([]);
-
-  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
-  const [routeLoaded, setRouteLoaded] = useState(false);
   const buttonOpacity = useRef(new Animated.Value(0)).current;
-
   const mapRef = useRef<MapView | null>(null);
 
   useLayoutEffect(() => {
@@ -97,6 +92,25 @@ export default function HomeScreen() {
       return;
     }
 
+    // Check cache first
+    const cacheKey = createRouteKey(
+      { ...origin, name: '' },
+      { ...destination, name: '' }
+    );
+    const cachedRoute = getCachedRoute(cacheKey);
+    
+    if (cachedRoute) {
+      console.log('Using cached route');
+      setRouteCoordinates(cachedRoute);
+      const coordinates = [origin, destination, ...cachedRoute];
+      mapRef.current?.fitToCoordinates(coordinates, {
+        edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      });
+      setRouteLoaded(true);
+      return;
+    }
+
     setIsLoadingRoute(true);
     setRouteLoaded(false);
     
@@ -131,6 +145,9 @@ export default function HomeScreen() {
         
         const decodedCoords = decodePolyline(route.overview_polyline.points);
         console.log('Decoded coordinates count:', decodedCoords.length);
+        
+        // Cache the route
+        setCachedRoute(cacheKey, decodedCoords);
         
         setRouteCoordinates(decodedCoords);
         const coordinates = [origin, destination, ...decodedCoords];
