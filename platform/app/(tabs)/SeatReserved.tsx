@@ -1,15 +1,37 @@
-import React, { useLayoutEffect } from "react";
-import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useLayoutEffect, useState, useRef, useEffect } from "react";
+import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, Platform, Alert } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useMapContext, createRouteKey } from '../../contexts/MapContext';
+
+// Get platform-specific API key
+const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
+  ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
+  : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function SeatReserved() {
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
+	const { 
+		currentLocation,
+		destination,
+		routeCoordinates,
+		isLoadingRoute,
+		routeLoaded,
+		setCurrentLocation,
+		setDestination,
+		setRouteCoordinates,
+		setIsLoadingRoute,
+		setRouteLoaded,
+		getCachedRoute,
+		setCachedRoute
+	} = useMapContext();
+
+	const mapRef = useRef<MapView | null>(null);
 	
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -24,18 +46,35 @@ export default function SeatReserved() {
 		return param || fallback;
 	}
 
-	// Parse location data from params
-	const currentLocation = {
-		latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
-		longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-		name: getParamAsString(params.currentName, "Current Location")
-	};
+	// Parse location data from params and update context
+	useEffect(() => {
+		const newCurrentLocation = {
+			latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
+			longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
+			name: getParamAsString(params.currentName, "Current Location")
+		};
 
-	const destination = {
-		latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
-		longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-		name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
-	};
+		const newDestination = {
+			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
+			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
+			name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+		};
+
+		// Only update context if locations have changed
+		if (!currentLocation || 
+			currentLocation.latitude !== newCurrentLocation.latitude || 
+			currentLocation.longitude !== newCurrentLocation.longitude ||
+			currentLocation.name !== newCurrentLocation.name) {
+			setCurrentLocation(newCurrentLocation);
+		}
+
+		if (!destination || 
+			destination.latitude !== newDestination.latitude || 
+			destination.longitude !== newDestination.longitude ||
+			destination.name !== newDestination.name) {
+			setDestination(newDestination);
+		}
+	}, [params, currentLocation, destination, setCurrentLocation, setDestination]);
 
 	const vehicleInfo = {
 		plate: getParamAsString(params.plate, "Unknown"),
@@ -45,18 +84,202 @@ export default function SeatReserved() {
 		selectedVehicleId: getParamAsString(params.selectedVehicleId, "")
 	};
 
-	const handleCancelReservation = () => {
-		router.push({
-			pathname: './TaxiInformation',
-			params: {
-				destinationName: destination.name,
-				destinationLat: destination.latitude.toString(),
-				destinationLng: destination.longitude.toString(),
-				currentName: currentLocation.name,
-				currentLat: currentLocation.latitude.toString(),
-				currentLng: currentLocation.longitude.toString(),
+	// Function to decode Google's polyline format
+	const decodePolyline = (encoded: string) => {
+		const points = [];
+		let index = 0;
+		const len = encoded.length;
+		let lat = 0;
+		let lng = 0;
+
+		while (index < len) {
+			let b, shift = 0, result = 0;
+			do {
+				b = encoded.charAt(index++).charCodeAt(0) - 63;
+				result |= (b & 0x1f) << shift;
+				shift += 5;
+			} while (b >= 0x20);
+			const dlat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+			lat += dlat;
+
+			shift = 0;
+			result = 0;
+			do {
+				b = encoded.charAt(index++).charCodeAt(0) - 63;
+				result |= (b & 0x1f) << shift;
+				shift += 5;
+			} while (b >= 0x20);
+			const dlng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
+			lng += dlng;
+
+			points.push({
+				latitude: lat / 1e5,
+				longitude: lng / 1e5,
+			});
+		}
+		return points;
+	};
+
+	// Function to get route from Google Directions API
+	const getRoute = async (origin: { latitude: number; longitude: number; name: string }, dest: { latitude: number; longitude: number; name: string }) => {
+		if (!GOOGLE_MAPS_API_KEY) {
+			console.error('Google Maps API key is not configured');
+			// Fallback to straight line if no API key
+			const fallbackRoute = [
+				{ latitude: origin.latitude, longitude: origin.longitude },
+				{ latitude: dest.latitude, longitude: dest.longitude }
+			];
+			setRouteCoordinates(fallbackRoute);
+			setRouteLoaded(true);
+			return;
+		}
+
+		// Check cache first
+		const routeKey = createRouteKey(origin, dest);
+		const cachedRoute = getCachedRoute(routeKey);
+		
+		if (cachedRoute && cachedRoute.length > 0) {
+			console.log('Using cached route');
+			setRouteCoordinates(cachedRoute);
+			setRouteLoaded(true);
+			
+			// Fit map to cached route
+			const coordinates = [
+				{ latitude: origin.latitude, longitude: origin.longitude },
+				{ latitude: dest.latitude, longitude: dest.longitude },
+				...cachedRoute
+			];
+			mapRef.current?.fitToCoordinates(coordinates, {
+				edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+				animated: true,
+			});
+			return;
+		}
+
+		setIsLoadingRoute(true);
+		setRouteLoaded(false);
+		
+		try {
+			const originStr = `${origin.latitude},${origin.longitude}`;
+			const destinationStr = `${dest.latitude},${dest.longitude}`;
+			
+			const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${GOOGLE_MAPS_API_KEY}`;
+			
+			console.log('Fetching route from:', url);
+			console.log('Platform:', Platform.OS);
+			
+			const response = await fetch(url);
+			
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('HTTP Error Response:', response.status, errorText);
+				throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
 			}
-		});
+			
+			const data = await response.json();
+			
+			console.log('Directions API response status:', data.status);
+			
+			if (data.status !== 'OK') {
+				console.error('Directions API Error:', data);
+				throw new Error(`Directions API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
+			}
+			
+			if (data.routes && data.routes.length > 0) {
+				const route = data.routes[0];
+				
+				if (!route.overview_polyline || !route.overview_polyline.points) {
+					throw new Error('No polyline data in route');
+				}
+				
+				const decodedCoords = decodePolyline(route.overview_polyline.points);
+				console.log('Decoded coordinates count:', decodedCoords.length);
+				
+				// Cache the route
+				setCachedRoute(routeKey, decodedCoords);
+				
+				setRouteCoordinates(decodedCoords);
+				setRouteLoaded(true);
+				
+				// Fit the map to show the entire route
+				const coordinates = [
+					{ latitude: origin.latitude, longitude: origin.longitude },
+					{ latitude: dest.latitude, longitude: dest.longitude },
+					...decodedCoords
+				];
+				mapRef.current?.fitToCoordinates(coordinates, {
+					edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+					animated: true,
+				});
+			} else {
+				throw new Error('No routes found');
+			}
+		} catch (error) {
+			console.error('Error fetching route:', error);
+			
+			// Fallback: use straight line between origin and destination
+			console.log('Falling back to straight line route');
+			const fallbackRoute = [
+				{ latitude: origin.latitude, longitude: origin.longitude },
+				{ latitude: dest.latitude, longitude: dest.longitude }
+			];
+			setRouteCoordinates(fallbackRoute);
+			setRouteLoaded(true);
+			
+			// Center the map to show both points
+			if (mapRef.current) {
+				mapRef.current.fitToCoordinates(fallbackRoute, {
+					edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+					animated: true,
+				});
+			}
+		} finally {
+			setIsLoadingRoute(false);
+		}
+	};
+
+	// Get route when locations are available and route not loaded
+	useEffect(() => {
+		if (currentLocation && destination && 
+			currentLocation.latitude && destination.latitude && 
+			!routeLoaded && !isLoadingRoute) {
+			getRoute(currentLocation, destination);
+		}
+	}, [currentLocation, destination, routeLoaded, isLoadingRoute]);
+
+	// Fit map to show route when coordinates are available
+	useEffect(() => {
+		if (routeCoordinates.length > 0 && currentLocation && destination && mapRef.current) {
+			const coordinates = [
+				{ latitude: currentLocation.latitude, longitude: currentLocation.longitude },
+				{ latitude: destination.latitude, longitude: destination.longitude },
+				...routeCoordinates
+			];
+			
+			// Small delay to ensure map is ready
+			setTimeout(() => {
+				mapRef.current?.fitToCoordinates(coordinates, {
+					edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+					animated: true,
+				});
+			}, 100);
+		}
+	}, [routeCoordinates, currentLocation, destination]);
+
+	const handleCancelReservation = () => {
+		if (destination && currentLocation) {
+			router.push({
+				pathname: './TaxiInformation',
+				params: {
+					destinationName: destination.name,
+					destinationLat: destination.latitude.toString(),
+					destinationLng: destination.longitude.toString(),
+					currentName: currentLocation.name,
+					currentLat: currentLocation.latitude.toString(),
+					currentLng: currentLocation.longitude.toString(),
+				}
+			});
+		}
 	};
 
 	// Create dynamic styles based on theme
@@ -87,6 +310,13 @@ export default function SeatReserved() {
 			fontSize: 13,
 			fontWeight: "bold",
 			textAlign: "center",
+		},
+		routeLoadingText: {
+			color: isDark ? theme.text : "#FFFFFF",
+			fontSize: 11,
+			fontStyle: 'italic',
+			textAlign: "center",
+			marginTop: 4,
 		},
 		bottomSection: {
 			alignItems: "center",
@@ -258,6 +488,17 @@ export default function SeatReserved() {
 		},
 	});
 
+	// Don't render until we have locations
+	if (!currentLocation || !destination) {
+		return (
+			<SafeAreaView style={dynamicStyles.container}>
+				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+					<Text style={{ color: theme.text }}>Loading...</Text>
+				</View>
+			</SafeAreaView>
+		);
+	}
+
 	return (
 		<SafeAreaView style={dynamicStyles.container}>
 			<ScrollView style={dynamicStyles.scrollView}>
@@ -265,6 +506,7 @@ export default function SeatReserved() {
 					{/* Map Section with Route */}
 					<View style={{ height: 300, position: 'relative' }}>
 						<MapView
+							ref={mapRef}
 							style={{ flex: 1 }}
 							provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
 							initialRegion={{
@@ -288,11 +530,14 @@ export default function SeatReserved() {
 								pinColor="orange"
 							>
 							</Marker>
-							<Polyline
-								coordinates={[currentLocation, destination]}
-								strokeColor="#00A591"
-								strokeWidth={4}
-							/>
+							{/* Render the route polyline */}
+							{routeCoordinates.length > 0 && (
+								<Polyline
+									coordinates={routeCoordinates}
+									strokeColor={theme.primary}
+									strokeWidth={4}
+								/>
+							)}
 						</MapView>
 
 						{/* Arrival Time Overlay */}
@@ -301,6 +546,11 @@ export default function SeatReserved() {
 								<Text style={dynamicStyles.arrivalTimeText}>
 									{vehicleInfo.time}
 								</Text>
+								{isLoadingRoute && (
+									<Text style={dynamicStyles.routeLoadingText}>
+										Loading route...
+									</Text>
+								)}
 							</View>
 						</View>
 					</View>
