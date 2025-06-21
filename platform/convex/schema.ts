@@ -7,7 +7,6 @@ export default defineSchema({
     email: v.string(),
     password: v.string(),
     age: v.number(),
-    
     phoneNumber: v.string(),
     
     isVerified: v.boolean(),
@@ -143,5 +142,41 @@ routes: defineTable({
     isActive: v.boolean(),
     taxiAssociation: v.string(),
     taxiAssociationRegistrationNumber: v.string()
-  }).index("by_route_id", ["routeId"])
+  }).index("by_route_id", ["routeId"]),
+
+  routeStops: defineTable({
+    routeId: v.string(), 
+    stopId: v.string(), 
+    name: v.string(), 
+    coordinates: v.array(v.number()), 
+    order: v.number(), 
+    isStartPoint: v.boolean(), 
+    isEndPoint: v.boolean(),
+    estimatedTime: v.optional(v.number()), 
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+  .index("by_route_id", ["routeId"])
+  .index("by_stop_name", ["name"])
+  .index("by_coordinates", ["coordinates"]),
+
+  enrichedRouteStops: defineTable({
+    routeId: v.string(),
+    stops: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        coordinates: v.array(v.number()),
+        order: v.number(),
+      })
+    ),
+    updatedAt: v.number(),
+  }).index("by_route_id", ["routeId"]),
+
+  reverseGeocodedStops: defineTable({
+    id: v.string(),
+    name: v.string(),
+    lastUsed: v.number(),
+  }).index("by_stop_id", ["id"]),
 });
+
