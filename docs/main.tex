@@ -697,49 +697,53 @@ Quality requirements determine the overall quality of Taxi Tap by specifying cri
 
 \begin{enumerate}
     \item \textbf{Security}
-    \begin{enumerate}[a.]
-        \item Encryption: All data must be encrypted in transit and at rest using the best security practices.
-        \item Compliance: Data capturing and storing must be adhered to the POPI act, ensuring data privacy and consent handling.
-        \item Secure authentication: Users must authenticate securely, and sessions must be protected.
-    \end{enumerate}
+    \begin{itemize}
+        \item \textbf{Encryption:} All data must be encrypted in transit and at rest using the best security practices.
+        \item \textbf{Compliance:}
+        \begin{itemize}
+            \item Data capturing and storing must adhere to the POPI act.
+            \item Ensure data privacy and consent handling.
+        \end{itemize}
+        \item \textbf{Secure authentication:} Users must authenticate securely, and sessions must be protected.
+    \end{itemize}
 
     \item \textbf{Usability}
-    \begin{enumerate}[a.]
-        \item Simplicity: the interface should be easy to use for people with varying levels of tech literacy.
-        \item Accessibility: The use of clear labels, large tap targets and minimal steps to complete key tasks.
-        \item Feedback and error handling: Provide real-time feedback for user actions, loading states and clear error messages when issues occur.
-    \end{enumerate}
+    \begin{itemize}
+        \item \textbf{Simplicity:} The interface should be easy to use for people with varying levels of tech literacy.
+        \item \textbf{Accessibility:} The use of clear labels, large tap targets and minimal steps to complete key tasks.
+        \item \textbf{Feedback and error handling:} Provide real-time feedback for user actions, loading states and clear error messages when issues occur.
+    \end{itemize}
 
     \item \textbf{Scalability}
-    \begin{enumerate}[a.]
-        \item The backend must scale horizontally and vertically to handle fluctuations in user or data load without performance degradation. This is automatically done by our chosen backend.
-    \end{enumerate}
+    \begin{itemize}
+        \item The backend must scale to handle fluctuations in user or data load without performance degradation. This is automatically done by our chosen backend.
+    \end{itemize}
 
     \item \textbf{Performance}
-    \begin{enumerate}[a.]
-        \item Low bandwidth optimization: The system must perform reliably under low-bandwidth or intermittent connectivity.
-        \item Battery efficiency: The app must minimize CPU, GPS and network usage to extend battery life.
-    \end{enumerate}
+    \begin{itemize}
+        \item \textbf{Low bandwidth optimization:} The system must perform reliably under low-bandwidth or intermittent connectivity.
+        \item \textbf{Battery efficiency:} The app must minimize CPU, GPS and network usage to extend battery life.
+    \end{itemize}
 
     \item \textbf{Reliability and Availability}
-    \begin{enumerate}[a.]
-        \item Offline Support: The app must function even without a constant internet connection, using local caching or data queuing mechanisms.
-        \item High uptime: The system should be available with minimal downtime to support driver operations throughout the day.
-        \item Data integrity: Ensure that data is not lost or duplicated during sync offline and online states.
-    \end{enumerate}
+    \begin{itemize}
+        \item \textbf{Offline Support:} The app must function even without a constant internet connection, using local caching or data queuing mechanisms.
+        \item \textbf{High uptime:} The system should be available with minimal downtime to support driver operations throughout the day.
+        \item \textbf{Data integrity:} Ensure that data is not lost or duplicated during sync offline and online states.
+    \end{itemize}
 
     \item \textbf{Maintainability and Extensibility}
-    \begin{enumerate}[a.]
-        \item Clean architecture: Backend and frontend systems should be modular and loosely coupled to allow easier updates, fixes, or feature additions in the future.
-        \item Logging and monitoring: Implement centralized logging and monitoring to quickly identify and resolve issues.
-        \item Configurability: Support code configurations without needing code changes.
-    \end{enumerate}
+    \begin{itemize}
+        \item \textbf{Clean architecture:} Backend and frontend systems should be modular and loosely coupled to allow easier updates, fixes, or feature additions in the future.
+        \item \textbf{Logging and monitoring:} Implement centralized logging and monitoring to quickly identify and resolve issues.
+        \item \textbf{Configurability:} Support code configurations without needing code changes.
+    \end{itemize}
 
     \item \textbf{Affordability}
-    \begin{enumerate}[a.]
-        \item Low data consumption: The app must use data sparingly to remain cost-effective for users in regions with expensive or limited mobile data.
-        \item Resource efficiency: The system should minimize server and client-side consumption to reduce infrastructure and battery costs.
-    \end{enumerate}
+    \begin{itemize}
+        \item \textbf{Low data consumption:} The app must use data sparingly to remain cost-effective for users in regions with expensive or limited mobile data.
+        \item \textbf{Resource efficiency:} The system should minimize server and client-side consumption to reduce infrastructure and battery costs.
+    \end{itemize}
 \end{enumerate}
 
 \subsection{Architectural Patterns}
