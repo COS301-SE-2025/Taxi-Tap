@@ -42,7 +42,7 @@ export default function Login() {
         phoneNumber: number,
         password,
       });
-      
+
       // Use the context login function
       await login(result);
       

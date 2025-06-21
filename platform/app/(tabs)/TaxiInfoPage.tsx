@@ -12,11 +12,6 @@ export default function DriverProfile() {
 
   const driverDetails = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
 
-  console.log(driverDetails);
-
-  console.log("Params received:", useLocalSearchParams());
-console.log("userId param:", userId);
-
   const styles = StyleSheet.create({
     container: {
       flex: 1,
