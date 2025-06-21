@@ -28,7 +28,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 // Initialize Convex client with your deployment URL
-const convex = new ConvexReactClient('https://proficient-clam-975.convex.cloud'); // Replace this URL with your actual deployment
+const convex = new ConvexReactClient('https://affable-goose-538.convex.cloud'); // Replace this URL with your actual deployment
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({

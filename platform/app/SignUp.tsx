@@ -19,7 +19,7 @@ import { api } from "../convex/_generated/api";
 import { useMutation } from 'convex/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const convex = new ConvexReactClient("https://proficient-clam-975.convex.cloud");
+const convex = new ConvexReactClient("https://affable-goose-538.convex.cloud");
 
 const data = [
   { label: 'Passenger', value: 'passenger' },
