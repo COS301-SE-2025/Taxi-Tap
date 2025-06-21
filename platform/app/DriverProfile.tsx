@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +34,7 @@ export default function DriverProfile() {
     const switchActiveRole = useMutation(api.functions.users.UserManagement.switchActiveRole.switchActiveRole);;
 
     const handleVehicle = () => {
-        router.push('../DriverRequestPage');
+        router.push('../VehicleDriver');
     };
 
     const handleDocs = () => {

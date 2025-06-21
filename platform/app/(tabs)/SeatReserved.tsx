@@ -5,11 +5,16 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useUser } from '../../contexts/UserContext';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 
 export default function SeatReserved() {
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
+	const { user } = useUser();
 	
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -44,6 +49,13 @@ export default function SeatReserved() {
 		price: getParamAsString(params.price, "0"),
 		selectedVehicleId: getParamAsString(params.selectedVehicleId, "")
 	};
+
+	// Fetch taxi and driver info for the current reservation using Convex
+	// I made use of 'skip' instead of undefined to avoid getting a type error, and cast user.id to Id<"taxiTap_users"> for Convex
+	const taxiInfo = useQuery(
+		api.functions.taxis.viewTaxiInfo.viewTaxiInfo,
+		user ? { passengerId: user.id as Id<"taxiTap_users"> } : "skip"
+	);
 
 	const handleCancelReservation = () => {
 		router.push({
@@ -325,30 +337,21 @@ export default function SeatReserved() {
 							</View>
 							<View style={{ marginRight: 35 }}>
 								<Text style={dynamicStyles.driverName}>
-									{"Tshepo Mthembu"}
+									{taxiInfo?.driver?.name || "Tshepo Mthembu"}
 								</Text>
 								<Text style={dynamicStyles.driverVehicle}>
-									{"Hiace-Sesfikile"}
+									{taxiInfo?.taxi?.model || "Hiace-Sesfikile"}
 								</Text>
 								<TouchableOpacity onPress={() => router.push('/TaxiInfoPage')}>
 									<Icon name="information-circle" size={30} color={isDark ? "#121212" : "#FF9900"} />
 								</TouchableOpacity>
 							</View>
 							<Text style={dynamicStyles.ratingText}>
-								{"5.0"}
+								{taxiInfo?.driver?.rating?.toFixed(1) || "5.0"}
 							</Text>
 							{[1, 2, 3, 4, 5].map((star, index) => (
 								<Icon key={index} name="star" size={12} color={theme.primary} style={{ marginRight: 1 }} />
 							))}
-						</View>
-						
-						<View style={dynamicStyles.licensePlateSection}>
-							<Text style={dynamicStyles.licensePlateLabel}>
-								{"License plate number"}
-							</Text>
-							<Text style={dynamicStyles.licensePlateValue}>
-								{vehicleInfo.plate}
-							</Text>
 						</View>
 						
 						<View style={dynamicStyles.locationBox}>

@@ -65,6 +65,7 @@ export default defineSchema({
       coordinates: v.object({
         latitude: v.number(),
         longitude: v.number(),
+        
       }),
       address: v.string(),
     }),
