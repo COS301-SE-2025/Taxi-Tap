@@ -81,7 +81,8 @@ export default function SeatReserved() {
 		time: getParamAsString(params.time, "Unknown"),
 		seats: getParamAsString(params.seats, "0"),
 		price: getParamAsString(params.price, "0"),
-		selectedVehicleId: getParamAsString(params.selectedVehicleId, "")
+		selectedVehicleId: getParamAsString(params.selectedVehicleId, ""),
+		userId: getParamAsString(params.userId, ""),   // <-- ADD THIS LINE
 	};
 
 	// Function to decode Google's polyline format
@@ -580,7 +581,7 @@ export default function SeatReserved() {
 								<Text style={dynamicStyles.driverVehicle}>
 									{"Hiace-Sesfikile"}
 								</Text>
-								<TouchableOpacity onPress={() => router.push('/TaxiInfoPage')}>
+								<TouchableOpacity onPress={() => router.push({pathname: '/TaxiInfoPage', params: { userId: vehicleInfo.userId }})}>
 									<Icon name="information-circle" size={30} color={isDark ? "#121212" : "#FF9900"} />
 								</TouchableOpacity>
 							</View>

@@ -42,7 +42,7 @@ export default function Login() {
         phoneNumber: number,
         password,
       });
-      
+
       // Use the context login function
       await login(result);
       
@@ -53,7 +53,7 @@ export default function Login() {
       } else if (result.currentActiveRole === 'passenger') {
         router.push('/HomeScreen');
       }
-    } catch (err) {
+    } catch {
       alert("Phone number or password is incorrect");
     }
   };

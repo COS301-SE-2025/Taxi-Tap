@@ -125,20 +125,38 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     //.index("by_driver_id", ["driverID"])
     .index("by_average_rating", ["averageRating"]),
-routes: defineTable({
-    routeId: v.string(),
-    name: v.string(),
-    geometry: v.any(),
-    stops: v.array(v.object({
-      id: v.string(),
+  routes: defineTable({
+      routeId: v.string(),
       name: v.string(),
-      coordinates: v.array(v.number()),
-      order: v.number()
-    })),
-    fare: v.number(),
-    estimatedDuration: v.number(),
-    isActive: v.boolean(),
-    taxiAssociation: v.string(),
-    taxiAssociationRegistrationNumber: v.string()
-  }).index("by_route_id", ["routeId"])
+      geometry: v.any(),
+      stops: v.array(v.object({
+        id: v.string(),
+        name: v.string(),
+        coordinates: v.array(v.number()),
+        order: v.number()
+      })),
+      fare: v.number(),
+      estimatedDuration: v.number(),
+      isActive: v.boolean(),
+      taxiAssociation: v.string(),
+      taxiAssociationRegistrationNumber: v.string()
+  }).index("by_route_id", ["routeId"]),
+   //Taxis Table - stores information about taxis
+    taxis: defineTable({
+    driverId: v.id("drivers"),
+    taxiId: v.optional(v.string()),
+    licensePlate: v.string(),
+    model: v.string(),
+    color: v.string(),
+    year: v.number(),
+    image: v.optional(v.string()),
+    capacity: v.number(),
+    isAvailable: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_driver_id", ["driverId"])
+    .index("by_taxi_id", ["taxiId"])
+    .index("by_is_available", ["isAvailable"])
+    .index("by_created_at", ["createdAt"]),
 });

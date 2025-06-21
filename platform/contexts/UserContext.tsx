@@ -8,6 +8,7 @@ interface User {
   name: string;
   role: string | undefined;
   accountType: "passenger" | "driver" | "both";
+  phoneNumber: string,
 }
 
 interface UserLoginData {
@@ -16,6 +17,7 @@ interface UserLoginData {
   name: string;
   currentActiveRole?: "passenger" | "driver" | undefined;
   accountType: "passenger" | "driver" | "both";
+  phoneNumber: string;
 }
 
 interface UserContextType {
@@ -25,6 +27,7 @@ interface UserContextType {
   logout: () => Promise<void>;
   updateUserRole: (newRole: string | undefined) => Promise<void>;
   updateUserName: (newName: string) => Promise<void>;
+  updateNumber: (newNumber: string) => Promise<void>;
   updateAccountType: (newAccountType: "passenger" | "driver" | "both") => Promise<void>;
 }
 
@@ -52,8 +55,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const loadUserFromStorage = async (): Promise<void> => {
     try {
-      const userData = await AsyncStorage.multiGet(['userId', 'userName', 'userRole', 'userAccountType']);
-      const [userId, userName, userRole, userAccountType] = userData.map(([key, value]) => value);
+      const userData = await AsyncStorage.multiGet(['userId', 'userName', 'userRole', 'userAccountType', 'userNumber' ]);
+      const [userId, userName, userRole, userAccountType, userNumber] = userData.map(([key, value]) => value);
       
       if (userId) {
         setUser({
@@ -61,6 +64,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           name: userName || '',
           role: userRole || '',
           accountType: userAccountType as "passenger" | "driver" | "both",
+          phoneNumber: userNumber || '',
         });
       }
     } catch (error) {
@@ -76,6 +80,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       name: userData.name,
       role: userData.currentActiveRole,
       accountType: userData.accountType,
+      phoneNumber: userData.phoneNumber,
     };
     
     setUser(userInfo);
@@ -86,12 +91,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       ['userName', userInfo.name],
       ['userRole', userInfo.role || ''],
       ['userAccountType', userInfo.accountType],
+      ['userNumber', userInfo.phoneNumber],
     ]);
   };
 
   const logout = async (): Promise<void> => {
     setUser(null);
-    await AsyncStorage.multiRemove(['userId', 'userName', 'userRole', 'userAccountType']);
+    await AsyncStorage.multiRemove(['userId', 'userName', 'userRole', 'userAccountType', 'userNumber' ]);
   };
 
   const updateUserRole = async (newRole: string | undefined): Promise<void> => {
@@ -107,6 +113,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const updatedUser: User = { ...user, name: newName };
       setUser(updatedUser);
       await AsyncStorage.setItem('userName', newName);
+    }
+  };
+
+  const updateNumber = async (newNumber: string): Promise<void> => {
+    if (user) {
+      const updatedUser: User = { ...user, phoneNumber: newNumber };
+      setUser(updatedUser);
+      await AsyncStorage.setItem('userNumber', newNumber);
     }
   };
 
@@ -126,6 +140,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     updateUserRole,
     updateUserName,
     updateAccountType,
+    updateNumber,
   };
 
   return (

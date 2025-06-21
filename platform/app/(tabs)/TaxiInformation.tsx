@@ -1,11 +1,12 @@
 import React, { useState, useLayoutEffect, useRef, useEffect, useCallback } from "react";
-import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, Alert, Platform } from "react-native";
+import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, Alert, Platform, ActivityIndicator } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMapContext, createRouteKey } from '../../contexts/MapContext';
-import taxi from '../../assets/images/Quantum.png';
+import { useQuery } from "convex/react";
+import { api } from '../../convex/_generated/api';
 
 // Get platform-specific API key
 const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
@@ -13,7 +14,7 @@ const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function TaxiInformation() {
-	const [selectedVehicle, setSelectedVehicle] = useState<number | null>(null);
+	const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
 	const [routeError, setRouteError] = useState<string | null>(null);
 	
 	const params = useLocalSearchParams();
@@ -36,6 +37,8 @@ export default function TaxiInformation() {
 		getCachedRoute,
 		setCachedRoute
 	} = useMapContext();
+
+	const availableTaxis = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -216,43 +219,8 @@ export default function TaxiInformation() {
 		}
 	}, [currentLocation, destination, getRoute]);
 
-	const vehicles = [
-		{
-			id: 1,
-			plate: "VV 87 89 GP",
-			image: taxi,
-			time: "8 min away",
-			seats: "2 seats left",
-			price: "R12"
-		},
-		{
-			id: 2,
-			plate: "YY 87 89 GP", 
-			image: taxi,
-			time: "3 min away",
-			seats: "1 seat left",
-			price: "R12"
-		},
-		{
-			id: 3,
-			plate: "YTV 567 GP",
-			image: taxi,
-			time: "8 min away",
-			seats: "5 seats left",
-			price: "R12"
-		},
-		{
-			id: 5,
-			plate: "XYZ 879 GP", 
-			image: taxi,
-			time: "4 min away",
-			seats: "4 seat left",
-			price: "R12"
-		}
-	];
-
-	const handleVehicleSelect = (vehicleId: number) => {
-		setSelectedVehicle(vehicleId);
+	const handleVehicleSelect = (plate: string) => {
+		setSelectedVehicle(plate);
 	};
 
 	const handleChangeDestination = () => {
@@ -260,12 +228,12 @@ export default function TaxiInformation() {
 	};
 
 	const handleReserveSeat = () => {
-		if (selectedVehicle === null) {
+		if (!selectedVehicle) {
 			alert('Please select a vehicle first!');
 			return;
 		}
 
-		const selected = vehicles.find(vehicle => vehicle.id === selectedVehicle);
+		const selected = availableTaxis?.find(vehicle => vehicle.licensePlate === selectedVehicle);
 
 		if (!selected) {
 			alert('Selected vehicle not found!');
@@ -288,15 +256,19 @@ export default function TaxiInformation() {
 				currentLng: currentLocation.longitude.toString(),
 
 				// Vehicle details
-				selectedVehicleId: selected.id.toString(),
-				plate: selected.plate,
-				time: selected.time,
-				seats: selected.seats,
-				price: selected.price,
-				image: selected.id.toString(),
+				plate: selected.licensePlate,
+				image: selected.image,
+				userId: selected.userId,
 			}
 		});
 	};
+
+	// function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
+	// 	if (Array.isArray(param)) {
+	// 		return param[0] || fallback;
+	// 	}
+	// 	return param || fallback;
+	// }
 
 	// Create dynamic styles based on theme
 	const dynamicStyles = StyleSheet.create({
@@ -626,12 +598,33 @@ export default function TaxiInformation() {
 			]
 		}
 	];
-
+	
 	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
 		if (Array.isArray(param)) {
 			return param[0] || fallback;
 		}
 		return param || fallback;
+	}
+
+
+	if (availableTaxis === undefined) {
+		return (
+			<SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
+				<ActivityIndicator size="large" color={theme.primary} />
+				<Text style={{ color: theme.text, marginTop: 10 }}>Loading available taxis...</Text>
+			</SafeAreaView>
+		);
+	}
+
+	// Don't render if locations aren't loaded yet
+	if (!currentLocation || !destination) {
+		return (
+			<SafeAreaView style={dynamicStyles.container}>
+				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+					<Text style={{ color: theme.text }}>Loading...</Text>
+				</View>
+			</SafeAreaView>
+		);
 	}
 
 	// Don't render if locations aren't loaded yet
@@ -727,50 +720,54 @@ export default function TaxiInformation() {
 								paddingHorizontal: 5,
 							}}>
 							
-							{vehicles.map((vehicle) => (
+							{availableTaxis.map((vehicle) => (
 								<TouchableOpacity 
-									key={vehicle.id}
+									key={vehicle.licensePlate}
 									style={[
 										dynamicStyles.vehicleCard,
-										selectedVehicle === vehicle.id 
+										selectedVehicle === vehicle.licensePlate 
 											? dynamicStyles.vehicleCardSelected 
 											: dynamicStyles.vehicleCardUnselected
 									]} 
-									onPress={() => handleVehicleSelect(vehicle.id)}>
+									onPress={() => handleVehicleSelect(vehicle.licensePlate)}>
 									
 									{/* Selection Circle */}
 									<View style={[
 										dynamicStyles.selectionCircle,
-										selectedVehicle !== vehicle.id && dynamicStyles.selectionCircleUnselected
+										selectedVehicle !== vehicle.licensePlate && dynamicStyles.selectionCircleUnselected
 									]}>
-										{selectedVehicle === vehicle.id && (
+										{selectedVehicle === vehicle.licensePlate && (
 											<Text style={dynamicStyles.selectionCheck}>✓</Text>
 										)}
 									</View>
 									
 									{/* Vehicle Plate */}
 									<Text style={dynamicStyles.vehiclePlate}>
-										{vehicle.plate}
+										{vehicle.licensePlate}
 									</Text>
 									
 									{/* Vehicle Image */}
-									<Image
-										source={vehicle.image} 
-										resizeMode={"contain"}
-										style={dynamicStyles.vehicleImage}
-									/>
+									{vehicle.image ? (
+										<Image
+											source={{ uri: vehicle.image }}
+											resizeMode="contain"
+											style={dynamicStyles.vehicleImage}
+										/>
+										) : (
+										<Text style={{ color: 'red' }}>No Image</Text>
+									)}
 									
 									{/* Time and Seats Info */}
-									<Text style={dynamicStyles.vehicleInfo}>
+									{/* <Text style={dynamicStyles.vehicleInfo}>
 										{`${vehicle.time} | ${vehicle.seats}`}
-									</Text>
+									</Text> */}
 									
 									{/* Price (if available) */}
-									{vehicle.price && (
+									{/* {vehicle.price && (
 										<Text style={dynamicStyles.vehiclePrice}>
 											{vehicle.price}
 										</Text>
-									)}
+									)} */}
 								</TouchableOpacity>
 							))}
 

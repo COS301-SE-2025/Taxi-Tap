@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery } from 'convex/react';
@@ -8,20 +7,42 @@ import { api } from '../convex/_generated/api';
 import { useUser } from '../contexts/UserContext';
 import { Id } from '../convex/_generated/dataModel';
 import { useTheme } from '../contexts/ThemeContext';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function DriverProfile() {
-    const [driverRating, setDriverRating] = useState('5 years');
     const [name, setName] = useState('');
+    const [number, setNumber] = useState('');
     const router = useRouter();
     const { user, logout, updateUserRole, updateUserName, updateAccountType } = useUser();
+    const { updateNumber } = useUser();
     const { theme, isDark } = useTheme();
+    const [imageUri, setImageUri] = useState<string | null>(null);
 
     // Initialize name from user context
     useEffect(() => {
-        if (user?.name) {
-            setName(user.name);
+        if (user) {
+            setName(user.name || '');
+            setNumber(user.phoneNumber || '');
         }
-    }, [user?.name]);
+    }, [user]);
+
+    const handleUploadPhoto = async () => {
+        try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: 'images',
+            allowsEditing: true,
+            quality: 1,
+        });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+            const uri = result.assets[0].uri;
+            console.log('Selected image URI:', uri);
+            setImageUri(uri);
+        }
+        } catch (error) {
+            console.error('Image upload error:', error);
+        }
+    };
 
     // Query user data from Convex using the user ID from context
     // Make sure your getUserById function uses the correct table name (taxiTap_users)
@@ -35,7 +56,7 @@ export default function DriverProfile() {
     const switchActiveRole = useMutation(api.functions.users.UserManagement.switchActiveRole.switchActiveRole);;
 
     const handleVehicle = () => {
-        router.push('../DriverRequestPage');
+        router.push('../VehicleDriver');
     };
 
     const handleDocs = () => {
@@ -43,7 +64,7 @@ export default function DriverProfile() {
     };
 
     const handleEarnings = () => {
-        //router.push('../Earnings'); ->change to real name
+        router.push('../EarningsPage');
     };
 
     const handleRoutes = () => {
@@ -55,9 +76,13 @@ export default function DriverProfile() {
         router.push('../LandingPage');
     };
 
-    // const handleNameChange = (newName: string) => {
-    //     setName(newName);
-    // };
+    const handleNameChange = (newName: string) => {
+        setName(newName);
+    };
+
+    const handleNumberChange = (newNumber: string) => {
+        setNumber(newNumber);
+    };
 
     const handleSwitchToPassenger = async () => {
     try {
@@ -161,6 +186,10 @@ export default function DriverProfile() {
             if (name !== user.name) {
                 await updateUserName(name);
             }
+            // Update number if changed
+            if (number !== user.phoneNumber) {
+                await updateNumber(number);
+            }
 
             // Here you would also save to your backend if needed
             // Example: await updateUserProfile({ userId: user.id as Id<"taxiTap_users">, name, experience });
@@ -221,10 +250,6 @@ export default function DriverProfile() {
             borderWidth: 1,
             color: theme.text,
         },
-        value: {
-            fontSize: 15,
-            color: theme.text,
-        },
         button: {
             backgroundColor: theme.primary,
             paddingVertical: 16,
@@ -267,43 +292,46 @@ export default function DriverProfile() {
                     <Text style={dynamicStyles.headerText}>Driver Profile</Text>
 
                     <View style={dynamicStyles.card}>
-                        <Ionicons name="person-circle" size={64} color={theme.text} style={{ marginBottom: 20 }} />
-                        
-                        <View style={dynamicStyles.fieldContainer}>
-                            <Text style={dynamicStyles.label}>Name:</Text>
-                            <TextInput
-                                value={name}
-                                onChangeText={setName}
-                                style={dynamicStyles.input}
-                                placeholder="Enter name"
-                                placeholderTextColor={isDark ? '#999' : '#aaa'}
+                        <Pressable
+                        onPress={handleUploadPhoto}
+                        style={{
+                            paddingVertical: 14,
+                            borderRadius: 30,
+                            alignItems: 'center',
+                            marginTop: 20,
+                        }}
+                        >
+                        {imageUri ? (
+                            <Image
+                            source={{ uri: imageUri }}
+                            resizeMode="cover"
+                            style={{ width: 150, height: 150, borderRadius: 75 }}
                             />
-                        </View>
-
+                        ) : (
+                            <Ionicons name="person-circle" size={150} color={theme.text} />
+                        )}
+                        </Pressable>
+        
                         <View style={dynamicStyles.fieldContainer}>
-                            <Text style={dynamicStyles.label}>Driver Rating:</Text>
-                            <TextInput
-                                value={driverRating}
-                                onChangeText={setDriverRating}
-                                style={dynamicStyles.input}
-                                placeholder="Enter rating"
-                                placeholderTextColor={isDark ? '#999' : '#aaa'}
-                            />
+                        <Text style={dynamicStyles.label}>Name:</Text>
+                        <TextInput
+                            value={name}
+                            onChangeText={handleNameChange}
+                            style={dynamicStyles.input}
+                            placeholder="Enter name"
+                            placeholderTextColor={isDark ? '#999' : '#aaa'}
+                        />
                         </View>
-
+        
                         <View style={dynamicStyles.fieldContainer}>
-                            <Text style={dynamicStyles.label}>User ID:</Text>
-                            <Text style={dynamicStyles.value}>{user.id}</Text>
-                        </View>
-
-                        <View style={dynamicStyles.fieldContainer}>
-                            <Text style={dynamicStyles.label}>Account Type:</Text>
-                            <Text style={dynamicStyles.value}>{convexUser?.accountType || user.accountType || 'N/A'}</Text>
-                        </View>
-
-                        <View style={dynamicStyles.fieldContainer}>
-                            <Text style={dynamicStyles.label}>Current Role:</Text>
-                            <Text style={dynamicStyles.value}>{convexUser?.currentActiveRole || user.role || 'N/A'}</Text>
+                        <Text style={dynamicStyles.label}>Number:</Text>
+                        <TextInput
+                            value={number}
+                            onChangeText={handleNumberChange}
+                            style={dynamicStyles.input}
+                            placeholder="Enter number"
+                            placeholderTextColor={isDark ? '#999' : '#aaa'}
+                        />
                         </View>
                     </View>
 
