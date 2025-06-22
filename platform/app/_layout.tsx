@@ -1,4 +1,3 @@
-// app/_layout.tsx
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -13,12 +12,10 @@ import regular from '../assets/fonts/Amazon_Ember_Display.otf';
 import bold from '../assets/fonts/Amazon_Ember_Display_Bold_Italic.ttf';
 import medium from '../assets/fonts/Amazon_Ember_Display_Medium.ttf';
 import light from '../assets/fonts/Amazon_Ember_Display_Light.ttf';
-
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
-
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { UserProvider } from '../contexts/UserContext';
-import { RouteProvider } from '../contexts/RouteContext';
+import { MapProvider } from '../contexts/MapContext'; // Import your MapProvider
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -29,7 +26,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 // Initialize Convex client with your deployment URL
-const convex = new ConvexReactClient('https://affable-goose-538.convex.cloud'); // Replace this URL with your actual deployment
+const convex = new ConvexReactClient('https://affable-goose-538.convex.cloud');
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -58,9 +55,9 @@ export default function RootLayout() {
     <ConvexProvider client={convex}>
       <ThemeProvider>
         <UserProvider>
-          <RouteProvider>
+          <MapProvider>
             <RootLayoutNav />
-          </RouteProvider>
+          </MapProvider>
         </UserProvider>
       </ThemeProvider>
     </ConvexProvider>
@@ -69,7 +66,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { theme, isDark } = useTheme();
-  
+ 
   // Create navigation theme based on our custom theme
   const navigationTheme = {
     dark: isDark,
@@ -81,7 +78,7 @@ function RootLayoutNav() {
       border: theme.border,
       notification: theme.primary,
     },
-    fonts: DefaultTheme.fonts, // Add the missing fonts property
+    fonts: DefaultTheme.fonts,
   };
 
   return (
@@ -102,18 +99,18 @@ function RootLayoutNav() {
             headerTintColor: theme.text,
           }}
         >
-          <Stack.Screen 
-            name="LandingPage" 
-            options={{ 
+          <Stack.Screen
+            name="LandingPage"
+            options={{
               headerShown: false
-            }} 
+            }}
           />
-          
-          <Stack.Screen 
-            name="(tabs)" 
-            options={{ 
+         
+          <Stack.Screen
+            name="(tabs)"
+            options={{
               headerShown: false,
-            }} 
+            }}
           />
         </Stack>
       </View>

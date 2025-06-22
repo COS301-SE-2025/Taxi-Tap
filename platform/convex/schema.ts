@@ -96,8 +96,8 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_requested_at", ["requestedAt"]),
 
-    //passenger table
-    passengers: defineTable({
+  //passenger table
+  passengers: defineTable({
     userId: v.id("taxiTap_users"),
     //passengerID: v.string(),
     numberOfRidesTaken: v.number(),

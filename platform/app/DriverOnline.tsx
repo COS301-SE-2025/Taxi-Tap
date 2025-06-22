@@ -52,8 +52,8 @@ export default function DriverOnline({
   availableSeats = 4,
 }: DriverOnlineProps) {
   const navigation = useNavigation();
+  const { theme, isDark, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
-  const { theme, isDark } = useTheme();
 
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -115,6 +115,11 @@ export default function DriverOnline({
 
   const handleSafetyPress = () => {
     setShowSafetyMenu(!showSafetyMenu);
+  };
+
+  const handleToggleTheme = () => {
+    const newMode = isDark ? 'light' : 'dark';
+    setThemeMode(newMode);
   };
 
   const handleEmergency = () => {
@@ -233,11 +238,28 @@ export default function DriverOnline({
       elevation: 4,
       zIndex: 1000,
     },
+    darkModeToggle: {
+      position: 'absolute',
+      top: 60,
+      right: 20,
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: isDark ? '#FFA500' : '#4A90E2',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 8,
+      zIndex: 1000,
+    },
     earningsContainer: {
       position: 'absolute',
       top: 60,
       left: 80,
-      right: 20,
+      right: 80,
       alignItems: 'center',
       zIndex: 999,
     },
@@ -502,6 +524,19 @@ export default function DriverOnline({
                 accessibilityLabel="Open menu"
               >
                 <Icon name="menu" size={24} color={theme.primary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={dynamicStyles.darkModeToggle}
+                onPress={handleToggleTheme}
+                activeOpacity={0.8}
+                accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+              >
+                <Icon 
+                  name={isDark ? 'sunny' : 'moon'} 
+                  size={28} 
+                  color="#FFFFFF" 
+                />
               </TouchableOpacity>
 
               <View style={dynamicStyles.earningsContainer}>
