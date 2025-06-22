@@ -6,7 +6,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useLocalSearchParams } from 'expo-router';
 
-export default function DriverProfile() {
+export default function TaxiInfoPage() {
   const { theme, isDark } = useTheme();
   const { userId } = useLocalSearchParams();
 
