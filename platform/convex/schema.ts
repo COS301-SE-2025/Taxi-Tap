@@ -175,4 +175,5 @@ export default defineSchema({
       v.literal("both")
     ),
   }).index("by_user", ["userId"]),
+  
 });
