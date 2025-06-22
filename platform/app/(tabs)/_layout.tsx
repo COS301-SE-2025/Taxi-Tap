@@ -119,6 +119,16 @@ const TabNavigation: React.FC = () => {
       />
 
       <Tabs.Screen
+        name="HelpPage"
+        options={{
+          title: 'Help',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="question-circle" size={24} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="DriverProfile"
         options={{
           href: null,

@@ -52,7 +52,7 @@ export default function DriverOffline({
   availableSeats = 4,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
-  const { theme, isDark, themeMode, setThemeMode } = useTheme();
+  const { theme, isDark, setThemeMode } = useTheme();
   
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
@@ -117,9 +117,9 @@ export default function DriverOffline({
     },
     { 
       icon: "settings-outline", 
-      title: "Settings", 
-      subtitle: "App preferences",
-      onPress: () => navigation.navigate('Settings' as never)
+      title: "Help", 
+      subtitle: "App information",
+      onPress: () => navigation.navigate('HelpPage' as never)
     },
   ];
 
@@ -156,6 +156,7 @@ export default function DriverOffline({
     container: {
       flex: 1,
       backgroundColor: theme.background,
+      paddingTop: 20,
     },
     safeArea: {
       flex: 1,
@@ -194,19 +195,6 @@ export default function DriverOffline({
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    darkModeToggle: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: isDark ? '#FFA500' : '#4A90E2',
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.15,
-      shadowOffset: { width: 0, height: 4 },
-      shadowRadius: 4,
-      elevation: 8,
     },
     statusContainer: {
       flexDirection: 'row',
@@ -524,16 +512,14 @@ export default function DriverOffline({
               <Text style={dynamicStyles.statusText}>OFFLINE</Text>
             </View>
             
-            <TouchableOpacity 
-              style={dynamicStyles.darkModeToggle}
+            <TouchableOpacity
               onPress={handleToggleTheme}
               activeOpacity={0.8}
               accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
             >
               <Icon 
                 name={isDark ? 'sunny' : 'moon'} 
-                size={28} 
-                color="#FFFFFF" 
+                size={28}
               />
             </TouchableOpacity>
           </View>
