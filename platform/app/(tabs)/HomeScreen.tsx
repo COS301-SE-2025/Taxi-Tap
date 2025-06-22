@@ -20,43 +20,26 @@ import { useMapContext, createRouteKey } from '../../contexts/MapContext';
 import loading from '../../assets/images/loading4.png';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-
-/* ⬇️ NEW: live-location hook that keeps streaming the user’s coordinates
-      to Convex every ~5 s and lets us log it in real time. */
 import { useLocationSystem } from '../../hooks/useLocationSystem';
 
-// ————————————————————————————————————————————————————————————
-// Get platform-specific API key
-// ————————————————————————————————————————————————————————————
 const GOOGLE_MAPS_API_KEY =
   Platform.OS === 'ios'
     ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
     : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function HomeScreen() {
-  /* ------------------------------------------------------------------ */
-  /* 1. Grab userId from the URL so the live-location system knows who  */
-  /* ------------------------------------------------------------------ */
   const { userId } = useLocalSearchParams<{ userId: string }>();
   useEffect(() => {
     console.log('🚀 HomeScreen got userId:', userId);
   }, [userId]);
 
-  /* ------------------------------------------------------------------ */
-  /* 2. Start streaming the phone’s GPS to Convex every five seconds    */
-  /* ------------------------------------------------------------------ */
   const { userLocation } = useLocationSystem(userId || '');
-
-  /* purely for debugging – prints every time the hook fires */
   useEffect(() => {
     if (userLocation) {
       console.log('✅ Live-location sent:', userLocation);
     }
   }, [userLocation]);
 
-  /* ------------------------------------------------------------------ */
-  /* 3. Everything that was already here (route cache, drawing, etc.)   */
-  /* ------------------------------------------------------------------ */
   const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
@@ -76,7 +59,6 @@ export default function HomeScreen() {
     setCachedRoute,
   } = useMapContext();
 
-  /* — animate the “Reserve” button only once a route has been fetched */
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const mapRef = useRef<MapView | null>(null);
 
@@ -84,7 +66,6 @@ export default function HomeScreen() {
     navigation.setOptions({ title: 'Home' });
   }, [navigation]);
 
-  /* ————————————————————— reserve-seat navigation ——————————————————— */
   const handleReserveSeat = () => {
     if (!destination || !currentLocation) {
       Alert.alert('Error', 'Please select a destination first');
@@ -104,7 +85,6 @@ export default function HomeScreen() {
     });
   };
 
-  /* ——————————————————— fade-in/out of the button ———————————————— */
   useEffect(() => {
     if (routeLoaded) {
       Animated.timing(buttonOpacity, {
@@ -117,7 +97,6 @@ export default function HomeScreen() {
     }
   }, [routeLoaded]);
 
-  /* ——————————————————— Google Directions API helper ———————————— */
   const getRoute = async (
     origin: { latitude: number; longitude: number },
     dest: { latitude: number; longitude: number }
@@ -170,7 +149,7 @@ export default function HomeScreen() {
     let idx = 0,
       lat = 0,
       lng = 0,
-      pts = [];
+      pts: { latitude: number; longitude: number }[] = [];
 
     while (idx < encoded.length) {
       let b,
@@ -199,7 +178,6 @@ export default function HomeScreen() {
     return pts;
   };
 
-  /* ————————————————————— initial geolocation ——————————————————— */
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -213,9 +191,8 @@ export default function HomeScreen() {
         latitude: loc.coords.latitude,
         longitude: loc.coords.longitude,
         name:
-          `${place.name || ''} ${place.street || ''}, ${
-            place.city || place.region || ''
-          }`.trim() || 'Unknown Location',
+          `${place.name || ''} ${place.street || ''}, ${place.city || place.region || ''}`.trim() ||
+          'Unknown Location',
       });
 
       mapRef.current?.animateToRegion(
@@ -230,7 +207,6 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  /* ————————————————— destination tap ———————————————————————— */
   const handleDestinationSelect = (route: {
     destination: string;
     destinationCoords: { latitude: number; longitude: number } | null;
@@ -245,10 +221,19 @@ export default function HomeScreen() {
     getRoute(currentLocation, dest);
   };
 
-  /* ———————————————————— styles (unchanged) ———————————————————— */
   const s = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     map: { height: '40%' },
+  });
+
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    map: {
+      height: '40%',
+    },
     bottomSheet: {
       flex: 1,
       backgroundColor: theme.background,
@@ -257,11 +242,139 @@ export default function HomeScreen() {
       padding: 16,
       paddingTop: 24,
     },
-    /* (the rest of your `dynamicStyles` definitions follow …) */
-    // — all existing style objects kept exactly the same —
+    locationBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: isDark ? theme.surface : "#ECD9C3",
+      borderColor: isDark ? theme.border : "#D4A57D",
+      borderRadius: 20,
+      borderWidth: 1,
+      paddingVertical: 11,
+      paddingHorizontal: 13,
+      marginBottom: 36,
+      width: '100%',
+      alignSelf: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    locationIndicator: {
+      marginRight: 10,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingTop: 5,
+    },
+    currentLocationCircle: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: theme.primary,
+      borderWidth: 2,
+      borderColor: '#FFB84D',
+      marginBottom: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    currentLocationDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.primary,
+    },
+    dottedLineContainer: {
+      height: 35,
+      width: 1,
+      marginBottom: 8,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    dottedLineDot: {
+      width: 2,
+      height: 3,
+      backgroundColor: theme.primary,
+      borderRadius: 1,
+    },
+    locationTextContainer: {
+      flex: 1,
+    },
+    currentLocationText: {
+      color: isDark ? theme.primary : "#A66400",
+      fontSize: 14,
+      fontWeight: "bold",
+      marginBottom: 17,
+    },
+    locationSeparator: {
+      height: 1,
+      backgroundColor: isDark ? theme.border : "#D4A57D",
+      marginBottom: 19,
+      marginHorizontal: 2,
+    },
+    destinationText: {
+      color: theme.text,
+      fontSize: 14,
+      fontWeight: "bold",
+      marginLeft: 2,
+    },
+    savedRoutesTitle: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      marginBottom: 8,
+      color: theme.text,
+    },
+    routeCard: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      marginBottom: 12,
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    routeTitle: {
+      fontWeight: 'bold',
+      fontSize: 14,
+      color: theme.text,
+    },
+    routeSubtitle: {
+      fontSize: 12,
+      color: theme.textSecondary,
+    },
+    routeLoadingText: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontStyle: 'italic',
+      marginTop: 4,
+    },
+    reserveButton: {
+      position: 'absolute',
+      bottom: 80,
+      left: 20,
+      right: 20,
+      backgroundColor: theme.primary,
+      borderRadius: 25,
+      paddingVertical: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: 0.3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    reserveButtonText: {
+      color: theme.buttonText || '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
   });
 
-  /* ———————————————————— render ———————————————————————— */
   return (
     <View style={s.container}>
       {!currentLocation ? (
@@ -291,60 +404,73 @@ export default function HomeScreen() {
         </MapView>
       )}
 
-      {/* — bottom sheet (unchanged content) — */}
-      <View style={s.bottomSheet}>
-        {/* … your existing JSX for current/destination boxes, route list, etc. … */}
-        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8, color: theme.text }}>
-          Recently Used Taxi Ranks
-        </Text>
+      {/* Dynamic Bottom Sheet */}
+      <View style={dynamicStyles.bottomSheet}>
+        <View style={dynamicStyles.locationBox}>
+          <View style={dynamicStyles.locationIndicator}>
+            <View style={dynamicStyles.currentLocationCircle}>
+              <View style={dynamicStyles.currentLocationDot} />
+            </View>
+            <View style={dynamicStyles.dottedLineContainer}>
+              {[...Array(8)].map((_, i) => (
+                <View key={i} style={dynamicStyles.dottedLineDot} />
+              ))}
+            </View>
+            <Icon
+              name="location"
+              size={18}
+              color={isDark ? theme.text : "#121212"}
+            />
+          </View>
+          <View style={dynamicStyles.locationTextContainer}>
+            <Text style={dynamicStyles.currentLocationText}>
+              {currentLocation ? currentLocation.name : 'Getting current location...'}
+            </Text>
+            <View style={dynamicStyles.locationSeparator} />
+            <Text style={dynamicStyles.destinationText}>
+              {destination ? destination.name : 'No destination selected'}
+            </Text>
+            {isLoadingRoute && (
+              <Text style={dynamicStyles.routeLoadingText}>
+                Loading route...
+              </Text>
+            )}
+            {routeLoaded && !isLoadingRoute && (
+              <Text style={[dynamicStyles.routeLoadingText, { color: theme.primary }]}>
+                Route loaded ✓
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <Text style={dynamicStyles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
         <ScrollView style={{ marginTop: 10 }}>
-          {routes?.map((route, i) => (
+          {routes?.map((route, idx) => (
             <TouchableOpacity
-              key={i}
-              style={{
-                backgroundColor: theme.card,
-                borderRadius: 12,
-                flexDirection: 'row',
-                alignItems: 'center',
-                padding: 12,
-                marginBottom: 12,
-              }}
+              key={idx}
+              style={dynamicStyles.routeCard}
               onPress={() => handleDestinationSelect(route)}
             >
-              <Icon name="location-sharp" size={20} color={theme.primary} style={{ marginRight: 12 }} />
+              <Icon
+                name="location-sharp"
+                size={20}
+                color={theme.primary}
+                style={{ marginRight: 12 }}
+              />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: 'bold', fontSize: 14, color: theme.text }}>
-                  {route.destination}
-                </Text>
-                <Text style={{ fontSize: 12, color: theme.textSecondary }}>
-                  Pickup: {route.start}
-                </Text>
+                <Text style={dynamicStyles.routeTitle}>{route.destination}</Text>
+                <Text style={dynamicStyles.routeSubtitle}>Pickup: {route.start}</Text>
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
 
-      {/* Reserve button fade-in */}
+      {/* Reserve a Seat Button */}
       {routeLoaded && !isLoadingRoute && (
-        <Animated.View style={{ opacity: buttonOpacity, position: 'absolute', bottom: 80, left: 20, right: 20 }}>
-          <TouchableOpacity
-            style={{
-              backgroundColor: theme.primary,
-              borderRadius: 25,
-              paddingVertical: 15,
-              alignItems: 'center',
-              shadowColor: theme.shadow,
-              shadowOpacity: 0.3,
-              shadowOffset: { width: 0, height: 2 },
-              shadowRadius: 4,
-              elevation: 5,
-            }}
-            onPress={handleReserveSeat}
-          >
-            <Text style={{ color: theme.buttonText || '#fff', fontSize: 18, fontWeight: 'bold' }}>
-              Reserve a Seat
-            </Text>
+        <Animated.View style={{ opacity: buttonOpacity }}>
+          <TouchableOpacity style={dynamicStyles.reserveButton} onPress={handleReserveSeat}>
+            <Text style={dynamicStyles.reserveButtonText}>Reserve a Seat</Text>
           </TouchableOpacity>
         </Animated.View>
       )}
