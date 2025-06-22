@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useContext } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useRouteContext } from '../contexts/RouteContext';
-import { RouteProvider } from '../contexts/RouteContext';
 
 interface DriverOfflineProps {
   onGoOnline: () => void;
   todaysEarnings: number;
+  currentRoute?: string;
   availableSeats?: number;
-  onRouteSet?: (route: string) => void;
 }
 
 interface MenuItemType {
@@ -47,11 +46,11 @@ interface SafetyOptionType {
   onPress: () => void;
 }
 
-export default function DriverOffline({
-  onGoOnline,
-  todaysEarnings,
+export default function DriverOffline({ 
+  onGoOnline, 
+  todaysEarnings, 
+  currentRoute: propCurrentRoute,
   availableSeats = 4,
-  onRouteSet,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
@@ -132,24 +131,22 @@ export default function DriverOffline({
     },
   ];
 
-  const isRouteSet = currentRoute !== 'Not Set';
-
   const quickActions: QuickActionType[] = [
     {
-      icon: 'location-outline',
-      title: 'Current Route',
-      value: isRouteSet ? 'Set' : 'Not Set',
-      subtitle: isRouteSet ? currentRoute : 'Tap to set route',
-      color: isRouteSet ? '#00A591' : '#FF9900',
-      onPress: handleSetRoute,
+      icon: "location-outline",
+      title: "Current Route",
+      value: (propCurrentRoute || "Not Set") as string,
+      subtitle: "Tap to set route",
+      color: (propCurrentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
+      onPress: () => console.log('Route pressed')
     },
     {
-      icon: 'car-outline',
-      title: 'Available Seats',
+      icon: "car-outline",
+      title: "Available Seats",
       value: availableSeats.toString(),
       subtitle: `of 14 seats free`,
-      color: '#FF9900',
-      onPress: () => {},
+      color: "#FF9900",
+      onPress: () => console.log('Seats pressed')
     },
   ];
 
@@ -550,10 +547,10 @@ export default function DriverOffline({
           </View>
         </View>
 
-        <ScrollView
-          style={{ flex: 1, paddingHorizontal: 20, paddingTop: 20 }}
-          contentContainerStyle={{ paddingBottom: 100 }}
+        <ScrollView 
+          style={dynamicStyles.contentContainer} 
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
         >
           {/* Earnings card */}
           <TouchableOpacity
@@ -569,45 +566,21 @@ export default function DriverOffline({
             }}
             onPress={() => router.push('/EarningsPage')}
           >
-            <Text style={{ color: theme.primary, fontSize: 32, fontWeight: 'bold', marginBottom: 4 }}>
+            <Text style={dynamicStyles.earningsAmount}>
               R{(todaysEarnings ?? 0).toFixed(2)}
             </Text>
-            <Text style={{ color: theme.textSecondary, fontSize: 16, fontWeight: 'bold', marginBottom: 8 }}>
-              Today's Earnings
-            </Text>
-            <Text style={{ color: theme.textSecondary, fontSize: 14, fontWeight: 'bold', textAlign: 'center' }}>
+            <Text style={dynamicStyles.earningsTitle}>Today's Earnings</Text>
+            <Text style={dynamicStyles.earningsSubtitle}>
               Tap to view detailed breakdown
             </Text>
           </TouchableOpacity>
 
-          {/* Offline section */}
-          <View
-            style={{
-              backgroundColor: theme.surface,
-              borderRadius: 30,
-              padding: 24,
-              marginBottom: 20,
-              alignItems: 'center',
-              elevation: 4,
-            }}
-          >
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: isDark ? theme.primary : '#ECD9C3',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 16,
-              }}
-            >
-              <Icon name="car-outline" size={40} color={isDark ? '#121212' : '#FF9900'} />
+          <View style={dynamicStyles.offlineSection}>
+            <View style={dynamicStyles.offlineIconContainer}>
+              <Icon name="car-outline" size={40} color={isDark ? "#121212" : "#FF9900"} />
             </View>
-            <Text style={{ fontSize: 22, fontWeight: 'bold', color: theme.text, marginBottom: 8, textAlign: 'center' }}>
-              Ready to Pick Up Passengers?
-            </Text>
-            <Text style={{ fontSize: 16, color: theme.textSecondary, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 }}>
+            <Text style={dynamicStyles.offlineTitle}>Ready to Pick Up Passengers?</Text>
+            <Text style={dynamicStyles.offlineSubtitle}>
               Go online to start accepting seat reservation requests
             </Text>
             <TouchableOpacity
@@ -625,209 +598,115 @@ export default function DriverOffline({
               activeOpacity={0.8}
               accessibilityLabel="Go online to accept passengers"
             >
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: isDark ? '#121212' : '#FFFFFF', marginLeft: 8 }}>
-                GO ONLINE
-              </Text>
+              <Text style={dynamicStyles.goOnlineButtonText}>GO ONLINE</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Quick Actions */}
-          <View>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text, marginBottom: 16 }}>
-              Quick Overview
-            </Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={dynamicStyles.quickActionsSection}>
+            <Text style={dynamicStyles.sectionTitle}>Quick Overview</Text>
+            
+            <View style={dynamicStyles.quickActionsRow}>
               {quickActions.map((action, index) => (
-                <TouchableOpacity
+                <TouchableOpacity 
                   key={index}
-                  style={{
-                    flex: 1,
-                    backgroundColor: theme.surface,
-                    borderRadius: 20,
-                    padding: 16,
-                    marginHorizontal: 4,
-                    elevation: 4,
-                    minHeight: 100,
-                  }}
+                  style={dynamicStyles.quickActionCard}
                   onPress={action.onPress}
+                  activeOpacity={0.8}
+                  accessibilityLabel={`${action.title}: ${action.value}`}
                 >
-                  <Icon name={action.icon} size={24} color={action.color} style={{ marginBottom: 8 }} />
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: theme.textSecondary, marginBottom: 4 }}>
-                    {action.title}
+                  <Icon 
+                    name={action.icon} 
+                    size={24} 
+                    color={action.color} 
+                    style={dynamicStyles.quickActionIcon} 
+                  />
+                  <Text style={dynamicStyles.quickActionTitle}>{action.title}</Text>
+                  <Text style={[dynamicStyles.quickActionValue, { color: action.color }]}>
+                    {action.value}
                   </Text>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: action.color }}>{action.value}</Text>
-                  <Text style={{ fontSize: 10, fontWeight: 'bold', color: theme.textSecondary }} numberOfLines={2}>
-                    {action.subtitle}
-                  </Text>
+                  <Text style={dynamicStyles.quickActionSubtitle}>{action.subtitle}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         </ScrollView>
 
-        {/* Menu Modal */}
-        {showMenu && (
-          <Modal
-            visible={showMenu}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setShowMenu(false)}
-          >
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-              }}
-              activeOpacity={1}
-              onPress={() => setShowMenu(false)}
-            >
-              <View
-                style={{
-                  marginTop: 120,
-                  marginLeft: 20,
-                  backgroundColor: theme.surface,
-                  borderRadius: 20,
-                  paddingVertical: 8,
-                  minWidth: 280,
-                  maxWidth: '90%',
-                  shadowColor: theme.shadow,
-                  shadowOpacity: isDark ? 0.3 : 0.15,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowRadius: 4,
-                  elevation: 12,
-                }}
-              >
-                <View style={{ paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: theme.border }}>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>Menu</Text>
-                </View>
-                {menuItems.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 20,
-                      paddingVertical: 16,
-                      minHeight: 60,
-                    }}
-                    onPress={() => {
-                      item.onPress();
-                      setShowMenu(false);
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <View style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      backgroundColor: theme.primary + '20',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      marginRight: 16,
-                    }}>
-                      <Icon name={item.icon} size={20} color={theme.primary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.text, marginBottom: 2 }}>{item.title}</Text>
-                      <Text style={{ fontSize: 14, fontWeight: 'bold', color: theme.textSecondary }}>{item.subtitle}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        )}
+        <TouchableOpacity 
+          style={dynamicStyles.safetyButton}
+          onPress={handleSafetyPress}
+          activeOpacity={0.8}
+          accessibilityLabel="Safety and emergency options"
+        >
+          <Icon name="shield-checkmark" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
 
-        {/* Safety Modal */}
+        <Modal
+          visible={showMenu}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowMenu(false)}
+        >
+          <TouchableOpacity 
+            style={dynamicStyles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}
+          >
+            <View style={dynamicStyles.menuModal}>
+              <View style={dynamicStyles.menuModalHeader}>
+                <Text style={dynamicStyles.menuModalHeaderText}>Menu</Text>
+              </View>
+              {menuItems.map((item, index) => (
+                <TouchableOpacity 
+                  key={index}
+                  style={dynamicStyles.menuModalItem}
+                  onPress={() => {
+                    item.onPress();
+                    setShowMenu(false);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={dynamicStyles.menuModalItemIcon}>
+                    <Icon name={item.icon} size={20} color={isDark ? "#121212" : "#FF9900"} />
+                  </View>
+                  <View style={dynamicStyles.menuModalItemContent}>
+                    <Text style={dynamicStyles.menuModalItemTitle}>{item.title}</Text>
+                    <Text style={dynamicStyles.menuModalItemSubtitle}>{item.subtitle}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
         {showSafetyMenu && (
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-end',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 2000,
-            }}
+          <TouchableOpacity 
+            style={dynamicStyles.modalOverlay}
             activeOpacity={1}
             onPress={() => setShowSafetyMenu(false)}
           >
-            <View
-              style={{
-                position: 'absolute',
-                bottom: 100,
-                right: 20,
-                backgroundColor: theme.surface,
-                borderRadius: 20,
-                padding: 8,
-                minWidth: 200,
-                shadowColor: theme.shadow,
-                shadowOpacity: isDark ? 0.3 : 0.15,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 4,
-                elevation: 8,
-              }}
-            >
+            <View style={dynamicStyles.safetyModal}>
               {safetyOptions.map((option, index) => (
-                <TouchableOpacity
+                <TouchableOpacity 
                   key={index}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                    minHeight: 50,
-                    borderBottomWidth: index === safetyOptions.length - 1 ? 0 : 1,
-                    borderBottomColor: theme.border,
-                  }}
+                  style={[
+                    dynamicStyles.safetyItem,
+                    index === safetyOptions.length - 1 && dynamicStyles.safetyItemLast
+                  ]}
                   onPress={option.onPress}
                   activeOpacity={0.8}
                 >
-                  <View style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: 12,
-                    backgroundColor: option.color + '20',
-                  }}>
+                  <View style={[dynamicStyles.safetyItemIcon, { backgroundColor: `${option.color}20` }]}>
                     <Icon name={option.icon} size={16} color={option.color} />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: theme.text, marginBottom: 2 }}>{option.title}</Text>
-                    <Text style={{ fontSize: 12, fontWeight: 'bold', color: theme.textSecondary }}>{option.subtitle}</Text>
+                  <View style={dynamicStyles.safetyItemContent}>
+                    <Text style={dynamicStyles.safetyItemTitle}>{option.title}</Text>
+                    <Text style={dynamicStyles.safetyItemSubtitle}>{option.subtitle}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
             </View>
           </TouchableOpacity>
         )}
-        {/* Safety Button */}
-        <TouchableOpacity
-          style={{
-            position: 'absolute',
-            bottom: 30,
-            right: 20,
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: '#FF4444',
-            justifyContent: 'center',
-            alignItems: 'center',
-            elevation: 8,
-            zIndex: 1000,
-          }}
-          onPress={() => setShowSafetyMenu(true)}
-        >
-          <Icon name="shield-checkmark" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
