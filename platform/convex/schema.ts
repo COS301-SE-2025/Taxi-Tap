@@ -244,5 +244,18 @@ routes: defineTable({
   .index("by_priority", ["priority"])
   .index("by_created_at", ["createdAt"])
   .index("by_scheduled_for", ["scheduledFor"]),
+
+  pushTokens: defineTable({
+  userId: v.id("taxiTap_users"),
+  token: v.string(),
+  platform: v.union(v.literal("ios"), v.literal("android")),
+  isActive: v.boolean(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  lastUsedAt: v.optional(v.number())
+})
+  .index("by_user_id", ["userId"])
+  .index("by_token", ["token"])
+  .index("by_is_active", ["isActive"]),
 });
 
