@@ -127,6 +127,18 @@ export default defineSchema({
     .index("by_taxi_association", ["taxiAssociation"])
     .index("by_assigned_route", ["assignedRoute"])
     .index("by_average_rating", ["averageRating"]),
+
+      locations: defineTable({
+    userId: v.id("taxiTap_users"),
+    latitude: v.number(),
+    longitude: v.number(),
+    updatedAt: v.string(),
+    role: v.union(
+      v.literal("passenger"),
+      v.literal("driver"),
+      v.literal("both")
+    ),
+  }).index("by_user", ["userId"]),
   routes: defineTable({
       routeId: v.string(),
       name: v.string(),
