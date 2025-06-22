@@ -159,4 +159,16 @@ export default defineSchema({
     .index("by_taxi_id", ["taxiId"])
     .index("by_is_available", ["isAvailable"])
     .index("by_created_at", ["createdAt"]),
+
+        locations: defineTable({
+    userId: v.id("taxiTap_users"),
+    latitude: v.number(),
+    longitude: v.number(),
+    updatedAt: v.string(),
+    role: v.union(
+      v.literal("passenger"),
+      v.literal("driver"),
+      v.literal("both")
+    ),
+  }).index("by_user", ["userId"]),
 });
