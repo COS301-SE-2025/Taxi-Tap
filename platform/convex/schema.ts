@@ -196,4 +196,15 @@ routes: defineTable({
     name: v.string(),
     lastUsed: v.number(),
   }).index("by_stop_id", ["id"]),
+      locations: defineTable({
+    userId: v.id("taxiTap_users"),
+    latitude: v.number(),
+    longitude: v.number(),
+    updatedAt: v.string(),
+    role: v.union(
+      v.literal("passenger"),
+      v.literal("driver"),
+      v.literal("both")
+    ),
+  }).index("by_user", ["userId"]),
 });
