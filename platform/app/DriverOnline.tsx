@@ -147,7 +147,7 @@ export default function DriverOnline({
       subtitle: "Driver details & documents",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('DriverProfile' as never);
+        router.push('/DriverProfile');
       }
     },
     { 
@@ -156,7 +156,7 @@ export default function DriverOnline({
       subtitle: "Vehicle info & route settings",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('../DriverRequestPage' as never);
+        router.push('/DriverRequestPage');
       }
     },
     { 
@@ -165,16 +165,16 @@ export default function DriverOnline({
       subtitle: "Past rides & routes",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('../EarningsPage' as never);
+        router.push('/EarningsPage');
       }
     },
     { 
       icon: "settings-outline", 
-      title: "Settings", 
-      subtitle: "App preferences",
+      title: "Toggle Theme", 
+      subtitle: "Switch between light and dark mode",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('../Settings' as never);
+        handleToggleTheme();
       }
     }
   ];

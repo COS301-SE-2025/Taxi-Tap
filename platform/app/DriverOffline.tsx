@@ -70,7 +70,7 @@ export default function DriverOffline({
   }, [navigation]);
 
   const handleSetRoute = () => {
-    navigation.navigate('SetRoute' as never);
+    router.push('/SetRoute');
   };
 
   const handleMenuPress = () => {
@@ -102,7 +102,7 @@ export default function DriverOffline({
 
   const handleEarningsPress = () => {
     // Type-safe navigation
-    navigation.navigate('EarningsPage' as never);
+    router.push('/EarningsPage');
   };
 
   const menuItems: MenuItemType[] = [
@@ -110,25 +110,25 @@ export default function DriverOffline({
       icon: 'person-outline',
       title: 'My Profile',
       subtitle: 'Driver details & documents',
-      onPress: () => navigation.navigate('DriverProfile' as never),
+      onPress: () => router.push('/DriverProfile'),
     },
     {
       icon: 'car-outline',
       title: 'My Taxi & Route',
       subtitle: 'Vehicle info & route settings',
-      onPress: () => navigation.navigate('DriverRequestPage' as never),
+      onPress: () => router.push('/DriverRequestPage'),
     },
     {
       icon: 'time-outline',
       title: 'Trip History',
       subtitle: 'Past rides & routes',
-      onPress: () => navigation.navigate('EarningsPage' as never),
+      onPress: () => router.push('/EarningsPage'),
     },
     {
       icon: 'settings-outline',
-      title: 'Settings',
-      subtitle: 'App preferences',
-      onPress: () => navigation.navigate('Settings' as never),
+      title: 'Toggle Theme',
+      subtitle: 'Switch between light and dark mode',
+      onPress: handleToggleTheme,
     },
   ];
 
@@ -567,7 +567,7 @@ export default function DriverOffline({
               borderLeftColor: theme.primary,
               elevation: 4,
             }}
-            onPress={() => navigation.navigate('EarningsPage' as never)}
+            onPress={() => router.push('/EarningsPage')}
           >
             <Text style={{ color: theme.primary, fontSize: 32, fontWeight: 'bold', marginBottom: 4 }}>
               R{(todaysEarnings ?? 0).toFixed(2)}

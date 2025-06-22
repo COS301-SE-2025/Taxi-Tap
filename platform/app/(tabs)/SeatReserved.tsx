@@ -123,37 +123,34 @@ export default function SeatReserved() {
 
 	// Function to get route from Google Directions API
 	const getRoute = async (origin: { latitude: number; longitude: number; name: string }, dest: { latitude: number; longitude: number; name: string }) => {
-		if (!GOOGLE_MAPS_API_KEY) {
-			console.error('Google Maps API key is not configured');
-			// Fallback to straight line if no API key
-			const fallbackRoute = [
-				{ latitude: origin.latitude, longitude: origin.longitude },
-				{ latitude: dest.latitude, longitude: dest.longitude }
-			];
-			setRouteCoordinates(fallbackRoute);
-			setRouteLoaded(true);
+		// Validate coordinates
+		if (!origin || !dest) {
+			console.warn('Invalid coordinates provided to getRoute');
+			return;
+		}
+		
+		if (origin.latitude === 0 && origin.longitude === 0) {
+			console.warn('Origin coordinates are (0,0) - waiting for valid location');
+			return;
+		}
+		
+		if (dest.latitude === 0 && dest.longitude === 0) {
+			console.warn('Destination coordinates are (0,0) - invalid destination');
 			return;
 		}
 
-		// Check cache first
-		const routeKey = createRouteKey(origin, dest);
-		const cachedRoute = getCachedRoute(routeKey);
+		if (!GOOGLE_MAPS_API_KEY) {
+			console.error('Google Maps API key is not configured');
+			return;
+		}
+
+		const routeKey = `${origin.latitude},${origin.longitude}-${dest.latitude},${dest.longitude}`;
 		
-		if (cachedRoute && cachedRoute.length > 0) {
-			console.log('Using cached route');
+		// Check cache first
+		const cachedRoute = getCachedRoute(routeKey);
+		if (cachedRoute) {
 			setRouteCoordinates(cachedRoute);
 			setRouteLoaded(true);
-			
-			// Fit map to cached route
-			const coordinates = [
-				{ latitude: origin.latitude, longitude: origin.longitude },
-				{ latitude: dest.latitude, longitude: dest.longitude },
-				...cachedRoute
-			];
-			mapRef.current?.fitToCoordinates(coordinates, {
-				edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
-				animated: true,
-			});
 			return;
 		}
 
