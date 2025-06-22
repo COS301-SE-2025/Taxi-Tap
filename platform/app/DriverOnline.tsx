@@ -13,15 +13,15 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import { useNavigation, useRouter } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
-import { useRouteContext } from '../contexts/RouteContext';
 
 const { width, height } = Dimensions.get('window');
 
 interface DriverOnlineProps {
   onGoOffline: () => void;
   todaysEarnings: number;
+  currentRoute?: string;
   availableSeats?: number;
 }
 
@@ -47,13 +47,13 @@ interface SafetyOption {
 }
 
 export default function DriverOnline({ 
-  onGoOffline,
+  onGoOffline, 
   todaysEarnings,
+  currentRoute = "Not Set",
   availableSeats = 4,
 }: DriverOnlineProps) {
   const navigation = useNavigation();
-  const router = useRouter();
-  const { theme, isDark } = useTheme();
+  const { theme, isDark, themeMode, setThemeMode } = useTheme();
 
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -115,6 +115,11 @@ export default function DriverOnline({
 
   const handleSafetyPress = () => {
     setShowSafetyMenu(!showSafetyMenu);
+  };
+
+  const handleToggleTheme = () => {
+    const newMode = isDark ? 'light' : 'dark';
+    setThemeMode(newMode);
   };
 
   const handleEmergency = () => {
@@ -233,11 +238,28 @@ export default function DriverOnline({
       elevation: 4,
       zIndex: 1000,
     },
+    darkModeToggle: {
+      position: 'absolute',
+      top: 60,
+      right: 20,
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: isDark ? '#FFA500' : '#4A90E2',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 8,
+      zIndex: 1000,
+    },
     earningsContainer: {
       position: 'absolute',
       top: 60,
       left: 80,
-      right: 20,
+      right: 80,
       alignItems: 'center',
       zIndex: 999,
     },
@@ -504,6 +526,19 @@ export default function DriverOnline({
                 <Icon name="menu" size={24} color={theme.primary} />
               </TouchableOpacity>
 
+              <TouchableOpacity 
+                style={dynamicStyles.darkModeToggle}
+                onPress={handleToggleTheme}
+                activeOpacity={0.8}
+                accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+              >
+                <Icon 
+                  name={isDark ? 'sunny' : 'moon'} 
+                  size={28} 
+                  color="#FFFFFF" 
+                />
+              </TouchableOpacity>
+
               <View style={dynamicStyles.earningsContainer}>
                 <TouchableOpacity 
                   style={dynamicStyles.earningsCard}
@@ -520,6 +555,10 @@ export default function DriverOnline({
               <View style={dynamicStyles.bottomContainer}>
                 <View style={dynamicStyles.quickStatus}>
                   <View style={dynamicStyles.quickStatusItem}>
+                    <Text style={dynamicStyles.quickStatusValue}>{currentRoute}</Text>
+                    <Text style={dynamicStyles.quickStatusLabel}>Current Route</Text>
+                  </View>
+                  <View style={dynamicStyles.quickStatusItem}>
                     <Text style={dynamicStyles.quickStatusValue}>{availableSeats}</Text>
                     <Text style={dynamicStyles.quickStatusLabel}>Available Seats</Text>
                   </View>
@@ -527,7 +566,7 @@ export default function DriverOnline({
 
                 <TouchableOpacity
                   style={dynamicStyles.offlineButton}
-                  onPress={() => router.replace('/DriverOffline')}
+                  onPress={onGoOffline}
                   activeOpacity={0.8}
                   accessibilityLabel="Go offline"
                 >
