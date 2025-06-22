@@ -119,6 +119,13 @@ export default defineSchema({
     numberOfRidesCompleted: v.number(),
     totalDistance: v.number(),
     totalFare: v.number(),
+
+        taxiAssociation: v.optional(v.string()),
+
+    // If you also want the other new fields you mentioned:
+    activeRoute: v.optional(v.id("routes")),
+    assignedRoute: v.optional(v.id("routes")),
+    routeAssignedAt: v.optional(v.number()),
       
     averageRating: v.optional(v.number()),
     })
