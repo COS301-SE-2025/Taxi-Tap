@@ -119,13 +119,6 @@ export default defineSchema({
     numberOfRidesCompleted: v.number(),
     totalDistance: v.number(),
     totalFare: v.number(),
-
-        taxiAssociation: v.optional(v.string()),
-
-    // If you also want the other new fields you mentioned:
-    activeRoute: v.optional(v.id("routes")),
-    assignedRoute: v.optional(v.id("routes")),
-    routeAssignedAt: v.optional(v.number()),
       
     averageRating: v.optional(v.number()),
     })
@@ -166,16 +159,4 @@ export default defineSchema({
     .index("by_taxi_id", ["taxiId"])
     .index("by_is_available", ["isAvailable"])
     .index("by_created_at", ["createdAt"]),
-
-        locations: defineTable({
-    userId: v.id("taxiTap_users"),
-    latitude: v.number(),
-    longitude: v.number(),
-    updatedAt: v.string(),
-    role: v.union(
-      v.literal("passenger"),
-      v.literal("driver"),
-      v.literal("both")
-    ),
-  }).index("by_user", ["userId"]),
 });
