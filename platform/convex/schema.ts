@@ -257,5 +257,23 @@ routes: defineTable({
   .index("by_user_id", ["userId"])
   .index("by_token", ["token"])
   .index("by_is_active", ["isActive"]),
+
+  notificationSettings: defineTable({
+  userId: v.id("taxiTap_users"),
+  rideUpdates: v.boolean(),
+  promotionalOffers: v.boolean(),
+  systemAlerts: v.boolean(),
+  emergencyNotifications: v.boolean(),
+  routeUpdates: v.boolean(),
+  paymentNotifications: v.boolean(),
+  ratingReminders: v.boolean(),
+  soundEnabled: v.boolean(),
+  vibrationEnabled: v.boolean(),
+  quietHoursStart: v.optional(v.string()),
+  quietHoursEnd: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number()
+})
+  .index("by_user_id", ["userId"])
 });
 
