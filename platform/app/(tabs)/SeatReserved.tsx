@@ -11,11 +11,16 @@ import { useMapContext, createRouteKey } from '../../contexts/MapContext';
 const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
+import { useUser } from '../../contexts/UserContext';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 
 export default function SeatReserved() {
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
+	const { user } = useUser();
 	const { 
 		currentLocation,
 		destination,
@@ -123,37 +128,34 @@ export default function SeatReserved() {
 
 	// Function to get route from Google Directions API
 	const getRoute = async (origin: { latitude: number; longitude: number; name: string }, dest: { latitude: number; longitude: number; name: string }) => {
-		if (!GOOGLE_MAPS_API_KEY) {
-			console.error('Google Maps API key is not configured');
-			// Fallback to straight line if no API key
-			const fallbackRoute = [
-				{ latitude: origin.latitude, longitude: origin.longitude },
-				{ latitude: dest.latitude, longitude: dest.longitude }
-			];
-			setRouteCoordinates(fallbackRoute);
-			setRouteLoaded(true);
+		// Validate coordinates
+		if (!origin || !dest) {
+			console.warn('Invalid coordinates provided to getRoute');
+			return;
+		}
+		
+		if (origin.latitude === 0 && origin.longitude === 0) {
+			console.warn('Origin coordinates are (0,0) - waiting for valid location');
+			return;
+		}
+		
+		if (dest.latitude === 0 && dest.longitude === 0) {
+			console.warn('Destination coordinates are (0,0) - invalid destination');
 			return;
 		}
 
-		// Check cache first
-		const routeKey = createRouteKey(origin, dest);
-		const cachedRoute = getCachedRoute(routeKey);
+		if (!GOOGLE_MAPS_API_KEY) {
+			console.error('Google Maps API key is not configured');
+			return;
+		}
+
+		const routeKey = `${origin.latitude},${origin.longitude}-${dest.latitude},${dest.longitude}`;
 		
-		if (cachedRoute && cachedRoute.length > 0) {
-			console.log('Using cached route');
+		// Check cache first
+		const cachedRoute = getCachedRoute(routeKey);
+		if (cachedRoute) {
 			setRouteCoordinates(cachedRoute);
 			setRouteLoaded(true);
-			
-			// Fit map to cached route
-			const coordinates = [
-				{ latitude: origin.latitude, longitude: origin.longitude },
-				{ latitude: dest.latitude, longitude: dest.longitude },
-				...cachedRoute
-			];
-			mapRef.current?.fitToCoordinates(coordinates, {
-				edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
-				animated: true,
-			});
 			return;
 		}
 
@@ -266,6 +268,13 @@ export default function SeatReserved() {
 			}, 100);
 		}
 	}, [routeCoordinates, currentLocation, destination]);
+
+	// Fetch taxi and driver info for the current reservation using Convex
+	// I made use of 'skip' instead of undefined to avoid getting a type error, and cast user.id to Id<"taxiTap_users"> for Convex
+	const taxiInfo = useQuery(
+		api.functions.taxis.viewTaxiInfo.viewTaxiInfo,
+		user ? { passengerId: user.id as Id<"taxiTap_users"> } : "skip"
+	);
 
 	const handleCancelReservation = () => {
 		if (destination && currentLocation) {
@@ -576,30 +585,21 @@ export default function SeatReserved() {
 							</View>
 							<View style={{ marginRight: 35 }}>
 								<Text style={dynamicStyles.driverName}>
-									{"Tshepo Mthembu"}
+									{taxiInfo?.driver?.name || "Tshepo Mthembu"}
 								</Text>
 								<Text style={dynamicStyles.driverVehicle}>
-									{"Hiace-Sesfikile"}
+									{taxiInfo?.taxi?.model || "Hiace-Sesfikile"}
 								</Text>
 								<TouchableOpacity onPress={() => router.push({pathname: '/TaxiInfoPage', params: { userId: vehicleInfo.userId }})}>
 									<Icon name="information-circle" size={30} color={isDark ? "#121212" : "#FF9900"} />
 								</TouchableOpacity>
 							</View>
 							<Text style={dynamicStyles.ratingText}>
-								{"5.0"}
+								{taxiInfo?.driver?.rating?.toFixed(1) || "5.0"}
 							</Text>
 							{[1, 2, 3, 4, 5].map((star, index) => (
 								<Icon key={index} name="star" size={12} color={theme.primary} style={{ marginRight: 1 }} />
 							))}
-						</View>
-						
-						<View style={dynamicStyles.licensePlateSection}>
-							<Text style={dynamicStyles.licensePlateLabel}>
-								{"License plate number"}
-							</Text>
-							<Text style={dynamicStyles.licensePlateValue}>
-								{vehicleInfo.plate}
-							</Text>
 						</View>
 						
 						<View style={dynamicStyles.locationBox}>

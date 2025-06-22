@@ -42,6 +42,10 @@ export const switchPassengerToBothHandler = async (
       totalDistance: 0,
       totalFare: 0,
       averageRating: undefined,
+      activeRoute: undefined,
+      assignedRoute: undefined,
+      taxiAssociation: "",
+      routeAssignedAt: undefined,
     });
   }
   
