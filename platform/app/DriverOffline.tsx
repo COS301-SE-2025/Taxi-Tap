@@ -11,8 +11,9 @@ import {
   SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
+import { useRouteContext } from '../contexts/RouteContext';
 
 interface DriverOfflineProps {
   onGoOnline: () => void;
@@ -48,12 +49,15 @@ interface SafetyOptionType {
 export default function DriverOffline({ 
   onGoOnline, 
   todaysEarnings, 
-  currentRoute = "Not Set",
+  currentRoute: propCurrentRoute,
   availableSeats = 4,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
   const { theme, isDark, setThemeMode } = useTheme();
   
+  const router = useRouter();
+  const { setCurrentRoute, currentRoute } = useRouteContext();
+
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
 
@@ -63,6 +67,10 @@ export default function DriverOffline({
       tabBarStyle: { display: 'none' },
     });
   }, [navigation]);
+
+  const handleSetRoute = () => {
+    router.push('/SetRoute');
+  };
 
   const handleMenuPress = () => {
     setShowMenu(!showMenu);
@@ -93,27 +101,33 @@ export default function DriverOffline({
 
   const handleEarningsPress = () => {
     // Type-safe navigation
-    navigation.navigate('EarningsPage' as never);
+    router.push('/EarningsPage');
   };
 
   const menuItems: MenuItemType[] = [
-    { 
-      icon: "person-outline", 
-      title: "My Profile", 
-      subtitle: "Driver details & documents",
-      onPress: () => navigation.navigate('DriverProfile' as never)
+    {
+      icon: 'person-outline',
+      title: 'My Profile',
+      subtitle: 'Driver details & documents',
+      onPress: () => router.push('/DriverProfile'),
     },
-    { 
-      icon: "car-outline", 
-      title: "My Taxi & Route", 
-      subtitle: "Vehicle info & route settings",
-      onPress: () => navigation.navigate('DriverRequestPage' as never)
+    {
+      icon: 'car-outline',
+      title: 'My Taxi & Route',
+      subtitle: 'Vehicle info & route settings',
+      onPress: () => router.push('/DriverRequestPage'),
     },
-    { 
-      icon: "time-outline", 
-      title: "Trip History", 
-      subtitle: "Past rides & routes",
-      onPress: () => navigation.navigate('EarningsPage' as never)
+    {
+      icon: 'time-outline',
+      title: 'Trip History',
+      subtitle: 'Past rides & routes',
+      onPress: () => router.push('/EarningsPage'),
+    },
+    {
+      icon: 'settings-outline',
+      title: 'Toggle Theme',
+      subtitle: 'Switch between light and dark mode',
+      onPress: handleToggleTheme,
     },
     { 
       icon: "settings-outline", 
@@ -127,9 +141,9 @@ export default function DriverOffline({
     {
       icon: "location-outline",
       title: "Current Route",
-      value: currentRoute,
+      value: (propCurrentRoute || "Not Set") as string,
       subtitle: "Tap to set route",
-      color: currentRoute === "Not Set" ? "#FF9900" : "#00A591",
+      color: (propCurrentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
       onPress: () => console.log('Route pressed')
     },
     {
@@ -530,10 +544,19 @@ export default function DriverOffline({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
         >
-          <TouchableOpacity 
-            style={dynamicStyles.earningsCard} 
-            activeOpacity={0.8} 
-            onPress={handleEarningsPress}
+          {/* Earnings card */}
+          <TouchableOpacity
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: 30,
+              padding: 24,
+              marginBottom: 20,
+              alignItems: 'center',
+              borderLeftWidth: 4,
+              borderLeftColor: theme.primary,
+              elevation: 4,
+            }}
+            onPress={() => router.push('/EarningsPage')}
           >
             <Text style={dynamicStyles.earningsAmount}>
               R{(todaysEarnings ?? 0).toFixed(2)}
@@ -553,8 +576,17 @@ export default function DriverOffline({
               Go online to start accepting seat reservation requests
             </Text>
             <TouchableOpacity
-              style={dynamicStyles.goOnlineButton}
-              onPress={() => navigation.navigate('DriverOnline' as never)}
+              style={{
+                width: '100%',
+                height: 56,
+                borderRadius: 30,
+                backgroundColor: isDark ? '#10B981' : '#00A591',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexDirection: 'row',
+                elevation: 4,
+              }}
+              onPress={() => router.replace('/DriverOnline')}
               activeOpacity={0.8}
               accessibilityLabel="Go online to accept passengers"
             >

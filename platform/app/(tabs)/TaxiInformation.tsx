@@ -102,6 +102,22 @@ export default function TaxiInformation() {
 
 	// Function to get route from Google Directions API - memoized with useCallback
 	const getRoute = useCallback(async (origin: { latitude: number; longitude: number; name: string }, dest: { latitude: number; longitude: number; name: string }) => {
+		// Validate coordinates
+		if (!origin || !dest) {
+			console.warn('Invalid coordinates provided to getRoute');
+			return;
+		}
+		
+		if (origin.latitude === 0 && origin.longitude === 0) {
+			console.warn('Origin coordinates are (0,0) - waiting for valid location');
+			return;
+		}
+		
+		if (dest.latitude === 0 && dest.longitude === 0) {
+			console.warn('Destination coordinates are (0,0) - invalid destination');
+			return;
+		}
+
 		if (!GOOGLE_MAPS_API_KEY) {
 			console.error('Google Maps API key is not configured');
 			setRouteError('Google Maps API key is not configured');
