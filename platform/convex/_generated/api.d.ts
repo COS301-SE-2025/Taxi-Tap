@@ -13,11 +13,13 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as functions_locations_getNearbyTaxis from "../functions/locations/getNearbyTaxis.js";
+import type * as functions_locations_updateLocation from "../functions/locations/updateLocation.js";
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
-import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_routes_mutations from "../functions/routes/mutations.js";
 import type * as functions_routes_queries from "../functions/routes/queries.js";
 import type * as functions_routes_reverseGeocode from "../functions/routes/reverseGeocode.js";
+import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_taxis_getTaxiForDriver from "../functions/taxis/getTaxiForDriver.js";
 import type * as functions_taxis_updateTaxiInfo from "../functions/taxis/updateTaxiInfo.js";
 import type * as functions_taxis_viewTaxiInfo from "../functions/taxis/viewTaxiInfo.js";
@@ -39,11 +41,13 @@ import type * as functions_users_UserManagement_switchPassengertoBoth from "../f
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "functions/locations/getNearbyTaxis": typeof functions_locations_getNearbyTaxis;
+  "functions/locations/updateLocation": typeof functions_locations_updateLocation;
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
-  "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/routes/mutations": typeof functions_routes_mutations;
   "functions/routes/queries": typeof functions_routes_queries;
   "functions/routes/reverseGeocode": typeof functions_routes_reverseGeocode;
+  "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/taxis/getTaxiForDriver": typeof functions_taxis_getTaxiForDriver;
   "functions/taxis/updateTaxiInfo": typeof functions_taxis_updateTaxiInfo;
   "functions/taxis/viewTaxiInfo": typeof functions_taxis_viewTaxiInfo;
