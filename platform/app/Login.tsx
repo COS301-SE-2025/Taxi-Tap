@@ -42,7 +42,7 @@ export default function Login() {
         phoneNumber: number,
         password,
       });
-      
+
       // Use the context login function
       await login(result);
       
@@ -59,7 +59,7 @@ export default function Login() {
         params: { userId: result.id.toString() }
       });
       }
-    } catch (err) {
+    } catch {
       alert("Phone number or password is incorrect");
     }
   };
