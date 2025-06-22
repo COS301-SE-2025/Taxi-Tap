@@ -86,27 +86,34 @@ export default function HomeScreen() {
   }, [routeLoaded]);
 
   const getRoute = async (origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }) => {
+    // Validate coordinates
+    if (!origin || !destination) {
+      console.warn('Invalid coordinates provided to getRoute');
+      return;
+    }
+    
+    if (origin.latitude === 0 && origin.longitude === 0) {
+      console.warn('Origin coordinates are (0,0) - waiting for valid location');
+      return;
+    }
+    
+    if (destination.latitude === 0 && destination.longitude === 0) {
+      console.warn('Destination coordinates are (0,0) - invalid destination');
+      return;
+    }
+
     if (!GOOGLE_MAPS_API_KEY) {
       console.error('Google Maps API key is not configured');
       Alert.alert('Error', 'Google Maps API key is not configured');
       return;
     }
 
-    // Check cache first
-    const cacheKey = createRouteKey(
-      { ...origin, name: '' },
-      { ...destination, name: '' }
-    );
-    const cachedRoute = getCachedRoute(cacheKey);
+    const cacheKey = `${origin.latitude},${origin.longitude}-${destination.latitude},${destination.longitude}`;
     
+    // Check cache first
+    const cachedRoute = getCachedRoute(cacheKey);
     if (cachedRoute) {
-      console.log('Using cached route');
       setRouteCoordinates(cachedRoute);
-      const coordinates = [origin, destination, ...cachedRoute];
-      mapRef.current?.fitToCoordinates(coordinates, {
-        edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
-        animated: true,
-      });
       setRouteLoaded(true);
       return;
     }

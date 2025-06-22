@@ -13,7 +13,7 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
@@ -54,6 +54,7 @@ export default function DriverOnline({
 }: DriverOnlineProps) {
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
+  const router = useRouter();
 
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -147,7 +148,7 @@ export default function DriverOnline({
       subtitle: "Driver details & documents",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('DriverProfile' as never);
+        router.push('/DriverProfile');
       }
     },
     { 
@@ -156,7 +157,7 @@ export default function DriverOnline({
       subtitle: "Vehicle info & route settings",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('../DriverRequestPage' as never);
+        router.push('/DriverRequestPage');
       }
     },
     { 
@@ -165,16 +166,16 @@ export default function DriverOnline({
       subtitle: "Past rides & routes",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('../EarningsPage' as never);
+        router.push('/EarningsPage');
       }
     },
     { 
       icon: "settings-outline", 
-      title: "Settings", 
-      subtitle: "App preferences",
+      title: "Toggle Theme", 
+      subtitle: "Switch between light and dark mode",
       onPress: () => {
         setShowMenu(false);
-        navigation.navigate('../Settings' as never);
+        handleToggleTheme();
       }
     }
   ];

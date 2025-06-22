@@ -69,6 +69,11 @@ export const signUpSMSHandler = async (
         numberOfRidesCompleted: 0,
         totalDistance: 0,
         totalFare: 0,
+        averageRating: undefined,
+        activeRoute: undefined,
+        assignedRoute: undefined,
+        taxiAssociation: "",
+        routeAssignedAt: undefined,
       });
     }
 
