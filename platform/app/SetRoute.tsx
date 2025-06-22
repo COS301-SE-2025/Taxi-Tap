@@ -140,6 +140,11 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
         taxiAssociation: taxiAssociation
       });
 
+      // Check if result and assignedRoute exist
+      if (!result || !result.assignedRoute) {
+        throw new Error("No route was assigned. Please try again.");
+      }
+
       const { start, destination } = parseRouteName(result.assignedRoute.name);
       const routeString = `${start} → ${destination}`;
       
@@ -394,6 +399,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
               <TouchableOpacity 
                 style={dynamicStyles.backButton}
                 onPress={() => navigation.goBack()}
+                testID="back-button"
               >
                 <Icon name="arrow-back" size={24} color={isDark ? "#121212" : "#FF9900"} />
               </TouchableOpacity>
@@ -442,6 +448,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
             <TouchableOpacity 
               style={dynamicStyles.backButton}
               onPress={() => navigation.goBack()}
+              testID="back-button"
             >
               <Icon name="arrow-back" size={24} color={isDark ? "#121212" : "#FF9900"} />
             </TouchableOpacity>
