@@ -33,10 +33,22 @@ import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.
 import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
 =======
 >>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
+import type * as functions_notifications_deactivatePushToken from "../functions/notifications/deactivatePushToken.js";
+import type * as functions_notifications_getNotificationSettings from "../functions/notifications/getNotificationSettings.js";
+import type * as functions_notifications_getNotifications from "../functions/notifications/getNotifications.js";
+import type * as functions_notifications_markAllAsRead from "../functions/notifications/markAllAsRead.js";
+import type * as functions_notifications_markAsRead from "../functions/notifications/markAsRead.js";
+import type * as functions_notifications_registerPushToken from "../functions/notifications/registerPushToken.js";
+import type * as functions_notifications_sendNotifications from "../functions/notifications/sendNotifications.js";
+import type * as functions_notifications_updateNotificationSettings from "../functions/notifications/updateNotificationSettings.js";
+import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
+import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.js";
+import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
 import type * as functions_routes_mutations from "../functions/routes/mutations.js";
 import type * as functions_routes_queries from "../functions/routes/queries.js";
 import type * as functions_routes_reverseGeocode from "../functions/routes/reverseGeocode.js";
+import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_taxis_getTaxiForDriver from "../functions/taxis/getTaxiForDriver.js";
 import type * as functions_taxis_updateTaxiInfo from "../functions/taxis/updateTaxiInfo.js";
@@ -79,10 +91,22 @@ declare const fullApi: ApiFromModules<{
   "functions/rides/cancelRide": typeof functions_rides_cancelRide;
 =======
 >>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
+  "functions/notifications/deactivatePushToken": typeof functions_notifications_deactivatePushToken;
+  "functions/notifications/getNotificationSettings": typeof functions_notifications_getNotificationSettings;
+  "functions/notifications/getNotifications": typeof functions_notifications_getNotifications;
+  "functions/notifications/markAllAsRead": typeof functions_notifications_markAllAsRead;
+  "functions/notifications/markAsRead": typeof functions_notifications_markAsRead;
+  "functions/notifications/registerPushToken": typeof functions_notifications_registerPushToken;
+  "functions/notifications/sendNotifications": typeof functions_notifications_sendNotifications;
+  "functions/notifications/updateNotificationSettings": typeof functions_notifications_updateNotificationSettings;
+  "functions/rides/RequestRide": typeof functions_rides_RequestRide;
+  "functions/rides/acceptRide": typeof functions_rides_acceptRide;
+  "functions/rides/cancelRide": typeof functions_rides_cancelRide;
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
   "functions/routes/mutations": typeof functions_routes_mutations;
   "functions/routes/queries": typeof functions_routes_queries;
   "functions/routes/reverseGeocode": typeof functions_routes_reverseGeocode;
+  "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/taxis/getTaxiForDriver": typeof functions_taxis_getTaxiForDriver;
   "functions/taxis/updateTaxiInfo": typeof functions_taxis_updateTaxiInfo;
