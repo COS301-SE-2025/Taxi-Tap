@@ -17,6 +17,7 @@ import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { UserProvider } from '../contexts/UserContext';
 import { MapProvider } from '../contexts/MapContext';
 import { RouteProvider } from '../contexts/RouteContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -56,11 +57,13 @@ export default function RootLayout() {
     <ConvexProvider client={convex}>
       <ThemeProvider>
         <UserProvider>
+          <NotificationProvider>
           <MapProvider>
             <RouteProvider>
               <RootLayoutNav />
             </RouteProvider>
           </MapProvider>
+          </NotificationProvider>
         </UserProvider>
       </ThemeProvider>
     </ConvexProvider>
@@ -197,6 +200,13 @@ function RootLayoutNav() {
               headerShown: true,
               title: "Vehicle Details"
             }}
+          />
+          <Stack.Screen
+           name="NotificationsScreen"
+           options={{
+             headerShown: true,
+            title: "Notifications" 
+             }}
           />
         </Stack>
       </View>

@@ -14,7 +14,7 @@ const NotificationButton: React.FC = () => {
   const { theme, isDark } = useTheme();
 
   const handleNotificationPress = () => {
-    router.push('./NotificationScreen');
+    router.push('../NotificationsScreen');
   };
 
   return (
