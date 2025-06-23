@@ -18,7 +18,7 @@ export const getUserNotifications = query({
     }
 
     if (args.limit) {
-      q = q.take(args.limit);
+      return await q.take(args.limit);
     }
 
     return await q.collect();
