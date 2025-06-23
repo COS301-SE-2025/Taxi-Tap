@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+// platform/app/(tabs)/HomeScreen.tsx
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,68 +7,214 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  Alert,
+  Platform,
+  Animated,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import { router, useNavigation } from 'expo-router';
+import { router, useNavigation, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useMapContext, createRouteKey } from '../../contexts/MapContext';
 import loading from '../../assets/images/loading4.png';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { useLocationSystem } from '../../hooks/useLocationSystem';
+
+const GOOGLE_MAPS_API_KEY =
+  Platform.OS === 'ios'
+    ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
+    : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function HomeScreen() {
+  const { userId } = useLocalSearchParams<{ userId: string }>();
+  useEffect(() => {
+    console.log('🚀 HomeScreen got userId:', userId);
+  }, [userId]);
+
+  const [snapshotDrivers, setSnapshotDrivers] = useState<
+  { _id: string; latitude: number; longitude: number }[]
+>([]);
+
+  const { userLocation, nearbyTaxis } = useLocationSystem(userId || '');
+  useEffect(() => {
+    if (userLocation) {
+      console.log('✅ Live-location sent:', userLocation);
+    }
+  }, [userLocation]);
+
+useEffect(() => {
+  if (nearbyTaxis && nearbyTaxis.length) {
+    console.log(`🚖 Nearby drivers (${nearbyTaxis.length}):`, nearbyTaxis);
+  }
+}, [nearbyTaxis]);
+
+useEffect(() => {
+  if (nearbyTaxis?.length && snapshotDrivers.length === 0) {
+    setSnapshotDrivers(nearbyTaxis);
+  }
+}, [nearbyTaxis, snapshotDrivers.length]);
+
+  const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
 
-  const [currentLocation, setCurrentLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    name: string;
-  } | null>(null);
+  const {
+    currentLocation,
+    destination,
+    routeCoordinates,
+    isLoadingRoute,
+    routeLoaded,
+    setCurrentLocation,
+    setDestination,
+    setRouteCoordinates,
+    setIsLoadingRoute,
+    setRouteLoaded,
+    getCachedRoute,
+    setCachedRoute,
+  } = useMapContext();
 
-  const [destination, setDestination] = useState<{
-    latitude: number;
-    longitude: number;
-    name: string;
-  } | null>(null);
-
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
   const mapRef = useRef<MapView | null>(null);
 
   useLayoutEffect(() => {
-    navigation.setOptions({
-      title: "Home",
-    });
+    navigation.setOptions({ title: 'Home' });
   }, [navigation]);
 
-  // Get current location on mount
+  const handleReserveSeat = () => {
+    if (!destination || !currentLocation) {
+      Alert.alert('Error', 'Please select a destination first');
+      return;
+    }
+
+    router.push({
+      pathname: './TaxiInformation',
+      params: {
+        destinationName: destination.name,
+        destinationLat: destination.latitude.toString(),
+        destinationLng: destination.longitude.toString(),
+        currentName: currentLocation.name,
+        currentLat: currentLocation.latitude.toString(),
+        currentLng: currentLocation.longitude.toString(),
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (routeLoaded) {
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      buttonOpacity.setValue(0);
+    }
+  }, [routeLoaded]);
+
+  const getRoute = async (
+    origin: { latitude: number; longitude: number },
+    dest: { latitude: number; longitude: number }
+  ) => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      Alert.alert('Error', 'Google Maps API key is not configured');
+      return;
+    }
+
+    const cacheKey = createRouteKey(
+      { ...origin, name: '' },
+      { ...dest, name: '' }
+    );
+
+    const cached = getCachedRoute(cacheKey);
+    if (cached) {
+      setRouteCoordinates(cached);
+      setRouteLoaded(true);
+      return;
+    }
+
+    setIsLoadingRoute(true);
+    setRouteLoaded(false);
+
+    try {
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${dest.latitude},${dest.longitude}&key=${GOOGLE_MAPS_API_KEY}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.status !== 'OK') throw new Error(data.error_message || data.status);
+
+      const points = decodePolyline(data.routes[0].overview_polyline.points);
+      setCachedRoute(cacheKey, points);
+      setRouteCoordinates(points);
+
+      mapRef.current?.fitToCoordinates([origin, dest, ...points], {
+        edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      });
+      setRouteLoaded(true);
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  };
+
+  const decodePolyline = (encoded: string) => {
+    let idx = 0,
+      lat = 0,
+      lng = 0,
+      pts: { latitude: number; longitude: number }[] = [];
+
+    while (idx < encoded.length) {
+      let b,
+        shift = 0,
+        result = 0;
+      do {
+        b = encoded.charCodeAt(idx++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(idx++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+      lng += dlng;
+
+      pts.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+    }
+    return pts;
+  };
+
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        console.warn('Permission to access location was denied');
-        return;
-      }
+      if (status !== 'granted') return;
 
-      const location = await Location.getCurrentPositionAsync({
+      const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Highest,
       });
-
-      const { latitude, longitude } = location.coords;
-      const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
-      const placeName = `${place.name || ''} ${place.street || ''}, ${place.city || place.region || ''}`.trim();
-
-      const currentLoc = {
-        latitude,
-        longitude,
-        name: placeName || 'Unknown Location',
-      };
-
-      setCurrentLocation(currentLoc);
-      setDestination(null);
+      const [place] = await Location.reverseGeocodeAsync(loc.coords);
+      setCurrentLocation({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        name:
+          `${place.name || ''} ${place.street || ''}, ${place.city || place.region || ''}`.trim() ||
+          'Unknown Location',
+      });
 
       mapRef.current?.animateToRegion(
         {
-          latitude,
-          longitude,
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         },
@@ -76,47 +223,25 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  // Navigate to TaxiInformation after destination selection
   const handleDestinationSelect = (route: {
-    coords: { latitude: number; longitude: number };
-    title: string;
-    subtitle?: string;
+    destination: string;
+    destinationCoords: { latitude: number; longitude: number } | null;
   }) => {
-    const newDestination = {
-      latitude: route.coords.latitude,
-      longitude: route.coords.longitude,
-      name: route.title,
+    if (!route.destinationCoords || !currentLocation) return;
+    const dest = {
+      latitude: route.destinationCoords.latitude,
+      longitude: route.destinationCoords.longitude,
+      name: route.destination,
     };
-
-    setDestination(newDestination);
-
-    mapRef.current?.animateToRegion(
-      {
-        latitude: newDestination.latitude,
-        longitude: newDestination.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      },
-      1000
-    );
-
-    // Navigate to TaxiInformation after a short delay to show the map animation
-    setTimeout(() => {
-      router.push({
-        pathname: './TaxiInformation',
-        params: {
-          destinationName: newDestination.name,
-          destinationLat: newDestination.latitude.toString(),
-          destinationLng: newDestination.longitude.toString(),
-          currentName: currentLocation?.name || '',
-          currentLat: currentLocation?.latitude.toString() || '',
-          currentLng: currentLocation?.longitude.toString() || '',
-        }
-      });
-    }, 1500);
+    setDestination(dest);
+    getRoute(currentLocation, dest);
   };
 
-  // Create dynamic styles based on theme
+  const s = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    map: { height: '40%' },
+  });
+
   const dynamicStyles = StyleSheet.create({
     container: {
       flex: 1,
@@ -147,10 +272,7 @@ export default function HomeScreen() {
       alignSelf: 'center',
       shadowColor: theme.shadow,
       shadowOpacity: isDark ? 0.3 : 0.15,
-      shadowOffset: {
-        width: 0,
-        height: 4
-      },
+      shadowOffset: { width: 0, height: 4 },
       shadowRadius: 4,
       elevation: 4,
     },
@@ -158,7 +280,7 @@ export default function HomeScreen() {
       marginRight: 10,
       alignItems: 'center',
       justifyContent: 'flex-start',
-      paddingTop: 5
+      paddingTop: 5,
     },
     currentLocationCircle: {
       width: 20,
@@ -166,29 +288,29 @@ export default function HomeScreen() {
       borderRadius: 10,
       backgroundColor: theme.primary,
       borderWidth: 2,
-      borderColor: isDark ? '#FFB84D' : '#FFB84D',
+      borderColor: '#FFB84D',
       marginBottom: 8,
       justifyContent: 'center',
-      alignItems: 'center'
+      alignItems: 'center',
     },
     currentLocationDot: {
       width: 10,
       height: 10,
       borderRadius: 5,
-      backgroundColor: theme.primary
+      backgroundColor: theme.primary,
     },
     dottedLineContainer: {
       height: 35,
       width: 1,
       marginBottom: 8,
       justifyContent: 'space-between',
-      alignItems: 'center'
+      alignItems: 'center',
     },
     dottedLineDot: {
       width: 2,
       height: 3,
       backgroundColor: theme.primary,
-      borderRadius: 1
+      borderRadius: 1,
     },
     locationTextContainer: {
       flex: 1,
@@ -240,84 +362,92 @@ export default function HomeScreen() {
       fontSize: 12,
       color: theme.textSecondary,
     },
-    loadingContainer: {
-      justifyContent: 'center',
+    routeLoadingText: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontStyle: 'italic',
+      marginTop: 4,
+    },
+    reserveButton: {
+      position: 'absolute',
+      bottom: 80,
+      left: 20,
+      right: 20,
+      backgroundColor: theme.primary,
+      borderRadius: 25,
+      paddingVertical: 15,
       alignItems: 'center',
-      backgroundColor: theme.background,
-    }
+      justifyContent: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: 0.3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    reserveButtonText: {
+      color: theme.buttonText || '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
   });
 
   return (
-    <View style={dynamicStyles.container}>
-      {/* Map Section */}
+    <View style={s.container}>
       {!currentLocation ? (
-        <View style={[dynamicStyles.map, dynamicStyles.loadingContainer]}>
-          <Image
-            source={loading}
-            style={{ width: 120, height: 120 }}
-            resizeMode="contain"
-          />
+        <View style={[s.map, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Image source={loading} style={{ width: 120, height: 120 }} resizeMode="contain" />
         </View>
       ) : (
         <MapView
           ref={mapRef}
-          style={dynamicStyles.map}
+          style={s.map}
+          provider={PROVIDER_GOOGLE}
           initialRegion={{
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
-          // Use dark map style when in dark mode
           customMapStyle={isDark ? darkMapStyle : []}
         >
-          <Marker
-            coordinate={{
-              latitude: currentLocation.latitude,
-              longitude: currentLocation.longitude,
-            }}
-            title="You are here"
-            pinColor="blue"
-          />
+          <Marker coordinate={currentLocation} title="You are here" pinColor="blue" />
+          
+                {snapshotDrivers.map((driver) => (
+        <Marker
+          key={driver._id}
+          coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
+          pinColor="green"
+          tracksViewChanges={false}
+          title="Driver"
+        />
+      ))}
           {destination && (
-            <Marker
-              coordinate={{
-                latitude: destination.latitude,
-                longitude: destination.longitude,
-              }}
-              title={destination.name}
-              pinColor="orange"
-            />
+            <Marker coordinate={destination} title={destination.name} pinColor="orange" />
+          )}
+          {routeLoaded && routeCoordinates.length > 0 && (
+            <Polyline coordinates={routeCoordinates} strokeColor={theme.primary} strokeWidth={4} />
           )}
         </MapView>
       )}
 
-      {/* Bottom Section */}
+      {/* Dynamic Bottom Sheet */}
       <View style={dynamicStyles.bottomSheet}>
-        {/* Location Box */}
         <View style={dynamicStyles.locationBox}>
-          {/* Current Location and Destination indicators */}
           <View style={dynamicStyles.locationIndicator}>
-            {/* Current Location Circle */}
             <View style={dynamicStyles.currentLocationCircle}>
               <View style={dynamicStyles.currentLocationDot} />
             </View>
-            
-            {/* Dotted Line Container */}
             <View style={dynamicStyles.dottedLineContainer}>
-              {[...Array(8)].map((_, index) => (
-                <View key={index} style={dynamicStyles.dottedLineDot} />
+              {[...Array(8)].map((_, i) => (
+                <View key={i} style={dynamicStyles.dottedLineDot} />
               ))}
             </View>
-            
-            {/* Destination Pin */}
-            <Icon 
-              name="location" 
-              size={18} 
-              color={isDark ? theme.text : "#121212"} 
+            <Icon
+              name="location"
+              size={18}
+              color={isDark ? theme.text : "#121212"}
             />
           </View>
-          
           <View style={dynamicStyles.locationTextContainer}>
             <Text style={dynamicStyles.currentLocationText}>
               {currentLocation ? currentLocation.name : 'Getting current location...'}
@@ -326,53 +456,54 @@ export default function HomeScreen() {
             <Text style={dynamicStyles.destinationText}>
               {destination ? destination.name : 'No destination selected'}
             </Text>
+            {isLoadingRoute && (
+              <Text style={dynamicStyles.routeLoadingText}>
+                Loading route...
+              </Text>
+            )}
+            {routeLoaded && !isLoadingRoute && (
+              <Text style={[dynamicStyles.routeLoadingText, { color: theme.primary }]}>
+                Route loaded ✓
+              </Text>
+            )}
           </View>
         </View>
 
-        {/* Saved Routes */}
         <Text style={dynamicStyles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
         <ScrollView style={{ marginTop: 10 }}>
-          {[
-            {
-              title: 'Bosman Taxi Rank',
-              subtitle: 'Pretoria Central, 0002',
-              coords: { latitude: -25.746111, longitude: 28.187222 },
-            },
-            {
-              title: 'Menlyn Taxi Rank',
-              subtitle: 'Menlyn Park Shopping Center, 0181',
-              coords: { latitude: -25.7824, longitude: 28.2753 },
-            },
-            {
-              title: 'Corner prospect & Hilda',
-              subtitle: '',
-              coords: { latitude: -25.754, longitude: 28.234 },
-            },
-          ].map((route, index) => (
+          {routes?.map((route, idx) => (
             <TouchableOpacity
-              key={index}
+              key={idx}
               style={dynamicStyles.routeCard}
               onPress={() => handleDestinationSelect(route)}
             >
-              <Icon 
-                name="location-sharp" 
-                size={20} 
-                color={theme.primary} 
-                style={{ marginRight: 12 }} 
+              <Icon
+                name="location-sharp"
+                size={20}
+                color={theme.primary}
+                style={{ marginRight: 12 }}
               />
               <View style={{ flex: 1 }}>
-                <Text style={dynamicStyles.routeTitle}>{route.title}</Text>
-                <Text style={dynamicStyles.routeSubtitle}>{route.subtitle}</Text>
+                <Text style={dynamicStyles.routeTitle}>{route.destination}</Text>
+                <Text style={dynamicStyles.routeSubtitle}>Pickup: {route.start}</Text>
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
+
+      {/* Reserve a Seat Button */}
+      {routeLoaded && !isLoadingRoute && (
+        <Animated.View style={{ opacity: buttonOpacity }}>
+          <TouchableOpacity style={dynamicStyles.reserveButton} onPress={handleReserveSeat}>
+            <Text style={dynamicStyles.reserveButtonText}>Reserve a Seat</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </View>
   );
 }
 
-// Dark map style for better dark mode experience
 const darkMapStyle = [
   {
     "elementType": "geometry",

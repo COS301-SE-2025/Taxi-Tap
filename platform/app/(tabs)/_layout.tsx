@@ -4,6 +4,7 @@ import { TouchableOpacity, Image } from 'react-native';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
+import { UserProvider } from '../../contexts/UserContext';
 import dark from '../../assets/images/icon-dark.png';
 import light from '../../assets/images/icon.png';
 
@@ -36,122 +37,141 @@ const ThemeToggleButton: React.FC = () => {
   );
 };
 
-export default function TabLayout() {
+// Tab Navigation Component (separated for cleaner structure)
+const TabNavigation: React.FC = () => {
   const { theme, isDark } = useTheme();
 
   return (
-    <SafeAreaProvider>
-      <Tabs
-        screenOptions={{
-          // Tab Bar Styling with Theme
-          tabBarActiveTintColor: theme.tabBarActive,
-          tabBarInactiveTintColor: theme.tabBarInactive,
-          tabBarStyle: {
-            height: 60,
-            paddingBottom: 10,
-            backgroundColor: theme.tabBarBackground,
-            borderTopColor: theme.border,
-            borderTopWidth: 1,
-          },
-          tabBarLabelStyle: {
-            fontFamily: 'AmazonEmber-Medium',
-            fontSize: 12,
-            marginBottom: 4,
-          },
-          
-          // Header Styling with Theme
-          headerTitle: () => (
-            <Image
-              source={isDark 
-                ? dark
-                : light
-              }
-              style={{ 
-                width: 150,
-                height: 150,
-                resizeMode: 'contain',
-              }}
-            />
+    <Tabs
+      screenOptions={{
+        // Tab Bar Styling with Theme
+        tabBarActiveTintColor: theme.tabBarActive,
+        tabBarInactiveTintColor: theme.tabBarInactive,
+        tabBarStyle: {
+          height: 60,
+          paddingBottom: 10,
+          backgroundColor: theme.tabBarBackground,
+          borderTopColor: theme.border,
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'AmazonEmber-Medium',
+          fontSize: 12,
+          marginBottom: 4,
+        },
+        
+        // Header Styling with Theme
+        headerTitle: () => (
+          <Image
+            source={isDark 
+              ? dark
+              : light
+            }
+            style={{ 
+              width: 150,
+              height: 150,
+              resizeMode: 'contain',
+            }}
+          />
+        ),
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: theme.headerBackground,
+          shadowOpacity: isDark ? 0.3 : 0.1,
+          elevation: 2,
+          borderBottomColor: theme.border,
+          borderBottomWidth: 1,
+        },
+        headerTintColor: theme.text,
+        // Add the theme toggle button to all tab headers
+        headerRight: () => <ThemeToggleButton />,
+      }}
+    >
+      {/* Home Tab */}
+      <Tabs.Screen
+        name="HomeScreen"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="home" size={24} color={color} />
           ),
-          headerTitleAlign: 'center',
-          headerStyle: {
-            backgroundColor: theme.headerBackground,
-            shadowOpacity: isDark ? 0.3 : 0.1,
-            elevation: 2,
-            borderBottomColor: theme.border,
-            borderBottomWidth: 1,
-          },
-          headerTintColor: theme.text,
-          // Add the theme toggle button to all tab headers
-          headerRight: () => <ThemeToggleButton />,
         }}
-      >
-        {/* Home Tab */}
-        <Tabs.Screen
-          name="HomeScreen"
-          options={{
-            title: 'Home',
-            tabBarIcon: ({ color }) => (
-              <FontAwesome name="home" size={24} color={color} />
-            ),
-          }}
-        />
+      />
 
-        <Tabs.Screen
-          name="Feedback"
-          options={{
-            title: 'Feedback',
-            tabBarIcon: ({ color }) => (
-              <MaterialIcons name="feedback" size={24} color={color} />
-            ),
-          }}
-        />
+      <Tabs.Screen
+        name="Feedback"
+        options={{
+          title: 'Feedback',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="feedback" size={24} color={color} />
+          ),
+        }}
+      />
 
-        <Tabs.Screen
-          name="PassengerProfile"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ color }) => (
-              <FontAwesome name="user" size={24} color={color} />
-            ),
-          }}
-        />
+      <Tabs.Screen
+        name="PassengerProfile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="user" size={24} color={color} />
+          ),
+        }}
+      />
 
-        <Tabs.Screen
-          name="DriverProfile"
-          options={{
-            href: null,
-          }}
-        />
+      <Tabs.Screen
+        name="HelpPage"
+        options={{
+          title: 'Help',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="question-circle" size={24} color={color} />
+          ),
+        }}
+      />
 
-        <Tabs.Screen
-          name="index"
-          options={{
-            href: null,
-          }}
-        />
+      <Tabs.Screen
+        name="DriverProfile"
+        options={{
+          href: null,
+        }}
+      />
 
-        <Tabs.Screen
-          name="SeatReserved"
-          options={{
-            href: null,
-          }}
-        />
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null,
+        }}
+      />
 
-        <Tabs.Screen
-          name="TaxiInfoPage"
-          options={{
-            href: null,
-          }}
-        />
+      <Tabs.Screen
+        name="SeatReserved"
+        options={{
+          href: null,
+        }}
+      />
 
-        <Tabs.Screen
-          name="TaxiInformation"
-          options={{
-            href: null,
-          }}
-        />
-      </Tabs>
+      <Tabs.Screen
+        name="TaxiInfoPage"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="TaxiInformation"
+        options={{
+          href: null,
+        }}
+      />
+    </Tabs>
+  );
+};
+
+export default function TabLayout() {
+  return (
+    <SafeAreaProvider>
+      <UserProvider>
+        <TabNavigation />
+      </UserProvider>
     </SafeAreaProvider>
   );
 }

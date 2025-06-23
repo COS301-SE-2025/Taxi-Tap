@@ -12,8 +12,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
-import { useConvex  } from "convex/react";
+import { useConvex } from "convex/react";
+import { api } from "../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
+import { useUser } from '../contexts/UserContext';
 import icon from '../assets/images/icon.png';
 import google from '../assets/images/google5.png';
 
@@ -23,10 +25,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const convex = useConvex();
+  const { login } = useUser();
 
   const handleLogin = async () => {
     if (!number || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+      Alert.alert('Error', 'Please enter both phone number and password');
       return;
     }
     const saNumberRegex = /^0(6|7|8)[0-9]{8}$/;
@@ -34,21 +37,31 @@ export default function Login() {
       Alert.alert('Invalid number', 'Please enter a valid number');
       return;
     }
-    // try {
-    //   const result = await convex.query(api.functions.users.UserManagement.logInWithSMS.loginSMS, {
-    //     number,
-    //     password,
-    //   });
-    //   alert(`Welcome back ${result.name}!`);
-    //   if (result.role === 'Driver') {
-    //     router.push('/DriverProfile');
-    //   } else if (result.role === 'Passenger') {
-        router.push('/HomeScreen');
-    //   }
-    // } catch (err) {
-    //   alert("Number or password is incorrect");
-    // }
-    // Alert.alert('Login Successful', `Welcome, ${email}`);
+    try {
+      const result = await convex.query(api.functions.users.UserManagement.logInWithSMS.loginSMS, {
+        phoneNumber: number,
+        password,
+      });
+
+      // Use the context login function
+      await login(result);
+      
+      alert(`Welcome back ${result.name}!`);
+      
+      if (result.currentActiveRole === 'driver') {
+        router.push({
+        pathname: '/DriverOffline',
+        params: { userId: result.id.toString() }
+      });
+      } else if (result.currentActiveRole === 'passenger') {
+        router.push({
+        pathname: '/HomeScreen',
+        params: { userId: result.id.toString() }
+      });
+      }
+    } catch {
+      alert("Phone number or password is incorrect");
+    }
   };
 
   return (
@@ -124,7 +137,6 @@ export default function Login() {
               secureTextEntry={!showPassword}
               style={{
                   flex: 1,
-                  // paddingVertical: 12,
                   fontSize: 16,
               }}
             />

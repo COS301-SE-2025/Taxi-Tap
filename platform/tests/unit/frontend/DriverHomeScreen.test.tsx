@@ -1,36 +1,42 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import DriverHomeScreen from '../../../app/(tabs)/DriverHomeScreen';
+import DriverHomeScreen from '../../../app/DriverHomeScreen';
 
+interface DriverOfflineProps {
+  onGoOnline: () => void;
+  todaysEarnings: number;
+}
 
+interface DriverOnlineProps {
+  onGoOffline: () => void;
+  todaysEarnings: number;
+}
 
-// Mock the child components
-jest.mock('../../../app/(tabs)/DriverOffline', () => {
-  const { TouchableOpacity, Text } = require('react-native');
-  return function MockDriverOffline({ onGoOnline, todaysEarnings }: any) {
+// Mock dependencies
+jest.mock('../../../app/DriverOffline', () => {
+  const { View, TouchableOpacity, Text } = jest.requireActual('react-native');
+  return function MockDriverOffline({ onGoOnline, todaysEarnings }: DriverOfflineProps) {
     return (
-      <TouchableOpacity 
-        testID="driver-offline-component"
-        onPress={onGoOnline}
-      >
+      <View testID="driver-offline-component">
+        <TouchableOpacity testID="go-online-button" onPress={onGoOnline}>
+          <Text>Go Online</Text>
+        </TouchableOpacity>
         <Text testID="offline-earnings">Earnings: R{todaysEarnings.toFixed(2)}</Text>
-        <Text testID="go-online-button">GO ONLINE</Text>
-      </TouchableOpacity>
+      </View>
     );
   };
 });
 
-jest.mock('../../../app/(tabs)/DriverOnline', () => {
-  const { TouchableOpacity, Text } = require('react-native');
-  return function MockDriverOnline({ onGoOffline, todaysEarnings }: any) {
+jest.mock('../../../app/DriverOnline', () => {
+  const { View, TouchableOpacity, Text } = jest.requireActual('react-native');
+  return function MockDriverOnline({ onGoOffline, todaysEarnings }: DriverOnlineProps) {
     return (
-      <TouchableOpacity 
-        testID="driver-online-component"
-        onPress={onGoOffline}
-      >
+      <View testID="driver-online-component">
+        <TouchableOpacity testID="go-offline-button" onPress={onGoOffline}>
+          <Text>Go Offline</Text>
+        </TouchableOpacity>
         <Text testID="online-earnings">Earnings: R{todaysEarnings.toFixed(2)}</Text>
-        <Text testID="go-offline-button">GO OFFLINE</Text>
-      </TouchableOpacity>
+      </View>
     );
   };
 });
@@ -194,7 +200,6 @@ describe('DriverHomeScreen', () => {
       
       expect(() => unmount()).not.toThrow();
     });
-
   });
 
   describe('Accessibility', () => {

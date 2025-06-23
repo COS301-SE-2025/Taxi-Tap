@@ -1,228 +1,310 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../contexts/ThemeContext';
 import { useRouter } from 'expo-router';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { useUser } from '../../contexts/UserContext';
+import { Id } from '../../convex/_generated/dataModel';
+import { useTheme } from '../../contexts/ThemeContext';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function PassengerProfile() {
-  const [name, setName] = useState('Tshepo Mthembu');
-  const [number, setNumber] = useState('073 658 9142');
-  const [email, setEmail] = useState('tshepo@gmail.com');
-  const { theme, isDark } = useTheme();
-  const router = useRouter();
+    const [name, setName] = useState('');
+    const [number, setNumber] = useState('');
+    const router = useRouter();
+    const { user, logout, updateUserRole, updateUserName, updateAccountType } = useUser();
+    const { updateNumber } = useUser();
+    const { theme, isDark } = useTheme();
+    const [imageUri, setImageUri] = useState<string | null>(null);
 
-  const handleSave = () => {
-    // Add save logic here
-  };
+    // Initialize name from user context
+    useEffect(() => {
+      if (user) {
+          setName(user.name || '');
+          setNumber(user.phoneNumber || '');
+      }
+    }, [user]);
 
-  const handleSwitchToDriver = () => {
-    Alert.alert(
-      'Switch Profile',
-      'Are you sure you want to switch to the driver profile?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes',
-          onPress: () => {
-            router.push('../DriverProfile');
-          },
-        },
-      ]
+    const handleUploadPhoto = async () => {
+      try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: 'images',
+            allowsEditing: true,
+            quality: 1,
+        });
+
+          if (!result.canceled && result.assets && result.assets.length > 0) {
+            const uri = result.assets[0].uri;
+            console.log('Selected image URI:', uri);
+            setImageUri(uri);
+        }
+      } catch (error) {
+          console.error('Image upload error:', error);
+      }
+    };
+
+    // Query user data from Convex using the user ID from context
+    const convexUser = useQuery(
+        api.functions.users.UserManagement.getUserById.getUserById, 
+        user?.id ? { userId: user.id as Id<"taxiTap_users"> } : "skip"
     );
-  };
 
-  // Create dynamic styles based on theme
-  const dynamicStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    scrollViewContent: {
-      flexGrow: 1,
-      padding: 20,
-      justifyContent: 'space-between',
-    },
-    profileCard: {
-      backgroundColor: isDark ? theme.surface : '#ecd4b5',
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.2,
-      shadowRadius: 4,
-      elevation: 5,
-      alignItems: 'center',
-      borderWidth: isDark ? 1 : 0,
-      borderColor: isDark ? theme.border : 'transparent',
-    },
-    profileIcon: {
-      marginBottom: 20,
-      backgroundColor: isDark ? theme.primary + '20' : 'transparent',
-      borderRadius: 50,
-      padding: isDark ? 8 : 0,
-    },
-    inputGroup: {
-      alignSelf: 'stretch',
-      marginBottom: 12,
-    },
-    inputLabel: {
-      marginBottom: 4,
-      fontWeight: 'bold',
-      color: theme.text,
-      fontSize: 16,
-    },
-    textInput: {
-      backgroundColor: theme.card,
-      borderRadius: 6,
-      paddingHorizontal: 10,
-      height: 40,
-      fontSize: 16,
-      color: theme.text,
-      borderWidth: isDark ? 1 : 0,
-      borderColor: isDark ? theme.border : 'transparent',
-    },
-    saveButton: {
-      backgroundColor: theme.primary,
-      paddingVertical: 14,
-      borderRadius: 30,
-      alignItems: 'center',
-      marginTop: 20,
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.2,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    saveButtonText: {
-      color: isDark ? '#121212' : '#FFFFFF',
-      fontWeight: 'bold',
-      fontSize: 18,
-    },
-    additionalInfo: {
-      backgroundColor: theme.card,
-      borderRadius: 12,
-      padding: 16,
-      marginTop: 20,
-      borderWidth: isDark ? 1 : 0,
-      borderColor: isDark ? theme.border : 'transparent',
-    },
-    additionalInfoTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.text,
-      marginBottom: 12,
-    },
-    infoRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-    },
-    infoLabel: {
-      fontSize: 16,
-      color: theme.text,
-      fontWeight: '500',
-    },
-    infoValue: {
-      fontSize: 14,
-      color: theme.textSecondary,
-    },
-  });
+    // Mutations for switching roles
+    const switchPassengerToBoth = useMutation(api.functions.users.UserManagement.switchPassengertoBoth.switchPassengerToBoth);
+    const switchActiveRole = useMutation(api.functions.users.UserManagement.switchActiveRole.switchActiveRole);
 
-  return (
-    <SafeAreaView style={dynamicStyles.container}>
-      <ScrollView 
-        style={{ flex: 1 }}
-        contentContainerStyle={dynamicStyles.scrollViewContent}
-      >
-        <View>
-          <View style={dynamicStyles.profileCard}>
-            <View style={dynamicStyles.profileIcon}>
-              <Ionicons 
-                name="person-circle" 
-                size={64} 
-                color={isDark ? theme.primary : '#000'} 
-              />
+    const handleSignout = async () => {
+        await logout();
+        router.push('../LandingPage');
+    };
+
+    const handleNameChange = (newName: string) => {
+        setName(newName);
+    };
+
+    const handleNumberChange = (newNumber: string) => {
+        setNumber(newNumber);
+    };
+
+    const handleSwitchToDriver = async () => {
+        try {
+            if (!user?.id) {
+                Alert.alert('Error', 'User data not found');
+                return;
+            }
+
+            // First time switching - user is currently passenger only
+            if ((convexUser?.accountType || user.accountType) === 'passenger') {
+                Alert.alert(
+                    'First Time Switching',
+                    'This is your first time switching to driver mode. Your account will be upgraded to support both passenger and driver roles.',
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                            text: 'Continue',
+                            onPress: async () => {
+                                try {
+                                    // Upgrade passenger to both first
+                                    await switchPassengerToBoth({ 
+                                        userId: user.id as Id<"taxiTap_users"> 
+                                    });
+                                    
+                                    // Then switch active role to driver
+                                    await switchActiveRole({ 
+                                        userId: user.id as Id<"taxiTap_users">, 
+                                        newRole: 'driver' as const
+                                    });
+                                    
+                                    // Update context
+                                    await updateAccountType('both');
+                                    await updateUserRole('driver');
+                                    
+                                    Alert.alert('Success', 'Successfully switched to driver mode!');
+                                    router.push('../DriverOffline');
+                                } catch (error: any) {
+                                    Alert.alert('Error', error.message || 'Failed to switch to driver mode');
+                                }
+                            },
+                        },
+                    ]
+                );
+            } 
+            // User already has both account types - just switch active role
+            else if ((convexUser?.accountType || user.accountType) === 'both') {
+                Alert.alert(
+                    'Switch Profile',
+                    'Are you sure you want to switch to the driver profile?',
+                    [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                            text: 'Yes',
+                            onPress: async () => {
+                                try {
+                                    // Switch active role to driver
+                                    await switchActiveRole({ 
+                                        userId: user.id as Id<"taxiTap_users">, 
+                                        newRole: 'driver' as const
+                                    });
+                                    
+                                    // Update context
+                                    await updateUserRole('driver');
+                                    
+                                    Alert.alert('Success', 'Switched to driver mode!');
+                                    router.push('../DriverOffline');
+                                } catch (error: any) {
+                                    Alert.alert('Error', error.message || 'Failed to switch to driver mode');
+                                }
+                            },
+                        },
+                    ]
+                );
+            } else {
+                Alert.alert('Error', 'Invalid account type for switching to driver mode');
+            }
+        } catch {
+            Alert.alert('Error', 'An unexpected error occurred');
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            if (!user?.id) {
+                Alert.alert('Error', 'User not found');
+                return;
+            }
+            // Update name in context
+            if (name !== user.name) {
+                await updateUserName(name);
+            }
+            // Update number if changed
+            if (number !== user.phoneNumber) {
+                await updateNumber(number);
+            }
+            Alert.alert('Success', 'Profile saved successfully!');
+        } catch (error: any) {
+            Alert.alert('Error', error.message || 'Failed to save profile');
+        }
+    };
+
+    const dynamicStyles = StyleSheet.create({
+        safeArea: {
+            flex: 1,
+            backgroundColor: theme.background,
+        },
+        container: {
+            backgroundColor: theme.background,
+            padding: 20,
+            paddingBottom: 40,
+        },
+        headerText: {
+            color: theme.text,
+            fontSize: 22,
+            fontWeight: '600',
+            marginBottom: 16,
+        },
+        card: {
+            backgroundColor: theme.card,
+            borderRadius: 16,
+            padding: 20,
+            shadowColor: theme.shadow,
+            shadowOpacity: isDark ? 0.3 : 0.1,
+            shadowRadius: 4,
+            elevation: 4,
+            alignItems: 'center',
+            marginBottom: 30,
+            borderWidth: isDark ? 1 : 0,
+            borderColor: theme.border,
+        },
+        fieldContainer: {
+            alignSelf: 'stretch',
+            marginBottom: 12,
+        },
+        label: {
+            fontWeight: 'bold',
+            fontSize: 16,
+            marginBottom: 4,
+            color: theme.text,
+        },
+        input: {
+            backgroundColor: isDark ? theme.surface : '#fff',
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            height: 44,
+            fontSize: 16,
+            borderColor: isDark ? theme.border : '#ddd',
+            borderWidth: 1,
+            color: theme.text,
+        },
+        button: {
+            backgroundColor: theme.primary,
+            paddingVertical: 16,
+            borderRadius: 30,
+            alignItems: 'center',
+            marginBottom: 16,
+            shadowColor: theme.shadow,
+            shadowOpacity: isDark ? 0.3 : 0.15,
+            shadowRadius: 4,
+            elevation: 3,
+        },
+        buttonText: {
+            color: isDark ? '#121212' : '#fff',
+            fontWeight: 'bold',
+            fontSize: 18,
+        },
+    });
+    
+    if (!user) {
+        return (
+          <SafeAreaView style={dynamicStyles.safeArea}>
+            <View style={dynamicStyles.container}>
+                <Text>Loading user data...</Text>
+            </View>
+          </SafeAreaView>
+        );
+    }
+
+    return (
+      <SafeAreaView style={dynamicStyles.safeArea}>
+        <ScrollView contentContainerStyle={dynamicStyles.container}>
+            <Text style={dynamicStyles.headerText}>Passenger Profile</Text>
+
+            <View style={dynamicStyles.card}>
+              <Pressable
+                onPress={handleUploadPhoto}
+                style={{
+                  paddingVertical: 14,
+                  borderRadius: 30,
+                  alignItems: 'center',
+                  marginTop: 20,
+                }}
+              >
+                {imageUri ? (
+                  <Image
+                    source={{ uri: imageUri }}
+                    resizeMode="cover"
+                    style={{ width: 150, height: 150, borderRadius: 75 }}
+                  />
+                ) : (
+                  <Ionicons name="person-circle" size={150} color={theme.text} />
+                )}
+              </Pressable>
+
+              <View style={dynamicStyles.fieldContainer}>
+                <Text style={dynamicStyles.label}>Name:</Text>
+                <TextInput
+                  value={name}
+                  onChangeText={handleNameChange}
+                  style={dynamicStyles.input}
+                  placeholder="Enter name"
+                  placeholderTextColor={isDark ? '#999' : '#aaa'}
+                />
+              </View>
+
+              <View style={dynamicStyles.fieldContainer}>
+                <Text style={dynamicStyles.label}>Number:</Text>
+                <TextInput
+                  value={number}
+                  onChangeText={handleNumberChange}
+                  style={dynamicStyles.input}
+                  placeholder="Enter number"
+                  placeholderTextColor={isDark ? '#999' : '#aaa'}
+                />
+              </View>
             </View>
 
-            <View style={dynamicStyles.inputGroup}>
-              <Text style={dynamicStyles.inputLabel}>Name:</Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                style={dynamicStyles.textInput}
-                placeholderTextColor={theme.textSecondary}
-              />
-            </View>
+            <Pressable style={dynamicStyles.button} onPress={handleSave}>
+                <Text style={dynamicStyles.buttonText}>Save Profile</Text>
+            </Pressable>
 
-            <View style={dynamicStyles.inputGroup}>
-              <Text style={dynamicStyles.inputLabel}>Number:</Text>
-              <TextInput
-                value={number}
-                onChangeText={setNumber}
-                keyboardType="phone-pad"
-                style={dynamicStyles.textInput}
-                placeholderTextColor={theme.textSecondary}
-              />
-            </View>
+            <Pressable style={dynamicStyles.button} onPress={handleSwitchToDriver}>
+                <Text style={dynamicStyles.buttonText}>Switch to Driver Profile</Text>
+            </Pressable>
 
-            <View style={dynamicStyles.inputGroup}>
-              <Text style={dynamicStyles.inputLabel}>Email:</Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                style={dynamicStyles.textInput}
-                placeholderTextColor={theme.textSecondary}
-              />
-            </View>
-          </View>
-
-          {/* Additional Account Information */}
-          <View style={dynamicStyles.additionalInfo}>
-            <Text style={dynamicStyles.additionalInfoTitle}>Account Information</Text>
-            
-            <View style={dynamicStyles.infoRow}>
-              <Text style={dynamicStyles.infoLabel}>Member Since</Text>
-              <Text style={dynamicStyles.infoValue}>January 2024</Text>
-            </View>
-            
-            <View style={dynamicStyles.infoRow}>
-              <Text style={dynamicStyles.infoLabel}>Total Trips</Text>
-              <Text style={dynamicStyles.infoValue}>47</Text>
-            </View>
-            
-            <View style={dynamicStyles.infoRow}>
-              <Text style={dynamicStyles.infoLabel}>Average Rating</Text>
-              <Text style={dynamicStyles.infoValue}>4.8 ⭐</Text>
-            </View>
-            
-            <View style={[dynamicStyles.infoRow, { borderBottomWidth: 0 }]}>
-              <Text style={dynamicStyles.infoLabel}>Preferred Route</Text>
-              <Text style={dynamicStyles.infoValue}>Menlyn Taxi Rank</Text>
-            </View>
-          </View>
-        </View>
-        <Pressable
-          onPress={handleSwitchToDriver}
-          style={{
-          backgroundColor: '#ecd4b5',
-          paddingVertical: 14,
-          borderRadius: 30,
-          alignItems: 'center',
-          marginTop: 20,
-          }}
-        >
-          <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 18 }}>Switch to Driver Profile</Text>
-        </Pressable>
-        <Pressable
-          onPress={handleSave}
-          style={dynamicStyles.saveButton}
-        >
-          <Text style={dynamicStyles.saveButtonText}>Save Profile</Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
-  );
+            <Pressable style={dynamicStyles.button} onPress={handleSignout}>
+                <Text style={dynamicStyles.buttonText}>Sign Out</Text>
+            </Pressable>
+        </ScrollView>
+      </SafeAreaView>
+    );
 }
