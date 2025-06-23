@@ -18,6 +18,8 @@ import type * as functions_locations_getNearbyTaxis from "../functions/locations
 import type * as functions_locations_updateLocation from "../functions/locations/updateLocation.js";
 =======
 >>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
+import type * as functions_locations_getNearbyTaxis from "../functions/locations/getNearbyTaxis.js";
+import type * as functions_locations_updateLocation from "../functions/locations/updateLocation.js";
 import type * as functions_notifications_deactivatePushToken from "../functions/notifications/deactivatePushToken.js";
 import type * as functions_notifications_getNotificationSettings from "../functions/notifications/getNotificationSettings.js";
 import type * as functions_notifications_getNotifications from "../functions/notifications/getNotifications.js";
@@ -76,6 +78,8 @@ declare const fullApi: ApiFromModules<{
   "functions/locations/updateLocation": typeof functions_locations_updateLocation;
 =======
 >>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
+  "functions/locations/getNearbyTaxis": typeof functions_locations_getNearbyTaxis;
+  "functions/locations/updateLocation": typeof functions_locations_updateLocation;
   "functions/notifications/deactivatePushToken": typeof functions_notifications_deactivatePushToken;
   "functions/notifications/getNotificationSettings": typeof functions_notifications_getNotificationSettings;
   "functions/notifications/getNotifications": typeof functions_notifications_getNotifications;
