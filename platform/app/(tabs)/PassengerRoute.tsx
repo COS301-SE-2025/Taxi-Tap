@@ -235,7 +235,7 @@ export default function RouteSelectionScreen() {
    */
   const handleRouteSelect = (route: RouteData) => {
     if (!route.destinationCoords) {
-      Alert.alert("Error", "Route coordinates not available");
+      console.log("Error", "Route coordinates not available");
       return;
     }
 

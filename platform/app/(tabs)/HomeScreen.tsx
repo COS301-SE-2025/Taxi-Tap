@@ -121,7 +121,7 @@ export default function HomeScreen() {
     dest: { latitude: number; longitude: number }
   ) => {
     if (!GOOGLE_MAPS_API_KEY) {
-      Alert.alert('Error', 'Google Maps API key is not configured');
+      console.log('Error', 'Google Maps API key is not configured');
       return;
     }
 
@@ -158,7 +158,7 @@ export default function HomeScreen() {
       setRouteLoaded(true);
     } catch (err) {
       console.error(err);
-      Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
+      // Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoadingRoute(false);
     }

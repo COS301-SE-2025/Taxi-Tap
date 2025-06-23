@@ -46,8 +46,6 @@ export default function Login() {
       // Use the context login function
       await login(result);
       
-      alert(`Welcome back ${result.name}!`);
-      
       if (result.currentActiveRole === 'driver') {
         router.push({
         pathname: '/DriverOffline',
@@ -60,7 +58,7 @@ export default function Login() {
       });
       }
     } catch {
-      alert("Phone number or password is incorrect");
+      console.log("Phone number or password is incorrect");
     }
   };
 
