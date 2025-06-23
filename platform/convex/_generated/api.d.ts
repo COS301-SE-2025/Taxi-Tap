@@ -24,6 +24,7 @@ import type * as functions_notifications_getNotifications from "../functions/not
 import type * as functions_notifications_markAllAsRead from "../functions/notifications/markAllAsRead.js";
 import type * as functions_notifications_markAsRead from "../functions/notifications/markAsRead.js";
 import type * as functions_notifications_registerPushToken from "../functions/notifications/registerPushToken.js";
+import type * as functions_notifications_rideNotifications from "../functions/notifications/rideNotifications.js";
 import type * as functions_notifications_sendNotifications from "../functions/notifications/sendNotifications.js";
 import type * as functions_notifications_updateNotificationSettings from "../functions/notifications/updateNotificationSettings.js";
 <<<<<<< HEAD
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   "functions/notifications/markAllAsRead": typeof functions_notifications_markAllAsRead;
   "functions/notifications/markAsRead": typeof functions_notifications_markAsRead;
   "functions/notifications/registerPushToken": typeof functions_notifications_registerPushToken;
+  "functions/notifications/rideNotifications": typeof functions_notifications_rideNotifications;
   "functions/notifications/sendNotifications": typeof functions_notifications_sendNotifications;
   "functions/notifications/updateNotificationSettings": typeof functions_notifications_updateNotificationSettings;
 <<<<<<< HEAD
