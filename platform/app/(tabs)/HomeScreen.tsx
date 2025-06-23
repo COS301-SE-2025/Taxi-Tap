@@ -1,5 +1,5 @@
 // platform/app/(tabs)/HomeScreen.tsx
-import React, { useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -34,12 +34,28 @@ export default function HomeScreen() {
     console.log('🚀 HomeScreen got userId:', userId);
   }, [userId]);
 
-  const { userLocation } = useLocationSystem(userId || '');
+  const [snapshotDrivers, setSnapshotDrivers] = useState<
+  { _id: string; latitude: number; longitude: number }[]
+>([]);
+
+  const { userLocation, nearbyTaxis } = useLocationSystem(userId || '');
   useEffect(() => {
     if (userLocation) {
       console.log('✅ Live-location sent:', userLocation);
     }
   }, [userLocation]);
+
+useEffect(() => {
+  if (nearbyTaxis && nearbyTaxis.length) {
+    console.log(`🚖 Nearby drivers (${nearbyTaxis.length}):`, nearbyTaxis);
+  }
+}, [nearbyTaxis]);
+
+useEffect(() => {
+  if (nearbyTaxis?.length && snapshotDrivers.length === 0) {
+    setSnapshotDrivers(nearbyTaxis);
+  }
+}, [nearbyTaxis, snapshotDrivers.length]);
 
   const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
   const navigation = useNavigation();
@@ -409,6 +425,16 @@ export default function HomeScreen() {
           customMapStyle={isDark ? darkMapStyle : []}
         >
           <Marker coordinate={currentLocation} title="You are here" pinColor="blue" />
+          
+                {snapshotDrivers.map((driver) => (
+        <Marker
+          key={driver._id}
+          coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
+          pinColor="green"
+          tracksViewChanges={false}
+          title="Driver"
+        />
+      ))}
           {destination && (
             <Marker coordinate={destination} title={destination.name} pinColor="orange" />
           )}

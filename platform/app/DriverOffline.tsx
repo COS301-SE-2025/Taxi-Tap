@@ -11,9 +11,10 @@ import {
   SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation, useRouter } from 'expo-router';
+import { useNavigation, useRouter,useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useRouteContext } from '../contexts/RouteContext';
+
 
 interface DriverOfflineProps {
   onGoOnline: () => void;
@@ -57,7 +58,7 @@ export default function DriverOffline({
   
   const router = useRouter();
   const { setCurrentRoute, currentRoute } = useRouteContext();
-
+  const { userId } = useLocalSearchParams<{ userId: string }>();
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
 
@@ -586,7 +587,12 @@ export default function DriverOffline({
                 flexDirection: 'row',
                 elevation: 4,
               }}
-              onPress={() => router.replace('/DriverOnline')}
+              onPress={() =>
+              router.push({
+                pathname: '/DriverOnline',
+                params: { userId }
+              })
+            }
               activeOpacity={0.8}
               accessibilityLabel="Go online to accept passengers"
             >
