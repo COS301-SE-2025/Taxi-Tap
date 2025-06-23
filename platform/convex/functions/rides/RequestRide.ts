@@ -1,8 +1,10 @@
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
+import { sendNotification } from "../notifications";
 
 export const requestRideHandler = async (ctx: any, args: {
   passengerId: string;
+  driverId: string;
   startLocation: { coordinates: { latitude: number; longitude: number }; address: string };
   endLocation: { coordinates: { latitude: number; longitude: number }; address: string };
   estimatedFare?: number;
@@ -13,6 +15,7 @@ export const requestRideHandler = async (ctx: any, args: {
   const ride = await ctx.db.insert("rides", {
     rideId,
     passengerId: args.passengerId,
+    driverId: args.driverId,
     startLocation: args.startLocation,
     endLocation: args.endLocation,
     status: "requested",
@@ -20,7 +23,17 @@ export const requestRideHandler = async (ctx: any, args: {
     estimatedFare: args.estimatedFare,
     estimatedDistance: args.estimatedDistance,
   });
-  
+
+  // Notify the driver
+  await ctx.runMutation(sendNotification, {
+    userId: args.driverId,
+    type: "ride_request",
+    title: "New Ride Request",
+    message: `You have a new ride request from a passenger.`,
+    priority: "high",
+    metadata: { rideId, passengerId: args.passengerId },
+  });
+
   return {
     _id: ride,
     rideId,
@@ -31,6 +44,7 @@ export const requestRideHandler = async (ctx: any, args: {
 export const requestRide = mutation({
   args: {
     passengerId: v.id("taxiTap_users"),
+    driverId: v.id("taxiTap_users"),
     startLocation: v.object({
       coordinates: v.object({
         latitude: v.number(),

@@ -3,6 +3,7 @@
 //need to change rides table in schema to include driverId and status
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
+import { sendNotification } from "../notifications";
 // import { Doc } from "./_generated/dataModel";
 
 export const acceptRideHandler = async (
@@ -30,6 +31,16 @@ export const acceptRideHandler = async (
     status: "accepted",
     driverId: args.driverId,
     acceptedAt: Date.now(),
+  });
+
+  // Notify the passenger
+  await ctx.runMutation(sendNotification, {
+    userId: ride.passengerId,
+    type: "ride_accepted",
+    title: "Ride Accepted",
+    message: "Your ride request has been accepted by the driver.",
+    priority: "high",
+    metadata: { rideId: args.rideId, driverId: args.driverId },
   });
 
   return {
