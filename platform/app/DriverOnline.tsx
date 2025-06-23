@@ -177,7 +177,13 @@ export default function DriverOnline({
         setShowMenu(false);
         handleToggleTheme();
       }
-    }
+    },
+    { 
+      icon: "settings-outline", 
+      title: "Help", 
+      subtitle: "App information",
+      onPress: () => navigation.navigate('HelpPage' as never)
+    },
   ];
 
   const safetyOptions: SafetyOption[] = [
@@ -245,15 +251,8 @@ export default function DriverOnline({
       right: 20,
       width: 50,
       height: 50,
-      borderRadius: 25,
-      backgroundColor: isDark ? '#FFA500' : '#4A90E2',
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.15,
-      shadowOffset: { width: 0, height: 4 },
-      shadowRadius: 4,
-      elevation: 8,
       zIndex: 1000,
     },
     earningsContainer: {
@@ -536,7 +535,6 @@ export default function DriverOnline({
                 <Icon 
                   name={isDark ? 'sunny' : 'moon'} 
                   size={28} 
-                  color="#FFFFFF" 
                 />
               </TouchableOpacity>
 
