@@ -3,38 +3,44 @@ import * as Notifications from 'expo-notifications';
 import { NotificationService } from '../services/NotificationService';
 import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
+import { Platform } from 'react-native';
+import { Id } from '../convex/_generated/dataModel';
 
 interface NotificationContextType {
   notifications: any[];
   unreadCount: number;
-  markAsRead: (notificationId: string) => void;
+  markAsRead: (notificationId: Id<"notifications">) => void;
   markAllAsRead: () => void;
   refreshNotifications: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({ 
+export const NotificationProvider: React.FC<{ children: React.ReactNode; userId?: Id<"taxiTap_users"> }> = ({ 
   children, 
   userId 
 }) => {
   const [expoPushToken, setExpoPushToken] = useState<string>('');
   const [notifications, setNotifications] = useState<any[]>([]);
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
 
-  // Convex mutations and queries
-  const registerToken = useMutation(api.pushTokens.registerPushToken);
+  // Convex mutations and queries - Fixed conditional querying
+  const registerToken = useMutation(api.functions.notifications.registerPushToken.registerPushToken);
+  
+  // Fix: Use conditional parameters instead of conditional function reference
   const userNotifications = useQuery(
-    api.notifications.getUserNotifications,
-    userId ? { userId } : 'skip'
+    api.functions.notifications.getNotifications.getNotifications,
+    userId ? { userId } : "skip"
   );
+  
   const unreadCount = useQuery(
-    api.notifications.getUnreadCount,
-    userId ? { userId } : 'skip'
+    api.functions.notifications.getNotifications.getUnreadCount,
+    userId ? { userId } : "skip"
   );
-  const markNotificationAsRead = useMutation(api.notifications.markAsRead);
-  const markAllNotificationsAsRead = useMutation(api.notifications.markAllAsRead);
+  
+  const markNotificationAsRead = useMutation(api.functions.notifications.markAsRead.markAsRead);
+  const markAllNotificationsAsRead = useMutation(api.functions.notifications.markAllAsRead.markAllAsRead);
 
   useEffect(() => {
     if (userId) {
@@ -96,18 +102,18 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode; userId?
 
   const handleNotificationTap = (data: any) => {
     // Navigate based on notification type
-    if (data.rideId) {
+    if (data?.rideId) {
       // Navigate to ride details
-    } else if (data.routeId) {
+    } else if (data?.routeId) {
       // Navigate to route details
     }
     // Add more navigation logic as needed
   };
 
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = async (notificationId: Id<"notifications">) => {
     try {
       await markNotificationAsRead({ notificationId });
-      refreshNotifications();
+      // The query will automatically refetch due to Convex reactivity
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -117,15 +123,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode; userId?
     if (!userId) return;
     try {
       await markAllNotificationsAsRead({ userId });
-      refreshNotifications();
+      // The query will automatically refetch due to Convex reactivity
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
   };
 
   const refreshNotifications = () => {
-    // Trigger re-fetch by updating a state or calling refetch if available
-    // This depends on your Convex setup
+    // With Convex, queries automatically refetch when their dependencies change
+    // If you need to force a refresh, you might need to implement a different pattern
+    // or use Convex's invalidation features if available
+    console.log('Notifications will auto-refresh due to Convex reactivity');
   };
 
   return (
