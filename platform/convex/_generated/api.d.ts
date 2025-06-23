@@ -13,11 +13,22 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as functions_notifications_deactivatePushToken from "../functions/notifications/deactivatePushToken.js";
+import type * as functions_notifications_getNotificationSettings from "../functions/notifications/getNotificationSettings.js";
+import type * as functions_notifications_getNotifications from "../functions/notifications/getNotifications.js";
+import type * as functions_notifications_markAllAsRead from "../functions/notifications/markAllAsRead.js";
+import type * as functions_notifications_markAsRead from "../functions/notifications/markAsRead.js";
+import type * as functions_notifications_registerPushToken from "../functions/notifications/registerPushToken.js";
+import type * as functions_notifications_sendNotifications from "../functions/notifications/sendNotifications.js";
+import type * as functions_notifications_updateNotificationSettings from "../functions/notifications/updateNotificationSettings.js";
+import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
+import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.js";
+import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
-import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_routes_mutations from "../functions/routes/mutations.js";
 import type * as functions_routes_queries from "../functions/routes/queries.js";
 import type * as functions_routes_reverseGeocode from "../functions/routes/reverseGeocode.js";
+import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_taxis_getTaxiForDriver from "../functions/taxis/getTaxiForDriver.js";
 import type * as functions_taxis_updateTaxiInfo from "../functions/taxis/updateTaxiInfo.js";
 import type * as functions_taxis_viewTaxiInfo from "../functions/taxis/viewTaxiInfo.js";
@@ -29,9 +40,6 @@ import type * as functions_users_UserManagement_switchBothtoDriver from "../func
 import type * as functions_users_UserManagement_switchBothtoPassenger from "../functions/users/UserManagement/switchBothtoPassenger.js";
 import type * as functions_users_UserManagement_switchDrivertoBoth from "../functions/users/UserManagement/switchDrivertoBoth.js";
 import type * as functions_users_UserManagement_switchPassengertoBoth from "../functions/users/UserManagement/switchPassengertoBoth.js";
-import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
-import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.js";
-import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -42,11 +50,22 @@ import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "functions/notifications/deactivatePushToken": typeof functions_notifications_deactivatePushToken;
+  "functions/notifications/getNotificationSettings": typeof functions_notifications_getNotificationSettings;
+  "functions/notifications/getNotifications": typeof functions_notifications_getNotifications;
+  "functions/notifications/markAllAsRead": typeof functions_notifications_markAllAsRead;
+  "functions/notifications/markAsRead": typeof functions_notifications_markAsRead;
+  "functions/notifications/registerPushToken": typeof functions_notifications_registerPushToken;
+  "functions/notifications/sendNotifications": typeof functions_notifications_sendNotifications;
+  "functions/notifications/updateNotificationSettings": typeof functions_notifications_updateNotificationSettings;
+  "functions/rides/RequestRide": typeof functions_rides_RequestRide;
+  "functions/rides/acceptRide": typeof functions_rides_acceptRide;
+  "functions/rides/cancelRide": typeof functions_rides_cancelRide;
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
-  "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/routes/mutations": typeof functions_routes_mutations;
   "functions/routes/queries": typeof functions_routes_queries;
   "functions/routes/reverseGeocode": typeof functions_routes_reverseGeocode;
+  "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/taxis/getTaxiForDriver": typeof functions_taxis_getTaxiForDriver;
   "functions/taxis/updateTaxiInfo": typeof functions_taxis_updateTaxiInfo;
   "functions/taxis/viewTaxiInfo": typeof functions_taxis_viewTaxiInfo;
@@ -58,9 +77,6 @@ declare const fullApi: ApiFromModules<{
   "functions/users/UserManagement/switchBothtoPassenger": typeof functions_users_UserManagement_switchBothtoPassenger;
   "functions/users/UserManagement/switchDrivertoBoth": typeof functions_users_UserManagement_switchDrivertoBoth;
   "functions/users/UserManagement/switchPassengertoBoth": typeof functions_users_UserManagement_switchPassengertoBoth;
-  "functions/rides/RequestRide": typeof functions_rides_RequestRide;
-  "functions/rides/acceptRide": typeof functions_rides_acceptRide;
-  "functions/rides/cancelRide": typeof functions_rides_cancelRide;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
