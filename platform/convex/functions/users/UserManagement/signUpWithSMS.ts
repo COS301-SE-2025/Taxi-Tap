@@ -23,9 +23,16 @@ export const signUpSMSHandler = async (
   }
 
   const now = Date.now();
-  // Determine the “active” role for location purposes
+
+  // This remains unchanged for currentActiveRole logic
   const effectiveRole: "passenger" | "driver" =
     args.accountType === "both" ? "passenger" : args.accountType;
+
+  // ✅ NEW: explicitly define the role to insert into locations
+  const locationRole: "passenger" | "driver" =
+    args.accountType === "driver" || args.accountType === "both"
+      ? "driver"
+      : "passenger";
 
   try {
     // 2️⃣ Insert new user
@@ -43,13 +50,13 @@ export const signUpSMSHandler = async (
       updatedAt: now,
     });
 
-    // 3️⃣ Insert default location with role
+    // 3️⃣ Insert default location with corrected role logic
     await ctx.db.insert("locations", {
       userId,
       latitude: 0,
       longitude: 0,
       updatedAt: new Date().toISOString(),
-      role: effectiveRole,
+      role: locationRole,
     });
 
     // 4️⃣ Insert passenger/driver metadata
