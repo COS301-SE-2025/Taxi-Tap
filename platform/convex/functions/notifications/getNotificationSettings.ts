@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { QueryCtx } from "../../_generated/server";
 
 // Get user notification settings
-export const getUserSettings = query({
+export const getNotificationSettings = query({
   args: {
     userId: v.id("taxiTap_users")
   },
