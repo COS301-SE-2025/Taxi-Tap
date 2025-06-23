@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from 'expo-router';
+import { useNavigation,useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 
 // ============================================================================
@@ -384,7 +384,7 @@ const createStyles = (theme: Theme, isDark: boolean) => StyleSheet.create({
 export default function EarningsPage({}: EarningsPageProps) {
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
-  
+  const { userId } = useLocalSearchParams<{ userId: string }>();
   // State management
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
