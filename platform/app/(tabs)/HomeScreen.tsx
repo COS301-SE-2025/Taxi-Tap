@@ -21,6 +21,7 @@ import loading from '../../assets/images/loading4.png';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useLocationSystem } from '../../hooks/useLocationSystem';
+import { useFocusEffect } from '@react-navigation/native';
 
 const GOOGLE_MAPS_API_KEY =
   Platform.OS === 'ios'
@@ -44,6 +45,16 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
 
+  useFocusEffect(
+    React.useCallback(() => {
+      // When screen is focused
+      setRouteLoaded(false);
+      setDestination(null);
+      setRouteCoordinates([]);
+      setSelectedRouteId(null);
+    }, [])
+  );
+
   const {
     currentLocation,
     destination,
@@ -59,6 +70,8 @@ export default function HomeScreen() {
     setCachedRoute,
   } = useMapContext();
 
+  const [selectedRouteId, setSelectedRouteId] = React.useState<string | null>(null);
+
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const mapRef = useRef<MapView | null>(null);
 
@@ -72,6 +85,11 @@ export default function HomeScreen() {
       return;
     }
 
+    if (!selectedRouteId) {
+      Alert.alert('Error', 'Route not selected');
+      return;
+    }
+
     router.push({
       pathname: './TaxiInformation',
       params: {
@@ -81,6 +99,7 @@ export default function HomeScreen() {
         currentName: currentLocation.name,
         currentLat: currentLocation.latitude.toString(),
         currentLng: currentLocation.longitude.toString(),
+        routeId: selectedRouteId,
       },
     });
   };
@@ -208,6 +227,7 @@ export default function HomeScreen() {
   }, []);
 
   const handleDestinationSelect = (route: {
+    routeId: string;
     destination: string;
     destinationCoords: { latitude: number; longitude: number } | null;
   }) => {
@@ -218,6 +238,7 @@ export default function HomeScreen() {
       name: route.destination,
     };
     setDestination(dest);
+    setSelectedRouteId(route.routeId);
     getRoute(currentLocation, dest);
   };
 
@@ -227,13 +248,6 @@ export default function HomeScreen() {
   });
 
   const dynamicStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    map: {
-      height: '40%',
-    },
     bottomSheet: {
       flex: 1,
       backgroundColor: theme.background,
