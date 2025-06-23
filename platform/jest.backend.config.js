@@ -8,7 +8,7 @@ module.exports = {
   roots: ['<rootDir>/tests/unit/backend'],
 
   // Only match .test.ts files
-  testMatch: ['**/*.test.tsx'],
+  testMatch: ['**/*.test.ts', '**/*.test.tsx'],
 
   // Transform TS → JS with ts-jest
   transform: {
