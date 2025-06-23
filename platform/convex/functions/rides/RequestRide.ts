@@ -1,6 +1,6 @@
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
-import { sendNotification } from "../notifications";
+import { sendNotification } from "../notifications/sendNotifications";
 
 export const requestRideHandler = async (ctx: any, args: {
   passengerId: string;

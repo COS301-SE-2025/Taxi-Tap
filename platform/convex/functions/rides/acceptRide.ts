@@ -3,7 +3,7 @@
 //need to change rides table in schema to include driverId and status
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
-import { sendNotification } from "../notifications";
+import { sendNotification } from "../notifications/sendNotifications";
 // import { Doc } from "./_generated/dataModel";
 
 export const acceptRideHandler = async (
