@@ -13,8 +13,11 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+<<<<<<< HEAD
 import type * as functions_locations_getNearbyTaxis from "../functions/locations/getNearbyTaxis.js";
 import type * as functions_locations_updateLocation from "../functions/locations/updateLocation.js";
+=======
+>>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
 import type * as functions_notifications_deactivatePushToken from "../functions/notifications/deactivatePushToken.js";
 import type * as functions_notifications_getNotificationSettings from "../functions/notifications/getNotificationSettings.js";
 import type * as functions_notifications_getNotifications from "../functions/notifications/getNotifications.js";
@@ -23,9 +26,12 @@ import type * as functions_notifications_markAsRead from "../functions/notificat
 import type * as functions_notifications_registerPushToken from "../functions/notifications/registerPushToken.js";
 import type * as functions_notifications_sendNotifications from "../functions/notifications/sendNotifications.js";
 import type * as functions_notifications_updateNotificationSettings from "../functions/notifications/updateNotificationSettings.js";
+<<<<<<< HEAD
 import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
 import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.js";
 import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
+=======
+>>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
 import type * as functions_routes_mutations from "../functions/routes/mutations.js";
 import type * as functions_routes_queries from "../functions/routes/queries.js";
@@ -52,8 +58,11 @@ import type * as functions_users_UserManagement_switchPassengertoBoth from "../f
  * ```
  */
 declare const fullApi: ApiFromModules<{
+<<<<<<< HEAD
   "functions/locations/getNearbyTaxis": typeof functions_locations_getNearbyTaxis;
   "functions/locations/updateLocation": typeof functions_locations_updateLocation;
+=======
+>>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
   "functions/notifications/deactivatePushToken": typeof functions_notifications_deactivatePushToken;
   "functions/notifications/getNotificationSettings": typeof functions_notifications_getNotificationSettings;
   "functions/notifications/getNotifications": typeof functions_notifications_getNotifications;
@@ -62,9 +71,12 @@ declare const fullApi: ApiFromModules<{
   "functions/notifications/registerPushToken": typeof functions_notifications_registerPushToken;
   "functions/notifications/sendNotifications": typeof functions_notifications_sendNotifications;
   "functions/notifications/updateNotificationSettings": typeof functions_notifications_updateNotificationSettings;
+<<<<<<< HEAD
   "functions/rides/RequestRide": typeof functions_rides_RequestRide;
   "functions/rides/acceptRide": typeof functions_rides_acceptRide;
   "functions/rides/cancelRide": typeof functions_rides_cancelRide;
+=======
+>>>>>>> 9c4ba08 (Fixing getNotifications + adding functions to api.d.ts etc.)
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
   "functions/routes/mutations": typeof functions_routes_mutations;
   "functions/routes/queries": typeof functions_routes_queries;

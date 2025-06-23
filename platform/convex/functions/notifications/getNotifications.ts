@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "../../_generated/server";
 
-export const getUserNotifications = query({
+export const getNotifications = query({
   args: {
     userId: v.id("taxiTap_users"),
     limit: v.optional(v.number()),
