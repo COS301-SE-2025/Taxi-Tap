@@ -773,7 +773,7 @@ export default function TaxiInformation() {
 									
 									{/* Time and Seats Info */}
 									<Text style={dynamicStyles.vehicleInfo}>
-										{`${currentRoute?.estimatedDuration} min | ${vehicle.seats}`}
+										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min' : 'N/A'} | ${vehicle.seats}`}
 									</Text>
 									
 									{/* Price (if available) */}
