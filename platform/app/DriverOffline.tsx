@@ -181,7 +181,6 @@ export default function DriverOffline({
     container: {
       flex: 1,
       backgroundColor: theme.background,
-      paddingTop: 20,
     },
     safeArea: {
       flex: 1,

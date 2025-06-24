@@ -164,7 +164,7 @@ export default function DriverOnline({
         setShowMenu(false);
         router.push({
       pathname: "/DriverProfile",
-      params: { userId: uid }      // 👈 add this line
+      params: { userId: uid }
     });
       }
     },
@@ -176,7 +176,7 @@ export default function DriverOnline({
         setShowMenu(false);
         router.push({
           pathname: "/DriverRequestPage",
-          params:{ userId: uid }      // 👈
+          params:{ userId: uid }
        });
       }
     },
@@ -188,7 +188,7 @@ export default function DriverOnline({
         setShowMenu(false);
         router.push({
           pathname: "/EarningsPage",
-          params: { userId: uid }       // 👈
+          params: { userId: uid }
         });  
       }
     },
@@ -274,8 +274,15 @@ export default function DriverOnline({
       right: 20,
       width: 50,
       height: 50,
+      borderRadius: 25,
+      backgroundColor: isDark ? '#232F3E' : '#FFFFFF',
       justifyContent: 'center',
       alignItems: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.15,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 4,
+      elevation: 8,
       zIndex: 1000,
     },
     earningsContainer: {

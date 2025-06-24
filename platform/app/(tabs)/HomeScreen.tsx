@@ -22,6 +22,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useLocationSystem } from '../../hooks/useLocationSystem';
 import { useUser } from '../../contexts/UserContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 const GOOGLE_MAPS_API_KEY =
   Platform.OS === 'ios'
@@ -65,6 +66,16 @@ useEffect(() => {
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
 
+  useFocusEffect(
+    React.useCallback(() => {
+      // When screen is focused
+      setRouteLoaded(false);
+      setDestination(null);
+      setRouteCoordinates([]);
+      setSelectedRouteId(null);
+    }, [])
+  );
+
   const {
     currentLocation,
     destination,
@@ -80,6 +91,8 @@ useEffect(() => {
     setCachedRoute,
   } = useMapContext();
 
+  const [selectedRouteId, setSelectedRouteId] = React.useState<string | null>(null);
+
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const mapRef = useRef<MapView | null>(null);
 
@@ -93,6 +106,11 @@ useEffect(() => {
       return;
     }
 
+    if (!selectedRouteId) {
+      Alert.alert('Error', 'Route not selected');
+      return;
+    }
+
     router.push({
       pathname: './TaxiInformation',
       params: {
@@ -102,6 +120,7 @@ useEffect(() => {
         currentName: currentLocation.name,
         currentLat: currentLocation.latitude.toString(),
         currentLng: currentLocation.longitude.toString(),
+        routeId: selectedRouteId,
       },
     });
   };
@@ -123,7 +142,7 @@ useEffect(() => {
     dest: { latitude: number; longitude: number }
   ) => {
     if (!GOOGLE_MAPS_API_KEY) {
-      Alert.alert('Error', 'Google Maps API key is not configured');
+      console.log('Error', 'Google Maps API key is not configured');
       return;
     }
 
@@ -160,7 +179,7 @@ useEffect(() => {
       setRouteLoaded(true);
     } catch (err) {
       console.error(err);
-      Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
+      // Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoadingRoute(false);
     }
@@ -229,6 +248,7 @@ useEffect(() => {
   }, []);
 
   const handleDestinationSelect = (route: {
+    routeId: string;
     destination: string;
     destinationCoords: { latitude: number; longitude: number } | null;
   }) => {
@@ -239,6 +259,7 @@ useEffect(() => {
       name: route.destination,
     };
     setDestination(dest);
+    setSelectedRouteId(route.routeId);
     getRoute(currentLocation, dest);
   };
 
@@ -248,13 +269,6 @@ useEffect(() => {
   });
 
   const dynamicStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    map: {
-      height: '40%',
-    },
     bottomSheet: {
       flex: 1,
       backgroundColor: theme.background,
