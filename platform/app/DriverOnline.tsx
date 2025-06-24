@@ -17,6 +17,10 @@ import { useNavigation, useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocationSystem } from '../hooks/useLocationSystem';
 import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
+import { Id } from '../convex/_generated/dataModel';
 
 const { width, height } = Dimensions.get('window');
 
@@ -64,6 +68,9 @@ export default function DriverOnline({
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
   const mapRef = useRef<MapView | null>(null);
+  const { notifications, markAsRead } = useNotifications();
+  const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
+  const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -130,6 +137,45 @@ export default function DriverOnline({
       router.replace('/DriverHomeScreen');
     }
   }, [onGoOffline, router]);
+
+  useEffect(() => {
+    if (!user) return; // Guard: only proceed if user is defined
+    // Find the latest unread ride_request notification
+    const rideRequest = notifications.find(
+      n => n.type === "ride_request" && !n.isRead
+    );
+    if (rideRequest) {
+      Alert.alert(
+        "New Ride Request",
+        rideRequest.message,
+        [
+          {
+            text: "Decline",
+            onPress: () => {
+              cancelRide({
+                rideId: rideRequest.metadata.rideId,
+                userId: user.id as Id<"taxiTap_users">,
+              });
+              markAsRead(rideRequest._id);
+            },
+            style: "destructive"
+          },
+          {
+            text: "Accept",
+            onPress: () => {
+              acceptRide({
+                rideId: rideRequest.metadata.rideId,
+                driverId: user.id as Id<"taxiTap_users">,
+              });
+              markAsRead(rideRequest._id);
+            },
+            style: "default"
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, user]);
 
   const handleMenuPress = () => {
     setShowMenu(!showMenu);
