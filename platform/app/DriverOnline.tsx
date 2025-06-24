@@ -140,10 +140,11 @@ export default function DriverOnline({
 
   useEffect(() => {
     if (!user) return; // Guard: only proceed if user is defined
-    // Find the latest unread ride_request notification
+    console.log("DriverOnline: notifications", notifications);
     const rideRequest = notifications.find(
       n => n.type === "ride_request" && !n.isRead
     );
+    console.log("DriverOnline: found rideRequest", rideRequest);
     if (rideRequest) {
       Alert.alert(
         "New Ride Request",
