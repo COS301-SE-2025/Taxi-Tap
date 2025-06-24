@@ -275,8 +275,8 @@ routes: defineTable({
   updatedAt: v.number()
 })
   .index("by_user_id", ["userId"]),
-  
-      locations: defineTable({
+
+  locations: defineTable({
     userId: v.id("taxiTap_users"),
     latitude: v.number(),
     longitude: v.number(),

@@ -25,6 +25,7 @@ export async function getAvailableTaxisHandler(ctx: any) {
       model: taxi.model,
       driverName: user.name,
       userId: user._id,
+      driverId: driver._id,
     });
   }
 

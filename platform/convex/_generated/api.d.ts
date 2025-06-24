@@ -25,11 +25,15 @@ import type * as functions_notifications_registerPushToken from "../functions/no
 import type * as functions_notifications_rideNotifications from "../functions/notifications/rideNotifications.js";
 import type * as functions_notifications_sendNotifications from "../functions/notifications/sendNotifications.js";
 import type * as functions_notifications_updateNotificationSettings from "../functions/notifications/updateNotificationSettings.js";
+import type * as functions_rides_RequestRide from "../functions/rides/RequestRide.js";
+import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.js";
+import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
+import type * as functions_rides_completeRide from "../functions/rides/completeRide.js";
+import type * as functions_rides_getRideById from "../functions/rides/getRideById.js";
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
 import type * as functions_routes_mutations from "../functions/routes/mutations.js";
 import type * as functions_routes_queries from "../functions/routes/queries.js";
 import type * as functions_routes_reverseGeocode from "../functions/routes/reverseGeocode.js";
-import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_taxis_getTaxiForDriver from "../functions/taxis/getTaxiForDriver.js";
 import type * as functions_taxis_updateTaxiInfo from "../functions/taxis/updateTaxiInfo.js";
@@ -64,6 +68,11 @@ declare const fullApi: ApiFromModules<{
   "functions/notifications/rideNotifications": typeof functions_notifications_rideNotifications;
   "functions/notifications/sendNotifications": typeof functions_notifications_sendNotifications;
   "functions/notifications/updateNotificationSettings": typeof functions_notifications_updateNotificationSettings;
+  "functions/rides/RequestRide": typeof functions_rides_RequestRide;
+  "functions/rides/acceptRide": typeof functions_rides_acceptRide;
+  "functions/rides/cancelRide": typeof functions_rides_cancelRide;
+  "functions/rides/completeRide": typeof functions_rides_completeRide;
+  "functions/rides/getRideById": typeof functions_rides_getRideById;
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
   "functions/routes/mutations": typeof functions_routes_mutations;
   "functions/routes/queries": typeof functions_routes_queries;
