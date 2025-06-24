@@ -72,8 +72,6 @@ const handleSignup = async () => {
     await AsyncStorage.setItem('userId', result.userId);
     const userId = await AsyncStorage.getItem('userId');
     console.log('🚀 Retrieved userId from storage:', userId);
-
-    Alert.alert('Success', 'Welcome!');
 if (selectedRole === 'driver') {
   router.push({
     pathname: '/DriverOffline',
@@ -90,7 +88,7 @@ if (selectedRole === 'driver') {
     if (message.includes("Phone number already exists")) {
       Alert.alert("Phone Number In Use", "This phone number is already registered. Try logging in or use a different number.");
     } else {
-      Alert.alert("Signup Error", message);
+      console.log("Signup Error", message);
     }
   }
 };

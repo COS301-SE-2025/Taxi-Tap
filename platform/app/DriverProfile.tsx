@@ -8,8 +8,10 @@ import { useUser } from '../contexts/UserContext';
 import { Id } from '../convex/_generated/dataModel';
 import { useTheme } from '../contexts/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, router } from "expo-router";
 
 export default function DriverProfile() {
+    const { userId } = useLocalSearchParams<{ userId: string }>();
     const [name, setName] = useState('');
     const [number, setNumber] = useState('');
     const router = useRouter();
@@ -87,7 +89,7 @@ export default function DriverProfile() {
     const handleSwitchToPassenger = async () => {
     try {
         if (!user?.id) {
-            Alert.alert('Error', 'User data not found');
+            Alert.alert('Not found', 'User data not found');
             return;
         }
 
@@ -118,11 +120,11 @@ export default function DriverProfile() {
                                 await updateAccountType('both');
                                 await updateUserRole('passenger');
                                 
-                                Alert.alert('Success', 'Successfully switched to passenger mode!');
+                                console.log('Success', 'Successfully switched to passenger mode!');
                                 router.push('../HomeScreen');
                             } catch (error: any) {
                                 console.error('Switch to passenger error (first time):', error);
-                                Alert.alert('Error', error.message || 'Failed to switch to passenger mode');
+                                console.log('Error', error.message || 'Failed to switch to passenger mode');
                             }
                         },
                     },
@@ -155,30 +157,30 @@ export default function DriverProfile() {
                                 await updateUserRole('passenger');
                                 
                                 console.log('Context updated, showing success alert...');
-                                Alert.alert('Success', 'Switched to passenger mode!');
+                                console.log('Success', 'Switched to passenger mode!');
                                 router.push('../HomeScreen');
                                 
                             } catch (error: any) {
                                 console.error('Switch to passenger error (both account):', error);
-                                Alert.alert('Error', error.message || 'Failed to switch to passenger mode');
+                                console.log('Error', error.message || 'Failed to switch to passenger mode');
                             }
                         },
                     },
                 ]
             );
         } else {
-            Alert.alert('Error', 'Invalid account type for switching to passenger mode');
+            console.log('Error', 'Invalid account type for switching to passenger mode');
         }
     } catch (error) {
         console.error('Unexpected error in handleSwitchToPassenger:', error);
-        Alert.alert('Error', 'An unexpected error occurred');
+        console.log('Error', 'An unexpected error occurred');
     }
 };
 
     const handleSave = async () => {
         try {
             if (!user?.id) {
-                Alert.alert('Error', 'User not found');
+                Alert.alert('Not found', 'User not found');
                 return;
             }
 

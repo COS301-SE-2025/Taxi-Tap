@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,6 @@ import { useRouteContext } from '../contexts/RouteContext';
 interface DriverOfflineProps {
   onGoOnline: () => void;
   todaysEarnings: number;
-  currentRoute?: string;
   availableSeats?: number;
 }
 
@@ -50,7 +49,6 @@ interface SafetyOptionType {
 export default function DriverOffline({ 
   onGoOnline, 
   todaysEarnings, 
-  currentRoute: propCurrentRoute,
   availableSeats = 4,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
@@ -68,6 +66,13 @@ export default function DriverOffline({
       tabBarStyle: { display: 'none' },
     });
   }, [navigation]);
+
+  useEffect(() => {
+    // Redirect if accessed directly (not via DriverHomeScreen)
+    if (typeof onGoOnline !== 'function') {
+      router.replace('/DriverHomeScreen');
+    }
+  }, [onGoOnline, router]);
 
   const handleSetRoute = () => {
     router.push('/SetRoute');
@@ -142,10 +147,10 @@ export default function DriverOffline({
     {
       icon: "location-outline",
       title: "Current Route",
-      value: (propCurrentRoute || "Not Set") as string,
+      value: (currentRoute || "Not Set") as string,
       subtitle: "Tap to set route",
-      color: (propCurrentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
-      onPress: () => console.log('Route pressed')
+      color: (currentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
+      onPress: () => router.push('/SetRoute'),
     },
     {
       icon: "car-outline",
@@ -587,12 +592,7 @@ export default function DriverOffline({
                 flexDirection: 'row',
                 elevation: 4,
               }}
-              onPress={() =>
-              router.push({
-                pathname: '/DriverOnline',
-                params: { userId }
-              })
-            }
+              onPress={onGoOnline}
               activeOpacity={0.8}
               accessibilityLabel="Go online to accept passengers"
             >

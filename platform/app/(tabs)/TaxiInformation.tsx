@@ -5,8 +5,10 @@ import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMapContext, createRouteKey } from '../../contexts/MapContext';
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from '../../convex/_generated/api';
+import { useUser } from "../../contexts/UserContext";
+import { Id } from "../../convex/_generated/dataModel";
 
 // Get platform-specific API key
 const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
@@ -14,14 +16,15 @@ const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function TaxiInformation() {
-	const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+	const [selectedTaxi, setSelectedTaxi] = useState<any | null>(null);
 	const [routeError, setRouteError] = useState<string | null>(null);
 	
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
 	const mapRef = useRef<MapView | null>(null);
-	
+	const { routeId } = useLocalSearchParams();
+
 	// Use MapContext instead of local state
 	const {
 		currentLocation,
@@ -38,7 +41,13 @@ export default function TaxiInformation() {
 		setCachedRoute
 	} = useMapContext();
 
+	const { user } = useUser();
+	const requestRide = useMutation(api.functions.rides.RequestRide.requestRide);
 	const availableTaxis = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
+
+	const routeInfo = useQuery(api.functions.routes.displayRoutes.displayRoutes);
+
+	const currentRoute = routeInfo?.find(route => route.routeId === routeId);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -235,56 +244,63 @@ export default function TaxiInformation() {
 		}
 	}, [currentLocation, destination, getRoute]);
 
-	const handleVehicleSelect = (plate: string) => {
-		setSelectedVehicle(plate);
+	const handleTaxiSelect = (taxi: any) => {
+		setSelectedTaxi(taxi);
 	};
 
 	const handleChangeDestination = () => {
 		router.push('./HomeScreen');
 	};
 
-	const handleReserveSeat = () => {
-		if (!selectedVehicle) {
-			alert('Please select a vehicle first!');
+	const handleReserveSeat = async () => {
+		if (!selectedTaxi) {
+			Alert.alert('Please select a taxi first!');
+			return;
+		}
+		if (!user) {
+			Alert.alert('Error', 'You must be logged in to request a ride.');
+			return;
+		}
+		if (!destination || !currentLocation) {
+			Alert.alert('Error', 'Start and end locations are not set.');
 			return;
 		}
 
-		const selected = availableTaxis?.find(vehicle => vehicle.licensePlate === selectedVehicle);
+		try {
+			await requestRide({
+				passengerId: user.id as Id<"taxiTap_users">,
+				driverId: selectedTaxi.userId,
+				startLocation: {
+					coordinates: {
+						latitude: currentLocation.latitude,
+						longitude: currentLocation.longitude,
+					},
+					address: currentLocation.name,
+				},
+				endLocation: {
+					coordinates: {
+						latitude: destination.latitude,
+						longitude: destination.longitude,
+					},
+					address: destination.name,
+				},
+				estimatedFare: selectedTaxi.fare, 
+			});
 
-		if (!selected) {
-			alert('Selected vehicle not found!');
-			return;
+			Alert.alert(
+				'Ride Requested',
+				'Your request has been sent to the driver. You will be notified of their response.',
+				[{ text: 'OK', onPress: () => router.push('/(tabs)/HomeScreen') }]
+			);
+
+		} catch (error) {
+			console.error('Failed to request ride:', error);
+			Alert.alert(
+				'Request Failed',
+				'Could not request the ride. Please try again.'
+			);
 		}
-
-		if (!currentLocation || !destination) {
-			alert('Location data not available!');
-			return;
-		}
-
-		router.push({
-			pathname: './SeatReserved',
-			params: {
-				destinationName: destination.name,
-				destinationLat: destination.latitude.toString(),
-				destinationLng: destination.longitude.toString(),
-				currentName: currentLocation.name,
-				currentLat: currentLocation.latitude.toString(),
-				currentLng: currentLocation.longitude.toString(),
-
-				// Vehicle details
-				plate: selected.licensePlate,
-				image: selected.image,
-				userId: selected.userId,
-			}
-		});
 	};
-
-	// function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
-	// 	if (Array.isArray(param)) {
-	// 		return param[0] || fallback;
-	// 	}
-	// 	return param || fallback;
-	// }
 
 	// Create dynamic styles based on theme
 	const dynamicStyles = StyleSheet.create({
@@ -335,11 +351,11 @@ export default function TaxiInformation() {
 			alignSelf: 'flex-start',
 			paddingHorizontal: 12,
 		},
-		vehicleScrollContainer: {
+		taxiScrollContainer: {
 			marginBottom: 46,
 			marginLeft: 5,
 		},
-		vehicleCard: {
+		taxiCard: {
 			alignItems: "center",
 			backgroundColor: theme.card,
 			borderColor: theme.primary,
@@ -354,11 +370,11 @@ export default function TaxiInformation() {
 			shadowRadius: 4,
 			elevation: 2,
 		},
-		vehicleCardSelected: {
+		taxiCardSelected: {
 			borderWidth: 3,
 			borderColor: theme.primary,
 		},
-		vehicleCardUnselected: {
+		taxiCardUnselected: {
 			borderWidth: 1,
 			borderColor: isDark ? theme.border : "#E8E2E2",
 		},
@@ -381,30 +397,28 @@ export default function TaxiInformation() {
 			fontSize: 12,
 			fontWeight: "bold"
 		},
-		vehiclePlate: {
+		taxiPlate: {
 			color: theme.text,
 			fontSize: 15,
 			fontWeight: "bold",
 			marginBottom: 11,
 			textAlign: "center",
 		},
-		vehicleImage: {
+		taxiImage: {
 			width: 100,
 			height: 42,
 			marginBottom: 22,
 		},
-		vehicleInfo: {
-			color: theme.text,
-			fontSize: 11,
-			fontWeight: "bold",
-			marginBottom: 6,
-			textAlign: "center",
-		},
-		vehiclePrice: {
+		taxiInfo: {
 			color: theme.textSecondary,
-			fontSize: 12,
-			fontWeight: "bold",
-			textAlign: "center",
+			fontSize: 14,
+			marginTop: 8,
+		},
+		taxiPrice: {
+			color: theme.primary,
+			fontSize: 16,
+			fontWeight: 'bold',
+			marginTop: 4,
 		},
 		reserveButton: {
 			alignItems: "center",
@@ -727,63 +741,62 @@ export default function TaxiInformation() {
 							</Text>
 						)}
 						
-						{/* Horizontal ScrollView for vehicle list */}
+						{/* Horizontal ScrollView for taxi list */}
 						<ScrollView 
 							horizontal={true}
 							showsHorizontalScrollIndicator={false}
-							style={dynamicStyles.vehicleScrollContainer}
+							style={dynamicStyles.taxiScrollContainer}
 							contentContainerStyle={{
 								paddingHorizontal: 5,
 							}}>
 							
-							{availableTaxis.map((vehicle) => (
+							{availableTaxis.map((taxi) => (
 								<TouchableOpacity 
-									key={vehicle.licensePlate}
+									key={taxi.licensePlate}
 									style={[
-										dynamicStyles.vehicleCard,
-										selectedVehicle === vehicle.licensePlate 
-											? dynamicStyles.vehicleCardSelected 
-											: dynamicStyles.vehicleCardUnselected
+										dynamicStyles.taxiCard,
+										selectedTaxi?.licensePlate === taxi.licensePlate 
+											? dynamicStyles.taxiCardSelected 
+											: dynamicStyles.taxiCardUnselected
 									]} 
-									onPress={() => handleVehicleSelect(vehicle.licensePlate)}>
+									onPress={() => handleTaxiSelect(taxi)}>
 									
 									{/* Selection Circle */}
 									<View style={[
 										dynamicStyles.selectionCircle,
-										selectedVehicle !== vehicle.licensePlate && dynamicStyles.selectionCircleUnselected
+										selectedTaxi?.licensePlate !== taxi.licensePlate && dynamicStyles.selectionCircleUnselected
 									]}>
-										{selectedVehicle === vehicle.licensePlate && (
+										{selectedTaxi?.licensePlate === taxi.licensePlate && (
 											<Text style={dynamicStyles.selectionCheck}>✓</Text>
 										)}
 									</View>
 									
-									{/* Vehicle Plate */}
-									<Text style={dynamicStyles.vehiclePlate}>
-										{vehicle.licensePlate}
+									{/* Taxi Plate */}
+									<Text style={dynamicStyles.taxiPlate}>
+										{taxi.licensePlate}
 									</Text>
 									
-									{/* Vehicle Image */}
-									{vehicle.image ? (
+									{/* Taxi Image */}
+									{taxi.image ? (
 										<Image
-											source={{ uri: vehicle.image }}
+											source={{ uri: taxi.image }}
 											resizeMode="contain"
-											style={dynamicStyles.vehicleImage}
+											style={dynamicStyles.taxiImage}
 										/>
 										) : (
 										<Text style={{ color: 'red' }}>No Image</Text>
 									)}
 									
 									{/* Time and Seats Info */}
-									{/* <Text style={dynamicStyles.vehicleInfo}>
-										{`${vehicle.time} | ${vehicle.seats}`}
-									</Text> */}
+									<Text style={dynamicStyles.taxiInfo}>
+										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min' : 'N/A'} | ${taxi.seats}`}
+									</Text>
 									
 									{/* Price (if available) */}
-									{/* {vehicle.price && (
-										<Text style={dynamicStyles.vehiclePrice}>
-											{vehicle.price}
-										</Text>
-									)} */}
+									<Text style={dynamicStyles.taxiPrice}>
+										{currentRoute?.fare ?? 'N/A'}
+									</Text>
+
 								</TouchableOpacity>
 							))}
 
@@ -793,12 +806,12 @@ export default function TaxiInformation() {
 							<TouchableOpacity 
 								style={[
 									dynamicStyles.reserveButton,
-									!selectedVehicle && dynamicStyles.reserveButtonDisabled
+									!selectedTaxi && dynamicStyles.reserveButtonDisabled
 								]} 
 								onPress={handleReserveSeat}>
 								<Text style={[
 									dynamicStyles.reserveButtonText,
-									!selectedVehicle && dynamicStyles.reserveButtonTextDisabled
+									!selectedTaxi && dynamicStyles.reserveButtonTextDisabled
 								]}>
 									{"Reserve Seat"}
 								</Text>
