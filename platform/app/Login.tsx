@@ -58,7 +58,7 @@ export default function Login() {
       });
       }
     } catch {
-      console.log("Phone number or password is incorrect");
+      Alert.alert("Phone number or password is incorrect");
     }
   };
 
