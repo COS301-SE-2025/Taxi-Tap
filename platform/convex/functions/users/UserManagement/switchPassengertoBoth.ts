@@ -49,6 +49,21 @@ export const switchPassengerToBothHandler = async (
     });
   }
   
+  // Ensure a location record exists for driver role
+  const existingLocation = await ctx.db
+    .query("locations")
+    .withIndex("by_user", (q) => q.eq("userId", args.userId))
+    .first();
+  if (!existingLocation) {
+    await ctx.db.insert("locations", {
+      userId: args.userId,
+      latitude: 0,
+      longitude: 0,
+      updatedAt: new Date().toISOString(),
+      role: "driver",
+    });
+  }
+  
   return { success: true, message: "Account upgraded to both passenger and driver" };
 };
 
