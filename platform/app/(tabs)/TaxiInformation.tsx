@@ -269,7 +269,7 @@ export default function TaxiInformation() {
 		try {
 			await requestRide({
 				passengerId: user.id as Id<"taxiTap_users">,
-				driverId: selectedTaxi.driverId,
+				driverId: selectedTaxi.userId,
 				startLocation: {
 					coordinates: {
 						latitude: currentLocation.latitude,
