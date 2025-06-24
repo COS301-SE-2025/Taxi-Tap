@@ -29,6 +29,7 @@ interface UserContextType {
   updateUserName: (newName: string) => Promise<void>;
   updateNumber: (newNumber: string) => Promise<void>;
   updateAccountType: (newAccountType: "passenger" | "driver" | "both") => Promise<void>;
+  setUserId: (id: string) => Promise<void>;  
 }
 
 interface UserProviderProps {
@@ -132,6 +133,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   };
 
+  const setUserId = async (id: string): Promise<void> => {
+  // overwrite or create the user object
+  setUser((prev) =>
+    prev ? { ...prev, id } : { id, name: '', role: undefined, accountType: 'passenger', phoneNumber: '' },
+  );
+  await AsyncStorage.setItem('userId', id);
+};
+
   const contextValue: UserContextType = {
     user,
     loading,
@@ -141,6 +150,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     updateUserName,
     updateAccountType,
     updateNumber,
+    setUserId,   
   };
 
   return (

@@ -13,7 +13,8 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
+import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocationSystem } from '../hooks/useLocationSystem';
 
@@ -56,12 +57,13 @@ export default function DriverOnline({
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
-  const { userId } = useLocalSearchParams<{ userId: string }>();
+  const { user } = useUser();                                     // 👈 add
+  const uid = user?.id ?? ''; 
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
   const mapRef = useRef<MapView | null>(null);
-  const { userLocation } = useLocationSystem(userId || '');
+  const { userLocation } = useLocationSystem(uid);  
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -71,8 +73,8 @@ export default function DriverOnline({
   });
 
   useEffect(() => {
-  console.log('🚀 DriverOnline userId:', userId);
-}, [userId]);
+  console.log('🚀 DriverOnline userId:', uid);
+}, [uid]);
 
  useEffect(() => {
    if (userLocation) {
@@ -160,7 +162,10 @@ export default function DriverOnline({
       subtitle: "Driver details & documents",
       onPress: () => {
         setShowMenu(false);
-        router.push('/DriverProfile');
+        router.push({
+      pathname: "/DriverProfile",
+      params: { userId: uid }      // 👈 add this line
+    });
       }
     },
     { 
@@ -169,7 +174,10 @@ export default function DriverOnline({
       subtitle: "Vehicle info & route settings",
       onPress: () => {
         setShowMenu(false);
-        router.push('/DriverRequestPage');
+        router.push({
+          pathname: "/DriverRequestPage",
+          params:{ userId: uid }      // 👈
+       });
       }
     },
     { 
@@ -178,7 +186,10 @@ export default function DriverOnline({
       subtitle: "Past rides & routes",
       onPress: () => {
         setShowMenu(false);
-        router.push('/EarningsPage');
+        router.push({
+          pathname: "/EarningsPage",
+          params: { userId: uid }       // 👈
+        });  
       }
     },
     { 
