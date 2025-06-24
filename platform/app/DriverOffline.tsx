@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRouter,useLocalSearchParams } from 'expo-router';
+import { useUser } from '../contexts/UserContext';    
 import { useTheme } from '../contexts/ThemeContext';
 import { useRouteContext } from '../contexts/RouteContext';
 
@@ -58,6 +59,11 @@ export default function DriverOffline({
   
   const router = useRouter();
   const { setCurrentRoute, currentRoute } = useRouteContext();
+  const { user, setUserId } = useUser();                         // 👈 add
+  const uid = user?.id ?? '';                                    // 👈 add
+  const { userId: routeUserId } = useLocalSearchParams<{ userId: string }>(); // stays for deep-links
+
+
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
@@ -68,6 +74,10 @@ export default function DriverOffline({
       tabBarStyle: { display: 'none' },
     });
   }, [navigation]);
+
+    React.useEffect(() => {
+    if (routeUserId && routeUserId !== uid) setUserId(routeUserId);
+  }, [routeUserId]);
 
   const handleSetRoute = () => {
     router.push('/SetRoute');

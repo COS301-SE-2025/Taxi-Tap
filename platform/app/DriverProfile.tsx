@@ -8,8 +8,10 @@ import { useUser } from '../contexts/UserContext';
 import { Id } from '../convex/_generated/dataModel';
 import { useTheme } from '../contexts/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, router } from "expo-router";
 
 export default function DriverProfile() {
+    const { userId } = useLocalSearchParams<{ userId: string }>();
     const [name, setName] = useState('');
     const [number, setNumber] = useState('');
     const router = useRouter();

@@ -21,6 +21,7 @@ import loading from '../../assets/images/loading4.png';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useLocationSystem } from '../../hooks/useLocationSystem';
+import { useUser } from '../../contexts/UserContext';
 import { useFocusEffect } from '@react-navigation/native';
 
 const GOOGLE_MAPS_API_KEY =
@@ -29,16 +30,20 @@ const GOOGLE_MAPS_API_KEY =
     : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function HomeScreen() {
-  const { userId } = useLocalSearchParams<{ userId: string }>();
+  // 1️⃣  pull id from global context (falls back to nav param if needed)
+  const { user } = useUser();
+  const { userId: navId } = useLocalSearchParams<{ userId?: string }>();
+  const uid = user?.id || navId || '';   // single source of truth
+
   useEffect(() => {
-    console.log('🚀 HomeScreen got userId:', userId);
-  }, [userId]);
+    console.log('🚀 HomeScreen got userId (context):', uid);
+  }, [uid]);
 
   const [snapshotDrivers, setSnapshotDrivers] = useState<
   { _id: string; latitude: number; longitude: number }[]
 >([]);
 
-  const { userLocation, nearbyTaxis } = useLocationSystem(userId || '');
+  const { userLocation, nearbyTaxis } = useLocationSystem(uid);
   useEffect(() => {
     if (userLocation) {
       console.log('✅ Live-location sent:', userLocation);
