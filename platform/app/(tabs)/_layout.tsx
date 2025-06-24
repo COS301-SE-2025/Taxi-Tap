@@ -140,6 +140,16 @@ const TabNavigation: React.FC = () => {
       />
 
       <Tabs.Screen
+        name="PassengerRoute"
+        options={{
+          title: 'View Routes',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="map" size={24} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="Feedback"
         options={{
           title: 'Feedback',

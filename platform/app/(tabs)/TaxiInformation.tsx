@@ -21,7 +21,8 @@ export default function TaxiInformation() {
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
 	const mapRef = useRef<MapView | null>(null);
-	
+	const { routeId } = useLocalSearchParams();
+
 	// Use MapContext instead of local state
 	const {
 		currentLocation,
@@ -39,6 +40,10 @@ export default function TaxiInformation() {
 	} = useMapContext();
 
 	const availableTaxis = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
+
+	const routeInfo = useQuery(api.functions.routes.displayRoutes.displayRoutes);
+
+	const currentRoute = routeInfo?.find(route => route.routeId === routeId);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -278,13 +283,6 @@ export default function TaxiInformation() {
 			}
 		});
 	};
-
-	// function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
-	// 	if (Array.isArray(param)) {
-	// 		return param[0] || fallback;
-	// 	}
-	// 	return param || fallback;
-	// }
 
 	// Create dynamic styles based on theme
 	const dynamicStyles = StyleSheet.create({
@@ -774,16 +772,15 @@ export default function TaxiInformation() {
 									)}
 									
 									{/* Time and Seats Info */}
-									{/* <Text style={dynamicStyles.vehicleInfo}>
-										{`${vehicle.time} | ${vehicle.seats}`}
-									</Text> */}
+									<Text style={dynamicStyles.vehicleInfo}>
+										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min' : 'N/A'} | ${vehicle.seats}`}
+									</Text>
 									
 									{/* Price (if available) */}
-									{/* {vehicle.price && (
-										<Text style={dynamicStyles.vehiclePrice}>
-											{vehicle.price}
-										</Text>
-									)} */}
+									<Text style={dynamicStyles.vehiclePrice}>
+										{currentRoute?.fare ?? 'N/A'}
+									</Text>
+
 								</TouchableOpacity>
 							))}
 
