@@ -196,6 +196,86 @@ routes: defineTable({
     name: v.string(),
     lastUsed: v.number(),
   }).index("by_stop_id", ["id"]),
+  
+  notifications: defineTable({
+  notificationId: v.string(),
+  userId: v.id("taxiTap_users"),
+  type: v.union(
+    v.literal("ride_request"),
+    v.literal("ride_accepted"),
+    v.literal("ride_started"),
+    v.literal("ride_completed"),
+    v.literal("ride_cancelled"),
+    v.literal("driver_arrived"),
+    v.literal("payment_received"),
+    v.literal("rating_request"),
+    v.literal("route_update"),
+    v.literal("emergency_alert"),
+    v.literal("system_maintenance"),
+    v.literal("promotional")
+  ),
+  title: v.string(),
+  message: v.string(),
+  isRead: v.boolean(),
+  isPush: v.boolean(), // Whether it was sent as push notification
+  metadata: v.optional(v.object({
+    rideId: v.optional(v.string()),
+    routeId: v.optional(v.string()),
+    driverId: v.optional(v.id("taxiTap_users")),
+    passengerId: v.optional(v.id("taxiTap_users")),
+    amount: v.optional(v.number()),
+    additionalData: v.optional(v.any())
+  })),
+  priority: v.union(
+    v.literal("low"),
+    v.literal("medium"),
+    v.literal("high"),
+    v.literal("urgent")
+  ),
+  scheduledFor: v.optional(v.number()), // For scheduled notifications
+  expiresAt: v.optional(v.number()),
+  createdAt: v.number(),
+  readAt: v.optional(v.number())
+})
+  .index("by_user_id", ["userId"])
+  .index("by_notification_id", ["notificationId"])
+  .index("by_type", ["type"])
+  .index("by_is_read", ["isRead"])
+  .index("by_priority", ["priority"])
+  .index("by_created_at", ["createdAt"])
+  .index("by_scheduled_for", ["scheduledFor"]),
+
+  pushTokens: defineTable({
+  userId: v.id("taxiTap_users"),
+  token: v.string(),
+  platform: v.union(v.literal("ios"), v.literal("android")),
+  isActive: v.boolean(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  lastUsedAt: v.optional(v.number())
+})
+  .index("by_user_id", ["userId"])
+  .index("by_token", ["token"])
+  .index("by_is_active", ["isActive"]),
+
+  notificationSettings: defineTable({
+  userId: v.id("taxiTap_users"),
+  rideUpdates: v.boolean(),
+  promotionalOffers: v.boolean(),
+  systemAlerts: v.boolean(),
+  emergencyNotifications: v.boolean(),
+  routeUpdates: v.boolean(),
+  paymentNotifications: v.boolean(),
+  ratingReminders: v.boolean(),
+  soundEnabled: v.boolean(),
+  vibrationEnabled: v.boolean(),
+  quietHoursStart: v.optional(v.string()),
+  quietHoursEnd: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number()
+})
+  .index("by_user_id", ["userId"]),
+  
       locations: defineTable({
     userId: v.id("taxiTap_users"),
     latitude: v.number(),
