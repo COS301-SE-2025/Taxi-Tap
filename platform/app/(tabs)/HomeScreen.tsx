@@ -23,6 +23,7 @@ import { api } from '../../convex/_generated/api';
 import { useLocationSystem } from '../../hooks/useLocationSystem';
 import { useUser } from '../../contexts/UserContext';
 import { useFocusEffect } from '@react-navigation/native';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 const GOOGLE_MAPS_API_KEY =
   Platform.OS === 'ios'
@@ -95,6 +96,8 @@ useEffect(() => {
 
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const mapRef = useRef<MapView | null>(null);
+
+  const { notifications, markAsRead } = useNotifications();
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: 'Home' });
@@ -409,6 +412,44 @@ useEffect(() => {
       fontWeight: 'bold',
     },
   });
+
+  useEffect(() => {
+    const rideAccepted = notifications.find(
+      n => n.type === "ride_accepted" && !n.isRead
+    );
+    if (rideAccepted) {
+      Alert.alert(
+        "Ride Accepted",
+        rideAccepted.message,
+        [
+          {
+            text: "OK",
+            onPress: () => markAsRead(rideAccepted._id),
+            style: "default"
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+
+    const rideCancelled = notifications.find(
+      n => n.type === "ride_cancelled" && !n.isRead
+    );
+    if (rideCancelled) {
+      Alert.alert(
+        "Ride Cancelled",
+        rideCancelled.message,
+        [
+          {
+            text: "OK",
+            onPress: () => markAsRead(rideCancelled._id),
+            style: "default"
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
 
   return (
     <View style={s.container}>
