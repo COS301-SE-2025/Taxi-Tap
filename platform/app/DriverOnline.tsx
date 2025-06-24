@@ -275,7 +275,7 @@ export default function DriverOnline({
       width: 50,
       height: 50,
       borderRadius: 25,
-      backgroundColor: isDark ? '#FFA500' : '#FFFFFF',
+      backgroundColor: isDark ? '#232F3E' : '#FFFFFF',
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: theme.shadow,
