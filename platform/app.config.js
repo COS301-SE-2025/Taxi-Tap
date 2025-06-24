@@ -47,7 +47,15 @@ export default {
       }
     },
     plugins: [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "../assets/images/transparent-whitetext.png",
+          "color": "#ffffff",
+          "sounds": ["../assets/audios/hoot.wav"]
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true
