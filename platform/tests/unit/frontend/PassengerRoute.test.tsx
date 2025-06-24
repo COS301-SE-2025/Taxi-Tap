@@ -39,7 +39,8 @@ jest.mock('convex/react', () => ({
 jest.mock('react-native-vector-icons/Ionicons', () => 'Icon');
 
 // Mock Alert
-jest.spyOn(Alert, 'alert');
+// Mock Alert
+jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
 const { useQuery } = require('convex/react');
 
