@@ -72,6 +72,11 @@ export default function DriverOnline({
   const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
   const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 
+  console.log("DriverOnline: Component mounted");
+  console.log("DriverOnline: user", user);
+  console.log("DriverOnline: userId", userId);
+  console.log("DriverOnline: notifications from hook", notifications);
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -139,13 +144,20 @@ export default function DriverOnline({
   }, [onGoOffline, router]);
 
   useEffect(() => {
-    if (!user) return; // Guard: only proceed if user is defined
+    console.log("DriverOnline: useEffect triggered");
+    console.log("DriverOnline: user exists?", !!user);
+    console.log("DriverOnline: notifications length", notifications?.length || 0);
+    if (!user) {
+      console.log("DriverOnline: No user, returning early");
+      return; // Guard: only proceed if user is defined
+    }
     console.log("DriverOnline: notifications", notifications);
     const rideRequest = notifications.find(
       n => n.type === "ride_request" && !n.isRead
     );
     console.log("DriverOnline: found rideRequest", rideRequest);
     if (rideRequest) {
+      console.log("DriverOnline: Showing Alert for ride request");
       Alert.alert(
         "New Ride Request",
         rideRequest.message,
@@ -153,6 +165,7 @@ export default function DriverOnline({
           {
             text: "Decline",
             onPress: () => {
+              console.log("DriverOnline: Driver declined ride");
               cancelRide({
                 rideId: rideRequest.metadata.rideId,
                 userId: user.id as Id<"taxiTap_users">,
@@ -164,6 +177,7 @@ export default function DriverOnline({
           {
             text: "Accept",
             onPress: () => {
+              console.log("DriverOnline: Driver accepted ride");
               acceptRide({
                 rideId: rideRequest.metadata.rideId,
                 driverId: user.id as Id<"taxiTap_users">,
