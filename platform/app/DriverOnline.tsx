@@ -58,6 +58,8 @@ export default function DriverOnline({
   currentRoute = "Not Set",
   availableSeats = 4,
 }: DriverOnlineProps) {
+  console.log("DriverOnline: Function called");
+  
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
@@ -68,7 +70,11 @@ export default function DriverOnline({
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
   const mapRef = useRef<MapView | null>(null);
+  
+  console.log("DriverOnline: About to call useNotifications");
   const { notifications, markAsRead } = useNotifications();
+  console.log("DriverOnline: useNotifications called");
+  
   const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
   const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 
