@@ -17,6 +17,7 @@ import {
   SafeAreaView,
   StatusBar,
   ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from 'expo-router';
@@ -388,6 +389,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
     
     return (
       <SafeAreaView style={dynamicStyles.safeArea}>
+        <ScrollView>
         <StatusBar 
           barStyle={isDark ? "light-content" : "dark-content"} 
           backgroundColor={theme.surface} 
@@ -430,6 +432,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
             </TouchableOpacity>
           </View>
         </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -437,6 +440,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
   // If driver doesn't have an assigned route yet, show assignment screen
   return (
     <SafeAreaView style={dynamicStyles.safeArea}>
+      <ScrollView>
       <StatusBar 
         barStyle={isDark ? "light-content" : "dark-content"} 
         backgroundColor={theme.surface} 
@@ -509,6 +513,7 @@ export default function SetRoute({ onRouteSet }: SetRouteProps) {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
