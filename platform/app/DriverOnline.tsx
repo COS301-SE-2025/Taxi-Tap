@@ -14,9 +14,9 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { useNavigation, useRouter } from 'expo-router';
-import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocationSystem } from '../hooks/useLocationSystem';
+import { useUser } from '../contexts/UserContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -57,13 +57,13 @@ export default function DriverOnline({
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
-  const { user } = useUser();                                     // 👈 add
-  const uid = user?.id ?? ''; 
+  const { user } = useUser();
+  const userId = user?.id;
+  const { userLocation } = useLocationSystem(userId);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
   const mapRef = useRef<MapView | null>(null);
-  const { userLocation } = useLocationSystem(uid);  
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -73,8 +73,8 @@ export default function DriverOnline({
   });
 
   useEffect(() => {
-  console.log('🚀 DriverOnline userId:', uid);
-}, [uid]);
+  console.log('🚀 DriverOnline userId:', userId);
+}, [userId]);
 
  useEffect(() => {
    if (userLocation) {
@@ -124,6 +124,13 @@ export default function DriverOnline({
     getCurrentLocation();
   }, []);
 
+  useEffect(() => {
+    // Redirect if accessed directly (not via DriverHomeScreen)
+    if (typeof onGoOffline !== 'function') {
+      router.replace('/DriverHomeScreen');
+    }
+  }, [onGoOffline, router]);
+
   const handleMenuPress = () => {
     setShowMenu(!showMenu);
   };
@@ -162,10 +169,7 @@ export default function DriverOnline({
       subtitle: "Driver details & documents",
       onPress: () => {
         setShowMenu(false);
-        router.push({
-      pathname: "/DriverProfile",
-      params: { userId: uid }
-    });
+        router.push('/DriverProfile');
       }
     },
     { 
@@ -174,10 +178,7 @@ export default function DriverOnline({
       subtitle: "Vehicle info & route settings",
       onPress: () => {
         setShowMenu(false);
-        router.push({
-          pathname: "/DriverRequestPage",
-          params:{ userId: uid }
-       });
+        router.push('/DriverRequestPage');
       }
     },
     { 
@@ -186,10 +187,7 @@ export default function DriverOnline({
       subtitle: "Past rides & routes",
       onPress: () => {
         setShowMenu(false);
-        router.push({
-          pathname: "/EarningsPage",
-          params: { userId: uid }
-        });  
+        router.push('/EarningsPage');
       }
     },
     { 
@@ -274,15 +272,8 @@ export default function DriverOnline({
       right: 20,
       width: 50,
       height: 50,
-      borderRadius: 25,
-      backgroundColor: isDark ? '#232F3E' : '#FFFFFF',
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.15,
-      shadowOffset: { width: 0, height: 4 },
-      shadowRadius: 4,
-      elevation: 8,
       zIndex: 1000,
     },
     earningsContainer: {
@@ -583,10 +574,12 @@ export default function DriverOnline({
 
               <View style={dynamicStyles.bottomContainer}>
                 <View style={dynamicStyles.quickStatus}>
-                  <View style={dynamicStyles.quickStatusItem}>
-                    <Text style={dynamicStyles.quickStatusValue}>{currentRoute}</Text>
-                    <Text style={dynamicStyles.quickStatusLabel}>Current Route</Text>
-                  </View>
+                  {currentRoute && currentRoute !== 'Not Set' && (
+                    <View style={dynamicStyles.quickStatusItem}>
+                      <Text style={dynamicStyles.quickStatusValue}>{currentRoute}</Text>
+                      <Text style={dynamicStyles.quickStatusLabel}>Current Route</Text>
+                    </View>
+                  )}
                   <View style={dynamicStyles.quickStatusItem}>
                     <Text style={dynamicStyles.quickStatusValue}>{availableSeats}</Text>
                     <Text style={dynamicStyles.quickStatusLabel}>Available Seats</Text>

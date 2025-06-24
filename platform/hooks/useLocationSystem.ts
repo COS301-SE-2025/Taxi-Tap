@@ -4,15 +4,19 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 
-export function useLocationSystem(userId: string) {
+export function useLocationSystem(userId: string | undefined) {
   // 👇 pull out the actual mutation function
   const updateLocation = useMutation(
     api.functions.locations.updateLocation.updateLocation
+  );
+  const createLocation = useMutation(
+    api.functions.locations.createLocation.createLocation
   );
 
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") return;
@@ -27,11 +31,32 @@ export function useLocationSystem(userId: string) {
           const { latitude, longitude } = location.coords;
           setCoords({ latitude, longitude });
 
-          updateLocation({
-            userId: userId as Id<"taxiTap_users">,
-            latitude,
-            longitude,
-          });
+          (async () => {
+            try {
+              await updateLocation({
+                userId: userId as Id<"taxiTap_users">,
+                latitude,
+                longitude,
+              });
+            } catch (err: any) {
+              if (err?.message?.includes("No location record found")) {
+                // Fallback: create location, then retry update
+                await createLocation({
+                  userId: userId as Id<"taxiTap_users">,
+                  latitude,
+                  longitude,
+                  role: "driver", // or detect role if available
+                });
+                await updateLocation({
+                  userId: userId as Id<"taxiTap_users">,
+                  latitude,
+                  longitude,
+                });
+              } else {
+                throw err;
+              }
+            }
+          })();
         }
       );
     })();
