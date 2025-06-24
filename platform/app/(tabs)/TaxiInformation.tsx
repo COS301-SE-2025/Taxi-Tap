@@ -16,7 +16,7 @@ const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function TaxiInformation() {
-	const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+	const [selectedTaxi, setSelectedTaxi] = useState<any | null>(null);
 	const [routeError, setRouteError] = useState<string | null>(null);
 	
 	const params = useLocalSearchParams();
@@ -239,8 +239,8 @@ export default function TaxiInformation() {
 		}
 	}, [currentLocation, destination, getRoute]);
 
-	const handleVehicleSelect = (taxi: any) => {
-		setSelectedVehicle(taxi);
+	const handleTaxiSelect = (taxi: any) => {
+		setSelectedTaxi(taxi);
 	};
 
 	const handleChangeDestination = () => {
@@ -248,8 +248,8 @@ export default function TaxiInformation() {
 	};
 
 	const handleReserveSeat = async () => {
-		if (!selectedVehicle) {
-			Alert.alert('Please select a vehicle first!');
+		if (!selectedTaxi) {
+			Alert.alert('Please select a taxi first!');
 			return;
 		}
 		if (!user) {
@@ -264,7 +264,7 @@ export default function TaxiInformation() {
 		try {
 			await requestRide({
 				passengerId: user.id as Id<"taxiTap_users">,
-				driverId: selectedVehicle.driverId,
+				driverId: selectedTaxi.driverId,
 				startLocation: {
 					coordinates: {
 						latitude: currentLocation.latitude,
@@ -279,8 +279,7 @@ export default function TaxiInformation() {
 					},
 					address: destination.name,
 				},
-				// These can be populated if available
-				estimatedFare: selectedVehicle.fare, 
+				estimatedFare: selectedTaxi.fare, 
 			});
 
 			Alert.alert(
@@ -354,11 +353,11 @@ export default function TaxiInformation() {
 			alignSelf: 'flex-start',
 			paddingHorizontal: 12,
 		},
-		vehicleScrollContainer: {
+		taxiScrollContainer: {
 			marginBottom: 46,
 			marginLeft: 5,
 		},
-		vehicleCard: {
+		taxiCard: {
 			alignItems: "center",
 			backgroundColor: theme.card,
 			borderColor: theme.primary,
@@ -373,11 +372,11 @@ export default function TaxiInformation() {
 			shadowRadius: 4,
 			elevation: 2,
 		},
-		vehicleCardSelected: {
+		taxiCardSelected: {
 			borderWidth: 3,
 			borderColor: theme.primary,
 		},
-		vehicleCardUnselected: {
+		taxiCardUnselected: {
 			borderWidth: 1,
 			borderColor: isDark ? theme.border : "#E8E2E2",
 		},
@@ -400,26 +399,26 @@ export default function TaxiInformation() {
 			fontSize: 12,
 			fontWeight: "bold"
 		},
-		vehiclePlate: {
+		taxiPlate: {
 			color: theme.text,
 			fontSize: 15,
 			fontWeight: "bold",
 			marginBottom: 11,
 			textAlign: "center",
 		},
-		vehicleImage: {
+		taxiImage: {
 			width: 100,
 			height: 42,
 			marginBottom: 22,
 		},
-		vehicleInfo: {
+		taxiInfo: {
 			color: theme.text,
 			fontSize: 11,
 			fontWeight: "bold",
 			marginBottom: 6,
 			textAlign: "center",
 		},
-		vehiclePrice: {
+		taxiPrice: {
 			color: theme.textSecondary,
 			fontSize: 12,
 			fontWeight: "bold",
@@ -746,61 +745,61 @@ export default function TaxiInformation() {
 							</Text>
 						)}
 						
-						{/* Horizontal ScrollView for vehicle list */}
+						{/* Horizontal ScrollView for taxi list */}
 						<ScrollView 
 							horizontal={true}
 							showsHorizontalScrollIndicator={false}
-							style={dynamicStyles.vehicleScrollContainer}
+							style={dynamicStyles.taxiScrollContainer}
 							contentContainerStyle={{
 								paddingHorizontal: 5,
 							}}>
 							
-							{availableTaxis.map((vehicle) => (
+							{availableTaxis.map((taxi) => (
 								<TouchableOpacity 
-									key={vehicle.licensePlate}
+									key={taxi.licensePlate}
 									style={[
-										dynamicStyles.vehicleCard,
-										selectedVehicle === vehicle.licensePlate 
-											? dynamicStyles.vehicleCardSelected 
-											: dynamicStyles.vehicleCardUnselected
+										dynamicStyles.taxiCard,
+										selectedTaxi?.licensePlate === taxi.licensePlate 
+											? dynamicStyles.taxiCardSelected 
+											: dynamicStyles.taxiCardUnselected
 									]} 
-									onPress={() => handleVehicleSelect(vehicle.licensePlate)}>
+									onPress={() => handleTaxiSelect(taxi)}>
 									
 									{/* Selection Circle */}
 									<View style={[
 										dynamicStyles.selectionCircle,
-										selectedVehicle !== vehicle.licensePlate && dynamicStyles.selectionCircleUnselected
+										selectedTaxi?.licensePlate !== taxi.licensePlate && dynamicStyles.selectionCircleUnselected
 									]}>
-										{selectedVehicle === vehicle.licensePlate && (
+										{selectedTaxi?.licensePlate === taxi.licensePlate && (
 											<Text style={dynamicStyles.selectionCheck}>✓</Text>
 										)}
 									</View>
 									
-									{/* Vehicle Plate */}
-									<Text style={dynamicStyles.vehiclePlate}>
-										{vehicle.licensePlate}
+									{/* Taxi Plate */}
+									<Text style={dynamicStyles.taxiPlate}>
+										{taxi.licensePlate}
 									</Text>
 									
-									{/* Vehicle Image */}
-									{vehicle.image ? (
+									{/* Taxi Image */}
+									{taxi.image ? (
 										<Image
-											source={{ uri: vehicle.image }}
+											source={{ uri: taxi.image }}
 											resizeMode="contain"
-											style={dynamicStyles.vehicleImage}
+											style={dynamicStyles.taxiImage}
 										/>
 										) : (
 										<Text style={{ color: 'red' }}>No Image</Text>
 									)}
 									
 									{/* Time and Seats Info */}
-									{/* <Text style={dynamicStyles.vehicleInfo}>
-										{`${vehicle.time} | ${vehicle.seats}`}
+									{/* <Text style={dynamicStyles.taxiInfo}>
+										{`${taxi.time} | ${taxi.seats}`}
 									</Text> */}
 									
 									{/* Price (if available) */}
-									{/* {vehicle.price && (
-										<Text style={dynamicStyles.vehiclePrice}>
-											{vehicle.price}
+									{/* {taxi.price && (
+										<Text style={dynamicStyles.taxiPrice}>
+											{taxi.price}
 										</Text>
 									)} */}
 								</TouchableOpacity>
@@ -812,12 +811,12 @@ export default function TaxiInformation() {
 							<TouchableOpacity 
 								style={[
 									dynamicStyles.reserveButton,
-									!selectedVehicle && dynamicStyles.reserveButtonDisabled
+									!selectedTaxi && dynamicStyles.reserveButtonDisabled
 								]} 
 								onPress={handleReserveSeat}>
 								<Text style={[
 									dynamicStyles.reserveButtonText,
-									!selectedVehicle && dynamicStyles.reserveButtonTextDisabled
+									!selectedTaxi && dynamicStyles.reserveButtonTextDisabled
 								]}>
 									{"Reserve Seat"}
 								</Text>
