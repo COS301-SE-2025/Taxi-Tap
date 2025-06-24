@@ -35,13 +35,13 @@ export const acceptRideHandler = async (
   console.log("Updating ride with _id:", ride._id);
 
   // Update the ride
-  const updatedRide = await ctx.db.patch(ride._id, {
+  const updatedRideId = await ctx.db.patch(ride._id, {
     status: "accepted",
     driverId: args.driverId,
     acceptedAt: Date.now(),
   });
 
-  console.log("Ride updated successfully:", updatedRide);
+  console.log("Ride updated successfully, id:", updatedRideId);
 
   // Notify the passenger using the internal ride notification system
   await ctx.runMutation(internal.functions.notifications.rideNotifications.sendRideNotification, {
@@ -51,7 +51,7 @@ export const acceptRideHandler = async (
   });
 
   return {
-    _id: updatedRide._id,
+    _id: updatedRideId,
     message: "Ride accepted successfully",
   };
 };

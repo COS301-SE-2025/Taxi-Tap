@@ -21,7 +21,7 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
     }
     
     // Update the ride status to cancelled
-    const updatedRide = await ctx.db.patch(ride._id, {
+    const updatedRideId = await ctx.db.patch(ride._id, {
         status: "cancelled",
         cancelledAt: Date.now(),
         cancelledBy: args.userId,
@@ -53,7 +53,7 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
     }
 
     return {
-        _id: updatedRide._id,
+        _id: updatedRideId,
         message: "Ride cancelled successfully",
     };
 };
