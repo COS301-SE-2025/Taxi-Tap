@@ -184,6 +184,8 @@ export default function DriverOnline({
             text: "Accept",
             onPress: () => {
               console.log("DriverOnline: Driver accepted ride");
+              console.log("DriverOnline: rideId being passed:", rideRequest.metadata.rideId);
+              console.log("DriverOnline: driverId being passed:", user.id);
               acceptRide({
                 rideId: rideRequest.metadata.rideId,
                 driverId: user.id as Id<"taxiTap_users">,
