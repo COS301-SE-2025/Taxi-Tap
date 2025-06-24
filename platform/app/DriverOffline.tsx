@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRouter,useLocalSearchParams } from 'expo-router';
-import { useUser } from '../contexts/UserContext';    
 import { useTheme } from '../contexts/ThemeContext';
 import { useRouteContext } from '../contexts/RouteContext';
 
@@ -20,7 +19,6 @@ import { useRouteContext } from '../contexts/RouteContext';
 interface DriverOfflineProps {
   onGoOnline: () => void;
   todaysEarnings: number;
-  currentRoute?: string;
   availableSeats?: number;
 }
 
@@ -51,7 +49,6 @@ interface SafetyOptionType {
 export default function DriverOffline({ 
   onGoOnline, 
   todaysEarnings, 
-  currentRoute: propCurrentRoute,
   availableSeats = 4,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
@@ -59,11 +56,6 @@ export default function DriverOffline({
   
   const router = useRouter();
   const { setCurrentRoute, currentRoute } = useRouteContext();
-  const { user, setUserId } = useUser();                         // 👈 add
-  const uid = user?.id ?? '';                                    // 👈 add
-  const { userId: routeUserId } = useLocalSearchParams<{ userId: string }>(); // stays for deep-links
-
-
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
@@ -75,9 +67,12 @@ export default function DriverOffline({
     });
   }, [navigation]);
 
-    React.useEffect(() => {
-    if (routeUserId && routeUserId !== uid) setUserId(routeUserId);
-  }, [routeUserId]);
+  useEffect(() => {
+    // Redirect if accessed directly (not via DriverHomeScreen)
+    if (typeof onGoOnline !== 'function') {
+      router.replace('/DriverHomeScreen');
+    }
+  }, [onGoOnline, router]);
 
   const handleSetRoute = () => {
     router.push('/SetRoute');
@@ -152,10 +147,10 @@ export default function DriverOffline({
     {
       icon: "location-outline",
       title: "Current Route",
-      value: (propCurrentRoute || "Not Set") as string,
+      value: (currentRoute || "Not Set") as string,
       subtitle: "Tap to set route",
-      color: (propCurrentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
-      onPress: () => console.log('Route pressed')
+      color: (currentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
+      onPress: () => router.push('/SetRoute'),
     },
     {
       icon: "car-outline",
@@ -181,6 +176,7 @@ export default function DriverOffline({
     container: {
       flex: 1,
       backgroundColor: theme.background,
+      paddingTop: 20,
     },
     safeArea: {
       flex: 1,
@@ -596,12 +592,7 @@ export default function DriverOffline({
                 flexDirection: 'row',
                 elevation: 4,
               }}
-              onPress={() =>
-              router.push({
-                pathname: '/DriverOnline',
-                params: { userId }
-              })
-            }
+              onPress={onGoOnline}
               activeOpacity={0.8}
               accessibilityLabel="Go online to accept passengers"
             >
