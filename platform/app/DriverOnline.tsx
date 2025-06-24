@@ -164,7 +164,7 @@ export default function DriverOnline({
         setShowMenu(false);
         router.push({
       pathname: "/DriverProfile",
-      params: { userId: uid }      // 👈 add this line
+      params: { userId: uid }
     });
       }
     },
@@ -176,7 +176,7 @@ export default function DriverOnline({
         setShowMenu(false);
         router.push({
           pathname: "/DriverRequestPage",
-          params:{ userId: uid }      // 👈
+          params:{ userId: uid }
        });
       }
     },
@@ -188,7 +188,7 @@ export default function DriverOnline({
         setShowMenu(false);
         router.push({
           pathname: "/EarningsPage",
-          params: { userId: uid }       // 👈
+          params: { userId: uid }
         });  
       }
     },
