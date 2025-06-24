@@ -21,7 +21,7 @@ export default function FeedbackScreen() {
 
   const handleSubmit = () => {
     if (!rating && !comment) {
-      Alert.alert('Error', 'Please provide a rating or comment');
+      Alert.alert('No Input', 'Please provide a rating or comment');
       return;
     }
 

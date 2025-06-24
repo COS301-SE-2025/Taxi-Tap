@@ -13,6 +13,7 @@ export default () => {
     const params = useLocalSearchParams();
     const navigation = useNavigation();
     const { theme, isDark } = useTheme();
+    const { userId } = useLocalSearchParams<{ userId: string }>();
     const { user } = useUser();
 
     // Get rideId from navigation params
