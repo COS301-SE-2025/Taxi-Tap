@@ -410,17 +410,15 @@ export default function TaxiInformation() {
 			marginBottom: 22,
 		},
 		taxiInfo: {
-			color: theme.text,
-			fontSize: 11,
-			fontWeight: "bold",
-			marginBottom: 6,
-			textAlign: "center",
+			color: theme.textSecondary,
+			fontSize: 14,
+			marginTop: 8,
 		},
 		taxiPrice: {
-			color: theme.textSecondary,
-			fontSize: 12,
-			fontWeight: "bold",
-			textAlign: "center",
+			color: theme.primary,
+			fontSize: 16,
+			fontWeight: 'bold',
+			marginTop: 4,
 		},
 		reserveButton: {
 			alignItems: "center",
@@ -790,12 +788,12 @@ export default function TaxiInformation() {
 									)}
 									
 									{/* Time and Seats Info */}
-									<Text style={dynamicStyles.vehicleInfo}>
-										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min' : 'N/A'} | ${vehicle.seats}`}
+									<Text style={dynamicStyles.taxiInfo}>
+										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min' : 'N/A'} | ${taxi.seats}`}
 									</Text>
 									
 									{/* Price (if available) */}
-									<Text style={dynamicStyles.vehiclePrice}>
+									<Text style={dynamicStyles.taxiPrice}>
 										{currentRoute?.fare ?? 'N/A'}
 									</Text>
 
