@@ -5,6 +5,7 @@ import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Platform, AppState } from 'react-native';
 import { Id } from '../convex/_generated/dataModel';
+import { router } from 'expo-router';
 
 interface InAppNotification {
   id: string;
@@ -148,18 +149,24 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode; userId?
   };
 
   const handleNotificationTap = (data: any) => {
-    // Navigate based on notification type
-    if (data?.rideId) {
-      // Navigate to ride details
-      console.log('Navigate to ride:', data.rideId);
-    } else if (data?.routeId) {
-      // Navigate to route details
-      console.log('Navigate to route:', data.routeId);
-    } else if (data?.screen) {
-      // Navigate to specific screen
-      console.log('Navigate to screen:', data.screen);
+    console.log('Handling notification tap with data:', data);
+
+    // Navigate to ride request page for driver
+    if (data?.type === 'ride_request' && data?.rideId) {
+      router.push({
+        pathname: '/DriverRequestPage',
+        params: { rideId: data.rideId },
+      });
+      return;
     }
-    // Add more navigation logic as needed
+
+    // Navigate to a general notifications screen or other relevant page
+    if (data?.screen) {
+      router.push(`/${data.screen}`);
+    } else {
+      // Default navigation
+      router.push('/(tabs)/NotificationsScreen');
+    }
   };
 
   const markAsRead = async (notificationId: Id<"notifications">) => {

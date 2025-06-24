@@ -1,14 +1,29 @@
-import React, { useLayoutEffect } from "react";
-import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useLayoutEffect, useState } from "react";
+import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, router } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../convex/_generated/api';
+import { useUser } from '../contexts/UserContext';
+import { Id } from "../convex/_generated/dataModel";
 
 export default () => {
     const params = useLocalSearchParams();
     const navigation = useNavigation();
     const { theme, isDark } = useTheme();
+    const { user } = useUser();
+
+    // Get rideId from navigation params
+    const rideId = params.rideId as string;
+
+    // Fetch ride data from Convex
+    const ride = useQuery(api.functions.rides.getRideById, rideId ? { rideId } : "skip");
+    
+    const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
+    const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
+    const completeRide = useMutation(api.functions.rides.completeRide.completeRide);
     
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -16,35 +31,97 @@ export default () => {
         });
     });
 
-    function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
-		if (Array.isArray(param)) {
-			return param[0] || fallback;
-		}
-		return param || fallback;
-	}
+    const handleAction = async (action: 'accept' | 'decline' | 'complete') => {
+        if (!user || !ride) {
+            Alert.alert('Error', 'User or ride data is not available.');
+            return;
+        }
 
-	// Parse location data from params
+        try {
+            let result;
+            switch (action) {
+                case 'accept':
+                    result = await acceptRide({ rideId: ride.rideId, driverId: user.id as Id<"taxiTap_users"> });
+                    Alert.alert('Success', 'Ride accepted! The passenger has been notified.');
+                    break;
+                case 'decline':
+                    result = await cancelRide({ rideId: ride.rideId, userId: user.id as Id<"taxiTap_users"> });
+                    Alert.alert('Success', 'Ride declined.');
+                    break;
+                case 'complete':
+                    result = await completeRide({ rideId: ride.rideId, driverId: user.id as Id<"taxiTap_users"> });
+                    Alert.alert('Success', 'Ride marked as completed!');
+                    break;
+            }
+            router.back();
+        } catch (err: any) {
+            console.error(`Failed to ${action} ride:`, err);
+            Alert.alert('Error', err.message || `Failed to ${action} ride. Please try again.`);
+        }
+    };
+    
+    // Loading and error states
+    if (ride === undefined) {
+        return (
+            <SafeAreaView style={[dynamicStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={theme.primary} />
+                <Text style={{ color: theme.text, marginTop: 10 }}>Loading Ride Details...</Text>
+            </SafeAreaView>
+        );
+    }
+
+    if (ride === null) {
+        return (
+            <SafeAreaView style={[dynamicStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Icon name="alert-circle-outline" size={40} color={theme.textSecondary} />
+                <Text style={{ color: theme.text, marginTop: 10, fontSize: 16 }}>Ride not found.</Text>
+            </SafeAreaView>
+        );
+    }
+    
+    // Ride details
 	const currentLocation = {
-		latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
-		longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-		name: getParamAsString(params.currentName, "Current Location")
+		latitude: ride.startLocation.coordinates.latitude,
+		longitude: ride.startLocation.coordinates.longitude,
+		name: ride.startLocation.address
 	};
 
 	const destination = {
-		latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
-		longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-		name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+		latitude: ride.endLocation.coordinates.latitude,
+		longitude: ride.endLocation.coordinates.longitude,
+		name: ride.endLocation.address
 	};
 
-    const handleAccept = () => {
-        //Handle Accept
+    // Render action buttons based on ride status
+    const renderActionButtons = () => {
+        switch (ride.status) {
+            case 'requested':
+                return (
+                    <>
+                        <TouchableOpacity style={dynamicStyles.acceptButton} onPress={() => handleAction('accept')}>
+                            <Text style={dynamicStyles.acceptButtonText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={dynamicStyles.declineButton} onPress={() => handleAction('decline')}>
+                            <Text style={dynamicStyles.declineButtonText}>Decline</Text>
+                        </TouchableOpacity>
+                    </>
+                );
+            case 'accepted':
+                return (
+                    <TouchableOpacity style={dynamicStyles.completeButton} onPress={() => handleAction('complete')}>
+                        <Text style={dynamicStyles.completeButtonText}>Complete Ride</Text>
+                    </TouchableOpacity>
+                );
+            case 'completed':
+                return <Text style={dynamicStyles.statusText}>Ride Completed</Text>;
+            case 'cancelled':
+                return <Text style={dynamicStyles.statusText}>Ride Cancelled</Text>;
+            default:
+                return null;
+        }
     };
 
-    const handleDecline = () => {
-        //Handle Decline
-    };
-
-    // Create dynamic styles based on theme
+    // Styles (with additions for new buttons/states)
     const dynamicStyles = StyleSheet.create({
         container: {
             flex: 1,
@@ -141,28 +218,46 @@ export default () => {
         },
         declineButton: {
             alignItems: "center",
-            backgroundColor: isDark ? theme.primary : "#FF0000",
+            backgroundColor: "#dc3545", // Red
             borderRadius: 30,
             paddingVertical: 24,
-            width: 330,
+            width: '90%',
+        },
+        declineButtonText: {
+            color: "#FFFFFF",
+            fontSize: 20,
+            fontWeight: "bold",
         },
         acceptButton: {
             alignItems: "center",
-            backgroundColor: isDark ? theme.primary : "#00FF00",
+            backgroundColor: "#28a745", // Green
             borderRadius: 30,
             paddingVertical: 24,
-            width: 330,
+            width: '90%',
             marginBottom: 20,
         },
-        declineButtonText: {
-            color: isDark ? "#121212" : "#FFFFFF",
+        acceptButtonText: {
+            color: "#FFFFFF",
             fontSize: 20,
             fontWeight: "bold",
         },
-        acceptButtonText: {
-            color: isDark ? "#121212" : "#FFFFFF",
+        completeButton: {
+            alignItems: "center",
+            backgroundColor: theme.primary,
+            borderRadius: 30,
+            paddingVertical: 24,
+            width: '90%',
+        },
+        completeButtonText: {
+            color: theme.buttonText,
             fontSize: 20,
             fontWeight: "bold",
+        },
+        statusText: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: theme.textSecondary,
+            padding: 20,
         },
         textBox: {
             paddingVertical: 10,
@@ -181,7 +276,7 @@ export default () => {
             textAlign: 'center',
         },
     });
-
+    
     return (
         <SafeAreaView style={dynamicStyles.container}>
             <ScrollView style={dynamicStyles.scrollView}>
@@ -268,22 +363,7 @@ export default () => {
                         </View>
                         
                         <View style={{ width: '100%', alignItems: 'center' }}>
-                            <TouchableOpacity 
-                                style={dynamicStyles.acceptButton} 
-                                onPress={handleAccept}>
-                                <Text style={dynamicStyles.acceptButtonText}>
-                                    {"Accept"}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{ width: '100%', alignItems: 'center' }}>
-                            <TouchableOpacity 
-                                style={dynamicStyles.declineButton} 
-                                onPress={handleDecline}>
-                                <Text style={dynamicStyles.declineButtonText}>
-                                    {"Decline"}
-                                </Text>
-                            </TouchableOpacity>
+                            {renderActionButtons()}
                         </View>
                     </View>
                 </View>

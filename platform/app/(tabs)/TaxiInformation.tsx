@@ -5,8 +5,10 @@ import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMapContext, createRouteKey } from '../../contexts/MapContext';
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from '../../convex/_generated/api';
+import { useUser } from "../../contexts/UserContext";
+import { Id } from "../../convex/_generated/dataModel";
 
 // Get platform-specific API key
 const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
@@ -14,7 +16,7 @@ const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function TaxiInformation() {
-	const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+	const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
 	const [routeError, setRouteError] = useState<string | null>(null);
 	
 	const params = useLocalSearchParams();
@@ -38,6 +40,8 @@ export default function TaxiInformation() {
 		setCachedRoute
 	} = useMapContext();
 
+	const { user } = useUser();
+	const requestRide = useMutation(api.functions.rides.RequestRide.requestRide);
 	const availableTaxis = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
 
 	useLayoutEffect(() => {
@@ -235,48 +239,63 @@ export default function TaxiInformation() {
 		}
 	}, [currentLocation, destination, getRoute]);
 
-	const handleVehicleSelect = (plate: string) => {
-		setSelectedVehicle(plate);
+	const handleVehicleSelect = (taxi: any) => {
+		setSelectedVehicle(taxi);
 	};
 
 	const handleChangeDestination = () => {
 		router.push('./HomeScreen');
 	};
 
-	const handleReserveSeat = () => {
+	const handleReserveSeat = async () => {
 		if (!selectedVehicle) {
-			alert('Please select a vehicle first!');
+			Alert.alert('Please select a vehicle first!');
+			return;
+		}
+		if (!user) {
+			Alert.alert('Error', 'You must be logged in to request a ride.');
+			return;
+		}
+		if (!destination || !currentLocation) {
+			Alert.alert('Error', 'Start and end locations are not set.');
 			return;
 		}
 
-		const selected = availableTaxis?.find(vehicle => vehicle.licensePlate === selectedVehicle);
+		try {
+			await requestRide({
+				passengerId: user.id as Id<"taxiTap_users">,
+				driverId: selectedVehicle.driverId,
+				startLocation: {
+					coordinates: {
+						latitude: currentLocation.latitude,
+						longitude: currentLocation.longitude,
+					},
+					address: currentLocation.name,
+				},
+				endLocation: {
+					coordinates: {
+						latitude: destination.latitude,
+						longitude: destination.longitude,
+					},
+					address: destination.name,
+				},
+				// These can be populated if available
+				estimatedFare: selectedVehicle.fare, 
+			});
 
-		if (!selected) {
-			alert('Selected vehicle not found!');
-			return;
+			Alert.alert(
+				'Ride Requested',
+				'Your request has been sent to the driver. You will be notified of their response.',
+				[{ text: 'OK', onPress: () => router.push('/(tabs)/HomeScreen') }]
+			);
+
+		} catch (error) {
+			console.error('Failed to request ride:', error);
+			Alert.alert(
+				'Request Failed',
+				'Could not request the ride. Please try again.'
+			);
 		}
-
-		if (!currentLocation || !destination) {
-			alert('Location data not available!');
-			return;
-		}
-
-		router.push({
-			pathname: './SeatReserved',
-			params: {
-				destinationName: destination.name,
-				destinationLat: destination.latitude.toString(),
-				destinationLng: destination.longitude.toString(),
-				currentName: currentLocation.name,
-				currentLat: currentLocation.latitude.toString(),
-				currentLng: currentLocation.longitude.toString(),
-
-				// Vehicle details
-				plate: selected.licensePlate,
-				image: selected.image,
-				userId: selected.userId,
-			}
-		});
 	};
 
 	// function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
