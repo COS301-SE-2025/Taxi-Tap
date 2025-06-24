@@ -1,6 +1,6 @@
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
-import { api } from "../../_generated/api";
+import { api, internal } from "../../_generated/api";
 
 export const completeRide = mutation({
   args: {
@@ -30,14 +30,11 @@ export const completeRide = mutation({
       completedAt: Date.now(),
     });
 
-    // Notify the passenger
-    await ctx.runMutation(api.functions.notifications.sendNotifications.sendNotification, {
-      userId: ride.passengerId,
+    // Notify the passenger and driver using the internal ride notification system
+    await ctx.runMutation(internal.functions.notifications.rideNotifications.sendRideNotification, {
+      rideId: args.rideId,
       type: "ride_completed",
-      title: "Ride Completed",
-      message: "Your ride has been marked as completed by the driver.",
-      priority: "normal",
-      metadata: { rideId: args.rideId, driverId: args.driverId },
+      driverId: args.driverId,
     });
 
     return {

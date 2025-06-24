@@ -1,7 +1,7 @@
 //this os the funtionc for a user to cancel a ride
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
-import { sendNotification } from "../notifications/sendNotifications";
+import { internal } from "../../_generated/api";
 // import { Doc } from './_generated/dataModel';
 
 export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId: string }) => {
@@ -44,13 +44,11 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
         notifyType = "ride_cancelled_by_driver";
     }
     if (notifyUserId) {
-        await ctx.runMutation(sendNotification, {
-            userId: notifyUserId,
-            type: notifyType,
-            title: notifyTitle,
-            message: notifyMessage,
-            priority: "normal",
-            metadata: { rideId: args.rideId, cancelledBy: args.userId },
+        await ctx.runMutation(internal.functions.notifications.rideNotifications.sendRideNotification, {
+            rideId: args.rideId,
+            type: "ride_cancelled",
+            driverId: ride.driverId,
+            passengerId: ride.passengerId,
         });
     }
 

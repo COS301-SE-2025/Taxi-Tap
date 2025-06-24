@@ -1,6 +1,6 @@
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
-import { sendNotification } from "../notifications/sendNotifications";
+import { internal } from "../../_generated/api";
 
 export const requestRideHandler = async (ctx: any, args: {
   passengerId: string;
@@ -24,14 +24,12 @@ export const requestRideHandler = async (ctx: any, args: {
     estimatedDistance: args.estimatedDistance,
   });
 
-  // Notify the driver
-  await ctx.runMutation(sendNotification, {
-    userId: args.driverId,
-    type: "ride_request",
-    title: "New Ride Request",
-    message: `You have a new ride request from a passenger.`,
-    priority: "high",
-    metadata: { rideId, passengerId: args.passengerId },
+  // Notify the driver using the internal ride notification system
+  await ctx.runMutation(internal.functions.notifications.rideNotifications.sendRideNotification, {
+    rideId,
+    type: "ride_requested",
+    driverId: args.driverId,
+    passengerId: args.passengerId,
   });
 
   return {
