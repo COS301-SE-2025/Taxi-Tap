@@ -274,6 +274,17 @@ routes: defineTable({
   createdAt: v.number(),
   updatedAt: v.number()
 })
-  .index("by_user_id", ["userId"])
+  .index("by_user_id", ["userId"]),
+  
+      locations: defineTable({
+    userId: v.id("taxiTap_users"),
+    latitude: v.number(),
+    longitude: v.number(),
+    updatedAt: v.string(),
+    role: v.union(
+      v.literal("passenger"),
+      v.literal("driver"),
+      v.literal("both")
+    ),
+  }).index("by_user", ["userId"]),
 });
-
