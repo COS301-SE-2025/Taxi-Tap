@@ -7,24 +7,40 @@ export const getNearbyTaxis = query({
     passengerLng: v.number(),
   },
   handler: async (ctx, { passengerLat, passengerLng }) => {
+    // 1️⃣  Grab every location doc (or use an index if you have one)
     const allLocations = await ctx.db.query("locations").collect();
 
     const EARTH_RADIUS = 6371; // km
 
-    function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+    const getDistance = (
+      lat1: number,
+      lon1: number,
+      lat2: number,
+      lon2: number
+    ) => {
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
       const a =
         Math.sin(dLat / 2) ** 2 +
-        Math.cos(lat1 * Math.PI / 180) *
-        Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) ** 2;
+        Math.cos(toRad(lat1)) *
+          Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) ** 2;
       return EARTH_RADIUS * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-    }
+    };
 
-    return allLocations.filter(loc => {
-      const distance = getDistance(passengerLat, passengerLng, loc.latitude, loc.longitude);
-      return distance < 5; // only include users within 5km
-    });
+    // 2️⃣  Keep only drivers within 5 km
+    return allLocations
+      .filter((loc) => loc.role === "driver")
+      .filter(
+        (loc) =>
+          getDistance(
+            passengerLat,
+            passengerLng,
+            loc.latitude,
+            loc.longitude
+          ) < 5
+      );
   },
 });

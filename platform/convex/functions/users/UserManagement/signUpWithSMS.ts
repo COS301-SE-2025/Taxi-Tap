@@ -2,18 +2,56 @@ import { mutation } from "../../../_generated/server";
 import { v } from "convex/values";
 import { MutationCtx } from "../../../_generated/server";
 
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const passwordBuffer = encoder.encode(password);
+
+  // Generate a random salt
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+
+  // Derive key
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    passwordBuffer,
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"]
+  );
+
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    64 * 8 // 64 bytes
+  );
+
+  // Encode salt and derived key as hex for storage
+  const saltHex = Array.from(salt)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  const derivedHex = Array.from(new Uint8Array(derivedBits))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  return `${saltHex}:${derivedHex}`;
+}
+
 export const signUpSMSHandler = async (
   ctx: MutationCtx,
-  args: { 
-    phoneNumber: string; 
-    name: string; 
-    password: string; 
+  args: {
+    phoneNumber: string;
+    name: string;
+    password: string;
     accountType: "passenger" | "driver" | "both";
     email?: string;
     age?: number;
   }
 ) => {
-  // 1️⃣ Check if phone number already exists
+  // Check if phone number already exists
   const existingByPhone = await ctx.db
     .query("taxiTap_users")
     .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
@@ -23,16 +61,22 @@ export const signUpSMSHandler = async (
   }
 
   const now = Date.now();
-  // Determine the “active” role for location purposes
+
   const effectiveRole: "passenger" | "driver" =
     args.accountType === "both" ? "passenger" : args.accountType;
 
+  const locationRole: "passenger" | "driver" =
+    args.accountType === "driver" || args.accountType === "both"
+      ? "driver"
+      : "passenger";
+
+  const hashedPassword = await hashPassword(args.password);
+
   try {
-    // 2️⃣ Insert new user
     const userId = await ctx.db.insert("taxiTap_users", {
       phoneNumber: args.phoneNumber,
       name: args.name,
-      password: args.password,
+      password: hashedPassword,
       email: args.email || "",
       age: args.age ?? 18,
       accountType: args.accountType,
@@ -43,16 +87,14 @@ export const signUpSMSHandler = async (
       updatedAt: now,
     });
 
-    // 3️⃣ Insert default location with role
     await ctx.db.insert("locations", {
       userId,
       latitude: 0,
       longitude: 0,
       updatedAt: new Date().toISOString(),
-      role: effectiveRole,
+      role: locationRole,
     });
 
-    // 4️⃣ Insert passenger/driver metadata
     if (args.accountType === "passenger" || args.accountType === "both") {
       await ctx.db.insert("passengers", {
         userId,
@@ -79,7 +121,6 @@ export const signUpSMSHandler = async (
 
     return { success: true, userId };
   } catch (e) {
-    // Handle potential race condition
     const exists = await ctx.db
       .query("taxiTap_users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
@@ -91,7 +132,7 @@ export const signUpSMSHandler = async (
   }
 };
 
-// Expose the mutation to your frontend
+// Expose mutation
 export const signUpSMS = mutation({
   args: {
     phoneNumber: v.string(),

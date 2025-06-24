@@ -1,5 +1,5 @@
 // platform/app/(tabs)/HomeScreen.tsx
-import React, { useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,8 @@ import loading from '../../assets/images/loading4.png';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useLocationSystem } from '../../hooks/useLocationSystem';
+import { useUser } from '../../contexts/UserContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 const GOOGLE_MAPS_API_KEY =
   Platform.OS === 'ios'
@@ -28,21 +30,51 @@ const GOOGLE_MAPS_API_KEY =
     : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function HomeScreen() {
-  const { userId } = useLocalSearchParams<{ userId: string }>();
-  useEffect(() => {
-    console.log('🚀 HomeScreen got userId:', userId);
-  }, [userId]);
+  // 1️⃣  pull id from global context (falls back to nav param if needed)
+  const { user } = useUser();
+  const { userId: navId } = useLocalSearchParams<{ userId?: string }>();
+  const uid = user?.id || navId || '';   // single source of truth
 
-  const { userLocation } = useLocationSystem(userId || '');
+  useEffect(() => {
+    console.log('🚀 HomeScreen got userId (context):', uid);
+  }, [uid]);
+
+  const [snapshotDrivers, setSnapshotDrivers] = useState<
+  { _id: string; latitude: number; longitude: number }[]
+>([]);
+
+  const { userLocation, nearbyTaxis } = useLocationSystem(uid);
   useEffect(() => {
     if (userLocation) {
       console.log('✅ Live-location sent:', userLocation);
     }
   }, [userLocation]);
 
+useEffect(() => {
+  if (nearbyTaxis && nearbyTaxis.length) {
+    console.log(`🚖 Nearby drivers (${nearbyTaxis.length}):`, nearbyTaxis);
+  }
+}, [nearbyTaxis]);
+
+useEffect(() => {
+  if (nearbyTaxis?.length && snapshotDrivers.length === 0) {
+    setSnapshotDrivers(nearbyTaxis);
+  }
+}, [nearbyTaxis, snapshotDrivers.length]);
+
   const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // When screen is focused
+      setRouteLoaded(false);
+      setDestination(null);
+      setRouteCoordinates([]);
+      setSelectedRouteId(null);
+    }, [])
+  );
 
   const {
     currentLocation,
@@ -59,6 +91,8 @@ export default function HomeScreen() {
     setCachedRoute,
   } = useMapContext();
 
+  const [selectedRouteId, setSelectedRouteId] = React.useState<string | null>(null);
+
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const mapRef = useRef<MapView | null>(null);
 
@@ -72,6 +106,11 @@ export default function HomeScreen() {
       return;
     }
 
+    if (!selectedRouteId) {
+      Alert.alert('Error', 'Route not selected');
+      return;
+    }
+
     router.push({
       pathname: './TaxiInformation',
       params: {
@@ -81,6 +120,7 @@ export default function HomeScreen() {
         currentName: currentLocation.name,
         currentLat: currentLocation.latitude.toString(),
         currentLng: currentLocation.longitude.toString(),
+        routeId: selectedRouteId,
       },
     });
   };
@@ -102,7 +142,7 @@ export default function HomeScreen() {
     dest: { latitude: number; longitude: number }
   ) => {
     if (!GOOGLE_MAPS_API_KEY) {
-      Alert.alert('Error', 'Google Maps API key is not configured');
+      console.log('Error', 'Google Maps API key is not configured');
       return;
     }
 
@@ -139,7 +179,7 @@ export default function HomeScreen() {
       setRouteLoaded(true);
     } catch (err) {
       console.error(err);
-      Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
+      // Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoadingRoute(false);
     }
@@ -208,6 +248,7 @@ export default function HomeScreen() {
   }, []);
 
   const handleDestinationSelect = (route: {
+    routeId: string;
     destination: string;
     destinationCoords: { latitude: number; longitude: number } | null;
   }) => {
@@ -218,6 +259,7 @@ export default function HomeScreen() {
       name: route.destination,
     };
     setDestination(dest);
+    setSelectedRouteId(route.routeId);
     getRoute(currentLocation, dest);
   };
 
@@ -227,13 +269,6 @@ export default function HomeScreen() {
   });
 
   const dynamicStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    map: {
-      height: '40%',
-    },
     bottomSheet: {
       flex: 1,
       backgroundColor: theme.background,
@@ -395,6 +430,16 @@ export default function HomeScreen() {
           customMapStyle={isDark ? darkMapStyle : []}
         >
           <Marker coordinate={currentLocation} title="You are here" pinColor="blue" />
+          
+                {snapshotDrivers.map((driver) => (
+        <Marker
+          key={driver._id}
+          coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
+          pinColor="green"
+          tracksViewChanges={false}
+          title="Driver"
+        />
+      ))}
           {destination && (
             <Marker coordinate={destination} title={destination.name} pinColor="orange" />
           )}
