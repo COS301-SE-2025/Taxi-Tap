@@ -18,6 +18,7 @@ import { UserProvider } from '../contexts/UserContext';
 import { MapProvider } from '../contexts/MapContext';
 import { RouteProvider } from '../contexts/RouteContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { InAppNotificationOverlay } from '../components/InAppNotificationOverlay';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -91,6 +92,7 @@ function RootLayoutNav() {
     <NavigationThemeProvider value={navigationTheme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={{ flex: 1, backgroundColor: theme.background }}>
+        <InAppNotificationOverlay />
         <Stack
           screenOptions={{
             headerStyle: {
