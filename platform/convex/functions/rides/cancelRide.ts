@@ -44,9 +44,10 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
     if (notifyUserId) {
         await ctx.runMutation(internal.functions.notifications.rideNotifications.sendRideNotification, {
             rideId: args.rideId,
-            type: "ride_cancelled",
+            type: notifyType,
             driverId: ride.driverId,
             passengerId: ride.passengerId,
+            message: notifyMessage,
         });
     }
 
