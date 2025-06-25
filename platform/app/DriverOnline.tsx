@@ -81,7 +81,7 @@ export default function DriverOnline({
   console.log("DriverOnline: Component mounted");
   console.log("DriverOnline: user", user);
   console.log("DriverOnline: userId", userId);
-  console.log("DriverOnline: notifications from hook", notifications);
+ // console.log("DriverOnline: notifications from hook", notifications);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -199,6 +199,46 @@ export default function DriverOnline({
       );
     }
   }, [notifications, user]);
+
+  useEffect(() => {
+    const rideCancelled = notifications.find(
+      n => n.type === 'ride_cancelled' && !n.isRead
+    );
+    if (rideCancelled) {
+      Alert.alert(
+        'Ride Cancelled',
+        rideCancelled.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => markAsRead(rideCancelled._id),
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
+
+  useEffect(() => {
+    const rideStarted = notifications.find(
+      n => n.type === 'ride_started' && !n.isRead
+    );
+    if (rideStarted) {
+      Alert.alert(
+        'Ride Started',
+        rideStarted.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => markAsRead(rideStarted._id),
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
 
   const handleMenuPress = () => {
     setShowMenu(!showMenu);

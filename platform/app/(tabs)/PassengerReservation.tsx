@@ -1,20 +1,21 @@
 import React, { useLayoutEffect, useState, useRef, useEffect } from "react";
-import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
+import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, Platform, Alert } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMapContext, createRouteKey } from '../../contexts/MapContext';
+import { useNotifications } from '../../contexts/NotificationContext';
+import { useUser } from '../../contexts/UserContext';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 
 // Get platform-specific API key
 const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
-import { useUser } from '../../contexts/UserContext';
-import { useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
-import { Id } from '../../convex/_generated/dataModel';
 
 export default function SeatReserved() {
 	const params = useLocalSearchParams();
@@ -35,14 +36,25 @@ export default function SeatReserved() {
 		getCachedRoute,
 		setCachedRoute
 	} = useMapContext();
+	const { notifications, markAsRead } = useNotifications();
 
 	const mapRef = useRef<MapView | null>(null);
+	
+	// Move all hooks to the top, before any conditional logic
+	// Fetch taxi and driver info for the current reservation using Convex
+	const taxiInfo = useQuery(
+		api.functions.taxis.viewTaxiInfo.viewTaxiInfo,
+		user ? { passengerId: user.id as Id<"taxiTap_users"> } : "skip"
+	);
+
+	const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
+	const startRide = useMutation(api.functions.rides.startRide.startRide);
 	
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: false
 		});
-	}, []);
+	}, [navigation]);
 
 	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
 		if (Array.isArray(param)) {
@@ -269,36 +281,55 @@ export default function SeatReserved() {
 		}
 	}, [routeCoordinates, currentLocation, destination]);
 
-	// Fetch taxi and driver info for the current reservation using Convex
-	const taxiInfo = useQuery(
-		api.functions.taxis.viewTaxiInfo.viewTaxiInfo,
-		user ? { passengerId: user.id as Id<"taxiTap_users"> } : "skip"
-	);
+	// Handle notifications effect
+	useEffect(() => {
+		if (!currentLocation || !destination) return;
+		
+		const rideStarted = notifications.find(
+			n => n.type === 'ride_started' && !n.isRead
+		);
+		
+		if (rideStarted) {
+			Alert.alert(
+				'Ride Started',
+				rideStarted.message,
+				[
+					{
+						text: 'OK',
+						onPress: () => {
+							markAsRead(rideStarted._id);
+							router.push('/SeatReserved');
+						},
+						style: 'default',
+					},
+				],
+				{ cancelable: false }
+			);
+		}
+	}, [notifications, markAsRead, currentLocation, destination]);
 
-	const handleStartRide = () => {
-		console.log('Starting ride...');
-		// Implement logic to start the ride
-		// This would typically involve updating the ride status and navigating to a ride-in-progress screen
-		// For now, we'll just show a placeholder action
-		alert('Ride started! Make sure you are in the taxi before confirming.');
+	const handleStartRide = async () => {
+		if (!taxiInfo?.rideId || !user?.id) {
+			Alert.alert('Error', 'No ride or user information available.');
+			return;
+		}
+		try {
+			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+		} catch (error) {
+			Alert.alert('Error', 'Failed to start ride.');
+		}
 	};
 
-	const handleCancelRequest = () => {
-		console.log('Cancelling seat request...');
-		// Implement logic to cancel the seat request
-		// This would typically involve calling an API to cancel the reservation
-		if (destination && currentLocation) {
-			router.push({
-				pathname: './TaxiInformation',
-				params: {
-					destinationName: destination.name,
-					destinationLat: destination.latitude.toString(),
-					destinationLng: destination.longitude.toString(),
-					currentName: currentLocation.name,
-					currentLat: currentLocation.latitude.toString(),
-					currentLng: currentLocation.longitude.toString(),
-				}
-			});
+	const handleCancelRequest = async () => {
+		if (!taxiInfo?.rideId || !user?.id) {
+			Alert.alert('Error', 'No ride or user information available.');
+			return;
+		}
+		try {
+			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id });
+			router.push('/HomeScreen');
+		} catch (error) {
+			Alert.alert('Error', 'Failed to cancel ride.');
 		}
 	};
 
@@ -311,6 +342,14 @@ export default function SeatReserved() {
 		scrollView: {
 			flex: 1,
 			backgroundColor: theme.background,
+		},
+		loadingContainer: {
+			flex: 1, 
+			justifyContent: 'center', 
+			alignItems: 'center'
+		},
+		loadingText: {
+			color: theme.text
 		},
 		arrivalTimeOverlay: {
 			position: "absolute",
@@ -526,12 +565,12 @@ export default function SeatReserved() {
 		},
 	});
 
-	// Don't render until we have locations
+	// Early return for loading state - but ensure all hooks are called first
 	if (!currentLocation || !destination) {
 		return (
 			<SafeAreaView style={dynamicStyles.container}>
-				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-					<Text style={{ color: theme.text }}>Loading...</Text>
+				<View style={dynamicStyles.loadingContainer}>
+					<Text style={dynamicStyles.loadingText}>Loading...</Text>
 				</View>
 			</SafeAreaView>
 		);
@@ -667,7 +706,7 @@ export default function SeatReserved() {
 								style={dynamicStyles.startRideButton} 
 								onPress={handleStartRide}>
 								<Text style={dynamicStyles.startRideButtonText}>
-									{"End Ride"}
+									{"Start Ride"}
 								</Text>
 							</TouchableOpacity>
 							
