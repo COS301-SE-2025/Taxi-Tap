@@ -424,7 +424,20 @@ useEffect(() => {
         [
           {
             text: "OK",
-            onPress: () => markAsRead(rideAccepted._id),
+            onPress: () => {
+              markAsRead(rideAccepted._id);
+              router.push({
+                pathname: './PassengerReservation',
+                params: currentLocation && destination ? {
+                  currentLat: currentLocation.latitude.toString(),
+                  currentLng: currentLocation.longitude.toString(),
+                  currentName: currentLocation.name,
+                  destinationLat: destination.latitude.toString(),
+                  destinationLng: destination.longitude.toString(),
+                  destinationName: destination.name,
+                } : undefined
+              });
+            },
             style: "default"
           }
         ],
