@@ -9,6 +9,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from '../../convex/_generated/api';
 import { useUser } from "../../contexts/UserContext";
 import { Id } from "../../convex/_generated/dataModel";
+import { useNotifications } from '../../contexts/NotificationContext';
 
 // Get platform-specific API key
 const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
@@ -48,6 +49,8 @@ export default function TaxiInformation() {
 	const routeInfo = useQuery(api.functions.routes.displayRoutes.displayRoutes);
 
 	const currentRoute = routeInfo?.find(route => route.routeId === routeId);
+
+	const { notifications, markAsRead } = useNotifications();
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -243,6 +246,44 @@ export default function TaxiInformation() {
 			return () => clearTimeout(timer);
 		}
 	}, [currentLocation, destination, getRoute]);
+
+	useEffect(() => {
+		const rideAccepted = notifications.find(
+			n => n.type === "ride_accepted" && !n.isRead
+		);
+		if (rideAccepted) {
+			Alert.alert(
+				"Ride Accepted",
+				rideAccepted.message,
+				[
+					{
+						text: "OK",
+						onPress: () => markAsRead(rideAccepted._id),
+						style: "default"
+					}
+				],
+				{ cancelable: false }
+			);
+		}
+
+		const rideCancelled = notifications.find(
+			n => n.type === "ride_cancelled" && !n.isRead
+		);
+		if (rideCancelled) {
+			Alert.alert(
+				"Ride Cancelled",
+				rideCancelled.message,
+				[
+					{
+						text: "OK",
+						onPress: () => markAsRead(rideCancelled._id),
+						style: "default"
+					}
+				],
+				{ cancelable: false }
+			);
+		}
+	}, [notifications, markAsRead]);
 
 	const handleTaxiSelect = (taxi: any) => {
 		setSelectedTaxi(taxi);
