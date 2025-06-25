@@ -20,11 +20,9 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
         throw new Error("User is not authorized to cancel this ride");
     }
     
-    // Update the ride status to cancelled
-    const updatedRide = await ctx.db.patch(ride._id, {
+    // Update the ride status to cancelled (only update status since cancelledAt/cancelledBy not in schema)
+    const updatedRideId = await ctx.db.patch(ride._id, {
         status: "cancelled",
-        cancelledAt: Date.now(),
-        cancelledBy: args.userId,
     });
 
     // Notify the other party
@@ -53,7 +51,7 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
     }
 
     return {
-        _id: updatedRide._id,
+        _id: updatedRideId,
         message: "Ride cancelled successfully",
     };
 };
