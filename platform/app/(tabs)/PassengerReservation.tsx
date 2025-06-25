@@ -512,6 +512,18 @@ export default function SeatReserved() {
 			fontSize: 20,
 			fontWeight: "bold",
 		},
+		cancelButton: {
+			alignItems: "center",
+			backgroundColor: isDark ? "#FF4444" : "#FF6B6B",
+			borderRadius: 30,
+			paddingVertical: 24,
+			width: 330,
+		},
+		cancelButtonText: {
+			color: "#FFFFFF",
+			fontSize: 20,
+			fontWeight: "bold",
+		},
 	});
 
 	// Don't render until we have locations
@@ -656,6 +668,14 @@ export default function SeatReserved() {
 								onPress={handleStartRide}>
 								<Text style={dynamicStyles.startRideButtonText}>
 									{"End Ride"}
+								</Text>
+							</TouchableOpacity>
+							
+							<TouchableOpacity 
+								style={dynamicStyles.cancelButton} 
+								onPress={handleCancelRequest}>
+								<Text style={dynamicStyles.cancelButtonText}>
+									{"Cancel Request"}
 								</Text>
 							</TouchableOpacity>
 						</View>
