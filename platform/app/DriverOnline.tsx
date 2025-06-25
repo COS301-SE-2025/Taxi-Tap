@@ -17,6 +17,10 @@ import { useNavigation, useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocationSystem } from '../hooks/useLocationSystem';
 import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
+import { Id } from '../convex/_generated/dataModel';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,6 +58,8 @@ export default function DriverOnline({
   currentRoute = "Not Set",
   availableSeats = 4,
 }: DriverOnlineProps) {
+  console.log("DriverOnline: Function called");
+  
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
@@ -64,6 +70,18 @@ export default function DriverOnline({
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
   const mapRef = useRef<MapView | null>(null);
+  
+  console.log("DriverOnline: About to call useNotifications");
+  const { notifications, markAsRead } = useNotifications();
+  console.log("DriverOnline: useNotifications called");
+  
+  const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
+  const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
+
+  console.log("DriverOnline: Component mounted");
+  console.log("DriverOnline: user", user);
+  console.log("DriverOnline: userId", userId);
+  console.log("DriverOnline: notifications from hook", notifications);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -130,6 +148,57 @@ export default function DriverOnline({
       router.replace('/DriverHomeScreen');
     }
   }, [onGoOffline, router]);
+
+  useEffect(() => {
+    console.log("DriverOnline: useEffect triggered");
+    console.log("DriverOnline: user exists?", !!user);
+    console.log("DriverOnline: notifications length", notifications?.length || 0);
+    if (!user) {
+      console.log("DriverOnline: No user, returning early");
+      return; // Guard: only proceed if user is defined
+    }
+    console.log("DriverOnline: notifications", notifications);
+    const rideRequest = notifications.find(
+      n => n.type === "ride_request" && !n.isRead
+    );
+    console.log("DriverOnline: found rideRequest", rideRequest);
+    if (rideRequest) {
+      console.log("DriverOnline: Showing Alert for ride request");
+      Alert.alert(
+        "New Ride Request",
+        rideRequest.message,
+        [
+          {
+            text: "Decline",
+            onPress: () => {
+              console.log("DriverOnline: Driver declined ride");
+              cancelRide({
+                rideId: rideRequest.metadata.rideId,
+                userId: user.id as Id<"taxiTap_users">,
+              });
+              markAsRead(rideRequest._id);
+            },
+            style: "destructive"
+          },
+          {
+            text: "Accept",
+            onPress: () => {
+              console.log("DriverOnline: Driver accepted ride");
+              console.log("DriverOnline: rideId being passed:", rideRequest.metadata.rideId);
+              console.log("DriverOnline: driverId being passed:", user.id);
+              acceptRide({
+                rideId: rideRequest.metadata.rideId,
+                driverId: user.id as Id<"taxiTap_users">,
+              });
+              markAsRead(rideRequest._id);
+            },
+            style: "default"
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, user]);
 
   const handleMenuPress = () => {
     setShowMenu(!showMenu);
