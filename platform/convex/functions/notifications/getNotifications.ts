@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { query } from "../../_generated/server";
+import { query, QueryCtx } from "../../_generated/server";
+import { Id } from "../../_generated/dataModel";
 
 export const getNotifications = query({
   args: {
@@ -39,3 +40,23 @@ export const getUnreadCount = query({
     return unreadNotifications.length;
   }
 });
+
+export const getNotificationsHandler = async (
+  ctx: QueryCtx,
+  args: { userId: Id<"taxiTap_users">; limit?: number; unreadOnly?: boolean }
+) => {
+  let q = ctx.db
+    .query("notifications")
+    .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+    .order("desc");
+
+  if (args.unreadOnly) {
+    q = q.filter((q) => q.eq(q.field("isRead"), false));
+  }
+
+  if (args.limit) {
+    return await q.take(args.limit);
+  }
+
+  return await q.collect();
+};
