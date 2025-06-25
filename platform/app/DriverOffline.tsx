@@ -14,12 +14,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRouter,useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useRouteContext } from '../contexts/RouteContext';
-
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
+import { useUser } from '@/contexts/UserContext';
 
 interface DriverOfflineProps {
   onGoOnline: () => void;
   todaysEarnings: number;
-  availableSeats?: number;
 }
 
 interface MenuItemType {
@@ -49,16 +51,20 @@ interface SafetyOptionType {
 export default function DriverOffline({ 
   onGoOnline, 
   todaysEarnings, 
-  availableSeats = 4,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
   const { theme, isDark, setThemeMode } = useTheme();
-  
+  const { user } = useUser();
   const router = useRouter();
   const { setCurrentRoute, currentRoute } = useRouteContext();
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
+
+  const taxiInfo = useQuery(
+      api.functions.taxis.getTaxiForDriver.getTaxiForDriver,
+      user?.id ? { userId: user.id as Id<"taxiTap_users"> } : "skip"
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -155,11 +161,15 @@ export default function DriverOffline({
     {
       icon: "car-outline",
       title: "Available Seats",
-      value: availableSeats.toString(),
-      subtitle: `of 14 seats free`,
+      value: taxiInfo?.capacity === 0
+        ? "No seats available"
+        : taxiInfo?.capacity?.toString() ?? "Loading...",
+      subtitle: taxiInfo?.capacity === 0
+        ? ""
+        : `of 14 seats free`,
       color: "#FF9900",
       onPress: () => console.log('Seats pressed')
-    },
+    }
   ];
 
   const safetyOptions: SafetyOptionType[] = [

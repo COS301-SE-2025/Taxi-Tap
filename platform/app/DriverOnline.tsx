@@ -18,17 +18,14 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLocationSystem } from '../hooks/useLocationSystem';
 import { useUser } from '../contexts/UserContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Id } from '../convex/_generated/dataModel';
-
-const { width, height } = Dimensions.get('window');
 
 interface DriverOnlineProps {
   onGoOffline: () => void;
   todaysEarnings: number;
   currentRoute?: string;
-  availableSeats?: number;
 }
 
 interface LocationData {
@@ -56,9 +53,11 @@ export default function DriverOnline({
   onGoOffline, 
   todaysEarnings,
   currentRoute = "Not Set",
-  availableSeats = 4,
 }: DriverOnlineProps) {
   console.log("DriverOnline: Function called");
+  const { width, height } = Dimensions.get('window');
+
+  const updateTaxiSeatAvailability = useMutation(api.functions.taxis.updateAvailableSeats.updateTaxiSeatAvailability);
   
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
@@ -75,6 +74,11 @@ export default function DriverOnline({
   const { notifications, markAsRead } = useNotifications();
   console.log("DriverOnline: useNotifications called");
   
+  const taxiInfo = useQuery(
+    api.functions.taxis.getTaxiForDriver.getTaxiForDriver,
+    user?.id ? { userId: user.id as Id<"taxiTap_users"> } : "skip"
+  );
+
   const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
   const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 
@@ -182,14 +186,15 @@ export default function DriverOnline({
           },
           {
             text: "Accept",
-            onPress: () => {
-              console.log("DriverOnline: Driver accepted ride");
-              console.log("DriverOnline: rideId being passed:", rideRequest.metadata.rideId);
-              console.log("DriverOnline: driverId being passed:", user.id);
-              acceptRide({
-                rideId: rideRequest.metadata.rideId,
-                driverId: user.id as Id<"taxiTap_users">,
-              });
+            onPress: async () => {
+              try {
+                await acceptRide({ rideId: rideRequest.metadata.rideId, driverId: user.id as Id<"taxiTap_users">, });
+                await updateTaxiSeatAvailability({ rideId: rideRequest.metadata.rideId, action: "decrease" });
+                markAsRead(rideRequest._id);
+              } catch (error) {
+                console.error(error);
+                Alert.alert("Error", "Failed to accept ride or update seats.");
+              }
               markAsRead(rideRequest._id);
             },
             style: "default"
@@ -650,7 +655,11 @@ export default function DriverOnline({
                     </View>
                   )}
                   <View style={dynamicStyles.quickStatusItem}>
-                    <Text style={dynamicStyles.quickStatusValue}>{availableSeats}</Text>
+                    <Text style={dynamicStyles.quickStatusValue}>
+                      {taxiInfo?.capacity === 0
+                        ? "No seats available"
+                        : taxiInfo?.capacity?.toString() ?? "Loading..."}
+                    </Text>
                     <Text style={dynamicStyles.quickStatusLabel}>Available Seats</Text>
                   </View>
                 </View>
