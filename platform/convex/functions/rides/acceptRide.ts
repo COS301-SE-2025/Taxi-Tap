@@ -4,6 +4,7 @@
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
 import { internal } from "../../_generated/api";
+import { acceptRideHandler } from "./acceptRideHandler";
 // import { Doc } from "./_generated/dataModel";
 
 export const acceptRideHandler = async (
