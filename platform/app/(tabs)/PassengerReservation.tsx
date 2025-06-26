@@ -342,7 +342,6 @@ export default function SeatReserved() {
 						text: 'OK',
 						onPress: () => {
 							markAsRead(rideStarted._id);
-							router.push('/SeatReserved');
 						},
 						style: 'default',
 					},
@@ -757,18 +756,13 @@ export default function SeatReserved() {
 						<View style={dynamicStyles.locationBox}>
 							{/* Current Location and Destination indicators */}
 							<View style={dynamicStyles.locationIndicator}>
-								{/* Current Location Circle */}
-								<View style={dynamicStyles.currentLocationCircle}>
-									<View style={dynamicStyles.currentLocationDot} />
-								</View>
-								
+								{/* Removed Current Location Circle */}
 								{/* Dotted Line Container */}
 								<View style={dynamicStyles.dottedLineContainer}>
 									{[...Array(8)].map((_, index) => (
 										<View key={index} style={dynamicStyles.dottedLineDot} />
 									))}
 								</View>
-								
 								{/* Destination Pin */}
 								<Icon name="location" size={18} color={isDark ? theme.text : "#121212"} />
 							</View>
@@ -804,12 +798,21 @@ export default function SeatReserved() {
 									</Text>
 								</TouchableOpacity>
 							)}
-							{showCancel && (
+							{showCancel && !showStartRide && (
 								<TouchableOpacity 
 									style={dynamicStyles.cancelButton} 
 									onPress={handleCancelRequest}>
 									<Text style={dynamicStyles.cancelButtonText}>
 										{"Cancel Request"}
+									</Text>
+								</TouchableOpacity>
+							)}
+							{showCancel && showStartRide && (
+								<TouchableOpacity 
+									style={dynamicStyles.cancelButton} 
+									onPress={handleEndRide}>
+									<Text style={dynamicStyles.cancelButtonText}>
+										{"End Ride"}
 									</Text>
 								</TouchableOpacity>
 							)}
