@@ -83,7 +83,6 @@ export default function SeatReserved() {
 		if (!deepEqual(destination, newDestination)) {
 			setDestination(newDestination);
 		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [params, setCurrentLocation, setDestination]);
 
 	const vehicleInfo = {

@@ -49,6 +49,7 @@ import type * as functions_routes_reverseGeocode from "../functions/routes/rever
 import type * as functions_taxis_displayTaxis from "../functions/taxis/displayTaxis.js";
 import type * as functions_taxis_getTaxiForDriver from "../functions/taxis/getTaxiForDriver.js";
 import type * as functions_taxis_updateAvailableSeats from "../functions/taxis/updateAvailableSeats.js";
+import type * as functions_taxis_updateAvailableSeatsHandler from "../functions/taxis/updateAvailableSeatsHandler.js";
 import type * as functions_taxis_updateTaxiInfo from "../functions/taxis/updateTaxiInfo.js";
 import type * as functions_taxis_viewTaxiInfo from "../functions/taxis/viewTaxiInfo.js";
 import type * as functions_users_UserManagement_getUserById from "../functions/users/UserManagement/getUserById.js";
@@ -105,6 +106,7 @@ declare const fullApi: ApiFromModules<{
   "functions/taxis/displayTaxis": typeof functions_taxis_displayTaxis;
   "functions/taxis/getTaxiForDriver": typeof functions_taxis_getTaxiForDriver;
   "functions/taxis/updateAvailableSeats": typeof functions_taxis_updateAvailableSeats;
+  "functions/taxis/updateAvailableSeatsHandler": typeof functions_taxis_updateAvailableSeatsHandler;
   "functions/taxis/updateTaxiInfo": typeof functions_taxis_updateTaxiInfo;
   "functions/taxis/viewTaxiInfo": typeof functions_taxis_viewTaxiInfo;
   "functions/users/UserManagement/getUserById": typeof functions_users_UserManagement_getUserById;
