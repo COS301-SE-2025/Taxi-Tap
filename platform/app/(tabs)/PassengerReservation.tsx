@@ -18,6 +18,7 @@ const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function SeatReserved() {
+	const [useLiveLocation, setUseLiveLocation] = useState(false);
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
@@ -49,7 +50,15 @@ export default function SeatReserved() {
 
 	const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 	const startRide = useMutation(api.functions.rides.startRide.startRide);
-	
+	const endRide = useMutation(api.functions.rides.endRide.endRide);
+
+	// Helper to determine ride status
+	const rideStatus = taxiInfo?.status as 'requested' | 'accepted' | 'in_progress' | 'started' | 'completed' | 'cancelled' | undefined;
+	const updateTaxiSeatAvailability = useMutation(api.functions.taxis.updateAvailableSeats.updateTaxiSeatAvailability);
+
+	const [hasFittedRoute, setHasFittedRoute] = useState(false);
+	const [isFollowing, setIsFollowing] = useState(true);
+
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: false
@@ -63,35 +72,37 @@ export default function SeatReserved() {
 		return param || fallback;
 	}
 
+	useEffect(() => {
+		setUseLiveLocation(false);
+	}, []);
+
 	// Parse location data from params and update context
 	useEffect(() => {
-		const newCurrentLocation = {
-			latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
-			longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-			name: getParamAsString(params.currentName, "Current Location")
-		};
+		if (!useLiveLocation) {
+			const newCurrentLocation = {
+				latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
+				longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
+				name: getParamAsString(params.currentName, "Current Location")
+			};
 
-		const newDestination = {
-			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
-			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-			name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
-		};
+			const newDestination = {
+				latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
+				longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
+				name: getParamAsString(params.destinationName, "")
+			};
 
-		// Only update context if locations have changed
-		if (!currentLocation || 
-			currentLocation.latitude !== newCurrentLocation.latitude || 
-			currentLocation.longitude !== newCurrentLocation.longitude ||
-			currentLocation.name !== newCurrentLocation.name) {
+			if (
+				isNaN(newCurrentLocation.latitude) || isNaN(newCurrentLocation.longitude) ||
+				isNaN(newDestination.latitude) || isNaN(newDestination.longitude)
+			) {
+				console.warn('Invalid coordinates detected, skipping update');
+				return;
+			}
+
 			setCurrentLocation(newCurrentLocation);
-		}
-
-		if (!destination || 
-			destination.latitude !== newDestination.latitude || 
-			destination.longitude !== newDestination.longitude ||
-			destination.name !== newDestination.name) {
 			setDestination(newDestination);
 		}
-	}, [params, currentLocation, destination, setCurrentLocation, setDestination]);
+	}, [useLiveLocation]);
 
 	const vehicleInfo = {
 		plate: getParamAsString(params.plate, "Unknown"),
@@ -262,33 +273,61 @@ export default function SeatReserved() {
 		}
 	}, [currentLocation, destination, routeLoaded, isLoadingRoute]);
 
-	// Fit map to show route when coordinates are available
+	// Initial fit to route when route or destination changes
 	useEffect(() => {
-		if (routeCoordinates.length > 0 && currentLocation && destination && mapRef.current) {
-			const coordinates = [
-				{ latitude: currentLocation.latitude, longitude: currentLocation.longitude },
-				{ latitude: destination.latitude, longitude: destination.longitude },
-				...routeCoordinates
-			];
-			
-			// Small delay to ensure map is ready
-			setTimeout(() => {
-				mapRef.current?.fitToCoordinates(coordinates, {
+		if (
+			routeCoordinates.length > 0 &&
+			currentLocation &&
+			destination &&
+			mapRef.current &&
+			!hasFittedRoute
+		) {
+			mapRef.current.fitToCoordinates(
+				[
+					{ latitude: currentLocation.latitude, longitude: currentLocation.longitude },
+					{ latitude: destination.latitude, longitude: destination.longitude },
+					...routeCoordinates,
+				],
+				{
 					edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
 					animated: true,
-				});
-			}, 100);
+				}
+			);
+			setHasFittedRoute(true);
+			setIsFollowing(true);
 		}
-	}, [routeCoordinates, currentLocation, destination]);
+	}, [routeCoordinates, currentLocation, destination, hasFittedRoute]);
+
+	// Reset fit when route or destination changes
+	useEffect(() => {
+		setHasFittedRoute(false);
+	}, [destination, routeCoordinates]);
+
+	// Live tracking: follow user when ride is started/in_progress and isFollowing
+	useEffect(() => {
+		if (
+			(rideStatus === 'started' || rideStatus === 'in_progress') &&
+			isFollowing &&
+			mapRef.current &&
+			currentLocation
+		) {
+			mapRef.current.animateToRegion(
+				{
+					latitude: currentLocation.latitude,
+					longitude: currentLocation.longitude,
+					latitudeDelta: 0.01,
+					longitudeDelta: 0.01,
+				},
+				500
+			);
+		}
+	}, [currentLocation, rideStatus, isFollowing]);
 
 	// Handle notifications effect
 	useEffect(() => {
-		if (!currentLocation || !destination) return;
-		
 		const rideStarted = notifications.find(
 			n => n.type === 'ride_started' && !n.isRead
 		);
-		
 		if (rideStarted) {
 			Alert.alert(
 				'Ride Started',
@@ -298,7 +337,28 @@ export default function SeatReserved() {
 						text: 'OK',
 						onPress: () => {
 							markAsRead(rideStarted._id);
-							router.push('/SeatReserved');
+						},
+						style: 'default',
+					},
+				],
+				{ cancelable: false }
+			);
+			return;
+		} 
+
+		const rideDeclined = notifications.find(
+			n => n.type === 'ride_declined' && !n.isRead
+		);
+		if (rideDeclined) {
+			Alert.alert(
+				'Ride Declined',
+				rideDeclined.message || 'Your ride request was declined.',
+				[
+					{
+						text: 'OK',
+						onPress: () => {
+							markAsRead(rideDeclined._id);
+							router.push('/HomeScreen');
 						},
 						style: 'default',
 					},
@@ -306,7 +366,7 @@ export default function SeatReserved() {
 				{ cancelable: false }
 			);
 		}
-	}, [notifications, markAsRead, currentLocation, destination]);
+	}, [notifications, markAsRead, router]);
 
 	const handleStartRide = async () => {
 		if (!taxiInfo?.rideId || !user?.id) {
@@ -315,21 +375,37 @@ export default function SeatReserved() {
 		}
 		try {
 			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
-		} catch (error) {
-			Alert.alert('Error', 'Failed to start ride.');
+		} catch (error: any) {
+			Alert.alert('Error', error?.message || 'Failed to start ride.');
 		}
 	};
 
-	const handleCancelRequest = async () => {
+	const handleEndRide = async () => {
 		if (!taxiInfo?.rideId || !user?.id) {
 			Alert.alert('Error', 'No ride or user information available.');
 			return;
 		}
 		try {
-			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id });
+			await endRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			Alert.alert('Success', 'Ride ended!');
 			router.push('/HomeScreen');
-		} catch (error) {
-			Alert.alert('Error', 'Failed to cancel ride.');
+		} catch (error: any) {
+			Alert.alert('Error', error?.message || 'Failed to end ride.');
+		}
+	};
+
+	const handleCancelRequest = async () => { //this for when user wants to cancel the ride request
+		if (!taxiInfo?.rideId || !user?.id) {
+			Alert.alert('Error', 'No ride or user information available.');
+			return;
+		}
+		try {
+			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			await updateTaxiSeatAvailability({ rideId: taxiInfo.rideId, action: "increase" });
+			Alert.alert('Success', 'Ride cancelled.');
+			router.push('/HomeScreen');
+		} catch (error: any) {
+			Alert.alert('Error', error?.message || 'Failed to cancel ride.');
 		}
 	};
 
@@ -585,15 +661,16 @@ export default function SeatReserved() {
 						<MapView
 							ref={mapRef}
 							style={{ flex: 1 }}
-							provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
+							provider={PROVIDER_GOOGLE}
 							initialRegion={{
 								latitude: (currentLocation.latitude + destination.latitude) / 2,
 								longitude: (currentLocation.longitude + destination.longitude) / 2,
 								latitudeDelta: Math.abs(currentLocation.latitude - destination.latitude) * 2 + 0.01,
 								longitudeDelta: Math.abs(currentLocation.longitude - destination.longitude) * 2 + 0.01,
 							}}
-							// Use dark map style when in dark mode
 							customMapStyle={isDark ? darkMapStyle : []}
+							onPanDrag={() => setIsFollowing(false)}
+							onRegionChangeComplete={() => setIsFollowing(false)}
 						>
 							<Marker
 								coordinate={currentLocation}
@@ -702,25 +779,57 @@ export default function SeatReserved() {
 						
 						{/* Action Buttons */}
 						<View style={dynamicStyles.actionButtonsContainer}>
-							<TouchableOpacity 
-								style={dynamicStyles.startRideButton} 
-								onPress={handleStartRide}>
-								<Text style={dynamicStyles.startRideButtonText}>
-									{"Start Ride"}
-								</Text>
-							</TouchableOpacity>
-							
-							<TouchableOpacity 
-								style={dynamicStyles.cancelButton} 
-								onPress={handleCancelRequest}>
-								<Text style={dynamicStyles.cancelButtonText}>
-									{"Cancel Request"}
-								</Text>
-							</TouchableOpacity>
+							{/* Before ride is accepted: show only Cancel Request */}
+							{rideStatus === 'requested' && (
+								<TouchableOpacity 
+									style={dynamicStyles.cancelButton} 
+									onPress={handleCancelRequest}>
+									<Text style={dynamicStyles.cancelButtonText}>
+										{"Cancel Request"}
+									</Text>
+								</TouchableOpacity>
+							)}
+							{/* When ride is accepted and not started: show both Start Ride and Cancel Request */}
+							{rideStatus === 'accepted' && (
+								<>
+									<TouchableOpacity 
+										style={dynamicStyles.startRideButton} 
+										onPress={handleStartRide}>
+										<Text style={dynamicStyles.startRideButtonText}>
+											{"Start Ride"}
+										</Text>
+									</TouchableOpacity>
+									<TouchableOpacity 
+										style={dynamicStyles.cancelButton} 
+										onPress={handleCancelRequest}>
+										<Text style={dynamicStyles.cancelButtonText}>
+											{"Cancel Request"}
+										</Text>
+									</TouchableOpacity>
+								</>
+							)}
+							{/* Only show End Ride when ride is started or in progress */}
+							{(rideStatus === 'started' || rideStatus === 'in_progress') && (
+								<TouchableOpacity 
+									style={dynamicStyles.startRideButton} 
+									onPress={handleEndRide}>
+									<Text style={dynamicStyles.startRideButtonText}>
+										{"End Ride"}
+									</Text>
+								</TouchableOpacity>
+							)}
 						</View>
 					</View>
 				</View>
 			</ScrollView>
+			{!isFollowing && (
+				<TouchableOpacity
+					style={{ position: 'absolute', bottom: 120, right: 30, backgroundColor: theme.primary, borderRadius: 25, padding: 12, zIndex: 10 }}
+					onPress={() => setIsFollowing(true)}
+				>
+					<Icon name="locate" size={24} color={isDark ? '#121212' : '#fff'} />
+				</TouchableOpacity>
+			)}
 		</SafeAreaView>
 	)
 }

@@ -20,10 +20,10 @@ export default () => {
     const rideId = params.rideId as string;
 
     // Fetch ride data from Convex
-    const ride = useQuery(api.functions.rides.getRideById, rideId ? { rideId } : "skip");
+    const ride = useQuery(api.functions.rides.getRideById.getRideById, rideId ? { rideId } : "skip");
     
     const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
-    const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
+    const declineRide = useMutation(api.functions.rides.declineRide.declineRide);
     const completeRide = useMutation(api.functions.rides.completeRide.completeRide);
     
     useLayoutEffect(() => {
@@ -46,7 +46,7 @@ export default () => {
                     Alert.alert('Success', 'Ride accepted! The passenger has been notified.');
                     break;
                 case 'decline':
-                    result = await cancelRide({ rideId: ride.rideId, userId: user.id as Id<"taxiTap_users"> });
+                    result = await declineRide({ rideId: ride.rideId, driverId: user.id as Id<"taxiTap_users"> });
                     Alert.alert('Success', 'Ride declined.');
                     break;
                 case 'complete':
@@ -61,67 +61,6 @@ export default () => {
         }
     };
     
-    // Loading and error states
-    if (ride === undefined) {
-        return (
-            <SafeAreaView style={[dynamicStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                <ActivityIndicator size="large" color={theme.primary} />
-                <Text style={{ color: theme.text, marginTop: 10 }}>Loading Ride Details...</Text>
-            </SafeAreaView>
-        );
-    }
-
-    if (ride === null) {
-        return (
-            <SafeAreaView style={[dynamicStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                <Icon name="alert-circle-outline" size={40} color={theme.textSecondary} />
-                <Text style={{ color: theme.text, marginTop: 10, fontSize: 16 }}>Ride not found.</Text>
-            </SafeAreaView>
-        );
-    }
-    
-    // Ride details
-	const currentLocation = {
-		latitude: ride.startLocation.coordinates.latitude,
-		longitude: ride.startLocation.coordinates.longitude,
-		name: ride.startLocation.address
-	};
-
-	const destination = {
-		latitude: ride.endLocation.coordinates.latitude,
-		longitude: ride.endLocation.coordinates.longitude,
-		name: ride.endLocation.address
-	};
-
-    // Render action buttons based on ride status
-    const renderActionButtons = () => {
-        switch (ride.status) {
-            case 'requested':
-                return (
-                    <>
-                        <TouchableOpacity style={dynamicStyles.acceptButton} onPress={() => handleAction('accept')}>
-                            <Text style={dynamicStyles.acceptButtonText}>Accept</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={dynamicStyles.declineButton} onPress={() => handleAction('decline')}>
-                            <Text style={dynamicStyles.declineButtonText}>Decline</Text>
-                        </TouchableOpacity>
-                    </>
-                );
-            case 'accepted':
-                return (
-                    <TouchableOpacity style={dynamicStyles.completeButton} onPress={() => handleAction('complete')}>
-                        <Text style={dynamicStyles.completeButtonText}>Complete Ride</Text>
-                    </TouchableOpacity>
-                );
-            case 'completed':
-                return <Text style={dynamicStyles.statusText}>Ride Completed</Text>;
-            case 'cancelled':
-                return <Text style={dynamicStyles.statusText}>Ride Cancelled</Text>;
-            default:
-                return null;
-        }
-    };
-
     // Styles (with additions for new buttons/states)
     const dynamicStyles = StyleSheet.create({
         container: {
@@ -278,6 +217,67 @@ export default () => {
         },
     });
     
+    // Loading and error states
+    if (ride === undefined) {
+        return (
+            <SafeAreaView style={[dynamicStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={theme.primary} />
+                <Text style={{ color: theme.text, marginTop: 10 }}>Loading Ride Details...</Text>
+            </SafeAreaView>
+        );
+    }
+
+    if (ride === null) {
+        return (
+            <SafeAreaView style={[dynamicStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Icon name="alert-circle-outline" size={40} color={theme.textSecondary} />
+                <Text style={{ color: theme.text, marginTop: 10, fontSize: 16 }}>Ride not found.</Text>
+            </SafeAreaView>
+        );
+    }
+    
+    // Ride details
+	const currentLocation = {
+		latitude: ride.startLocation.coordinates.latitude,
+		longitude: ride.startLocation.coordinates.longitude,
+		name: ride.startLocation.address
+	};
+
+	const destination = {
+		latitude: ride.endLocation.coordinates.latitude,
+		longitude: ride.endLocation.coordinates.longitude,
+		name: ride.endLocation.address
+	};
+
+    // Render action buttons based on ride status
+    const renderActionButtons = () => {
+        switch (ride.status) {
+            case 'requested':
+                return (
+                    <>
+                        <TouchableOpacity style={dynamicStyles.acceptButton} onPress={() => handleAction('accept')}>
+                            <Text style={dynamicStyles.acceptButtonText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={dynamicStyles.declineButton} onPress={() => handleAction('decline')}>
+                            <Text style={dynamicStyles.declineButtonText}>Decline</Text>
+                        </TouchableOpacity>
+                    </>
+                );
+            case 'accepted':
+                return (
+                    <TouchableOpacity style={dynamicStyles.completeButton} onPress={() => handleAction('complete')}>
+                        <Text style={dynamicStyles.completeButtonText}>Complete Ride</Text>
+                    </TouchableOpacity>
+                );
+            case 'completed':
+                return <Text style={dynamicStyles.statusText}>Ride Completed</Text>;
+            case 'cancelled':
+                return <Text style={dynamicStyles.statusText}>Ride Cancelled</Text>;
+            default:
+                return null;
+        }
+    };
+
     return (
         <SafeAreaView style={dynamicStyles.container}>
             <ScrollView style={dynamicStyles.scrollView}>
