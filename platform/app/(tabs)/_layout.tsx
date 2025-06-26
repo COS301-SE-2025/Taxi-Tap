@@ -9,6 +9,8 @@ import { router } from 'expo-router';
 import dark from '../../assets/images/icon-dark.png';
 import light from '../../assets/images/icon.png';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useMapContext } from '../../contexts/MapContext';
+import { MapProvider } from '../../contexts/MapContext';
 
 // Notification Button Component
 const NotificationButton: React.FC = () => {
@@ -227,6 +229,15 @@ const TabNavigation: React.FC = () => {
 
 export default function TabLayout() {
   const { notifications, markAsRead } = useNotifications();
+  let currentLocation, destination;
+  try {
+    // Try to get map context if available
+    ({ currentLocation, destination } = useMapContext());
+  } catch (e) {
+    // MapProvider may not be present yet
+    currentLocation = undefined;
+    destination = undefined;
+  }
   useEffect(() => {
     const rideDeclined = notifications.find(
       n => n.type === 'ride_declined' && !n.isRead
@@ -249,10 +260,47 @@ export default function TabLayout() {
       );
     }
   }, [notifications, markAsRead]);
+
+  // Global handler for ride_accepted notifications (match HomeScreen logic)
+  useEffect(() => {
+    const rideAccepted = notifications.find(
+      n => n.type === 'ride_accepted' && !n.isRead
+    );
+    if (rideAccepted) {
+      Alert.alert(
+        'Ride Accepted',
+        rideAccepted.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              markAsRead(rideAccepted._id);
+              router.push({
+                pathname: './PassengerReservation',
+                params: currentLocation && destination ? {
+                  currentLat: currentLocation.latitude.toString(),
+                  currentLng: currentLocation.longitude.toString(),
+                  currentName: currentLocation.name,
+                  destinationLat: destination.latitude.toString(),
+                  destinationLng: destination.longitude.toString(),
+                  destinationName: destination.name,
+                } : undefined
+              });
+            },
+            style: 'default'
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead, currentLocation, destination]);
+
   return (
     <SafeAreaProvider>
       <UserProvider>
-        <TabNavigation />
+        <MapProvider>
+          <TabNavigation />
+        </MapProvider>
       </UserProvider>
     </SafeAreaProvider>
   );

@@ -652,36 +652,36 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
-    const rideAccepted = notifications.find(
-      (n: any) => n.type === "ride_accepted" && !n.isRead
-    );
-    if (rideAccepted) {
-      Alert.alert(
-        "Ride Accepted",
-        rideAccepted.message,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              markAsRead(rideAccepted._id);
-              router.push({
-                pathname: './PassengerReservation',
-                params: currentLocation && destination ? {
-                  currentLat: currentLocation.latitude.toString(),
-                  currentLng: currentLocation.longitude.toString(),
-                  currentName: currentLocation.name,
-                  destinationLat: destination.latitude.toString(),
-                  destinationLng: destination.longitude.toString(),
-                  destinationName: destination.name,
-                } : undefined
-              });
-            },
-            style: "default"
-          }
-        ],
-        { cancelable: false }
-      );
-    }
+    // const rideAccepted = notifications.find(
+    //   (n: any) => n.type === "ride_accepted" && !n.isRead
+    // );
+    // if (rideAccepted) {
+    //   Alert.alert(
+    //     "Ride Accepted",
+    //     rideAccepted.message,
+    //     [
+    //       {
+    //         text: "OK",
+    //         onPress: () => {
+    //           markAsRead(rideAccepted._id);
+    //           router.push({
+    //             pathname: './PassengerReservation',
+    //             params: currentLocation && destination ? {
+    //               currentLat: currentLocation.latitude.toString(),
+    //               currentLng: currentLocation.longitude.toString(),
+    //               currentName: currentLocation.name,
+    //               destinationLat: destination.latitude.toString(),
+    //               destinationLng: destination.longitude.toString(),
+    //               destinationName: destination.name,
+    //             } : undefined
+    //           });
+    //         },
+    //         style: "default"
+    //       }
+    //     ],
+    //     { cancelable: false }
+    //   );
+    // }
 
     const rideCancelled = notifications.find(
       (n: any) => n.type === "ride_cancelled" && !n.isRead
