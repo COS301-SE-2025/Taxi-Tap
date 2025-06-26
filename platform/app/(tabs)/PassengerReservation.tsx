@@ -789,7 +789,7 @@ export default function SeatReserved() {
 									</Text>
 								</TouchableOpacity>
 							)}
-							{showStartRide && (
+							{showStartRide && !showCancel && (
 								<TouchableOpacity 
 									style={dynamicStyles.startRideButton} 
 									onPress={handleStartRide}>
