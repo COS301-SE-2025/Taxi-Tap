@@ -36,9 +36,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# config
-**/*.config.js
-*.config.mjs
-
 # schema
 schema.ts
