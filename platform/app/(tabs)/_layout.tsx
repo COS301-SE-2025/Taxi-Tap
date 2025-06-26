@@ -213,6 +213,13 @@ const TabNavigation: React.FC = () => {
           href: null,
         }}
       />
+
+      <Tabs.Screen
+        name="PassengerReservation"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 };
