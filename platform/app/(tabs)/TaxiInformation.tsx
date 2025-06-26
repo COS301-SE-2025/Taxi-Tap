@@ -454,6 +454,7 @@ export default function TaxiInformation() {
 			color: theme.textSecondary,
 			fontSize: 14,
 			marginTop: 8,
+			textAlign: "center",
 		},
 		taxiPrice: {
 			color: theme.primary,
@@ -830,12 +831,12 @@ export default function TaxiInformation() {
 									
 									{/* Time and Seats Info */}
 									<Text style={dynamicStyles.taxiInfo}>
-										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min' : 'N/A'} | ${taxi.seats}`}
+										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min trip' : 'N/A'} | ${taxi.seats} seats available`}
 									</Text>
 									
 									{/* Price (if available) */}
 									<Text style={dynamicStyles.taxiPrice}>
-										{currentRoute?.fare ?? 'N/A'}
+										{currentRoute?.fare != null ? `R ${Number(currentRoute.fare).toFixed(2)}` : 'N/A'}
 									</Text>
 
 								</TouchableOpacity>
