@@ -34,6 +34,6 @@ export const endRideHandler = async (ctx: any, args: any) => {
 
   return {
     _id: ride._id,
-    message: "Ride marked as completed by passenger.",
+    //message: "Ride marked as completed by passenger.",
   };
 }; 
