@@ -350,29 +350,30 @@ export default function SeatReserved() {
 				{ cancelable: false }
 			);
 			return;
-		}
-
-		const rideDeclined = notifications.find(
-			n => n.type === 'ride_declined' && !n.isRead
-		);
-		if (rideDeclined) {
-			Alert.alert(
-				'Ride Declined',
-				rideDeclined.message || 'Your ride request was declined.',
-				[
-					{
-						text: 'OK',
-						onPress: () => {
-							markAsRead(rideDeclined._id);
-							router.push('/HomeScreen');
-						},
-						style: 'default',
-					},
-				],
-				{ cancelable: false }
-			);
-		}
+		} 
 	}, [notifications, markAsRead, router]);
+
+	// 	const rideDeclined = notifications.find(
+	// 		n => n.type === 'ride_declined' && !n.isRead
+	// 	);
+	// 	if (rideDeclined) {
+	// 		Alert.alert(
+	// 			'Ride Declined',
+	// 			rideDeclined.message || 'Your ride request was declined.',
+	// 			[
+	// 				{
+	// 					text: 'OK',
+	// 					onPress: () => {
+	// 						markAsRead(rideDeclined._id);
+	// 						router.push('/HomeScreen');
+	// 					},
+	// 					style: 'default',
+	// 				},
+	// 			],
+	// 			{ cancelable: false }
+	// 		);
+	// 	}
+	// }, [notifications, markAsRead, router]);
 
 	const handleStartRide = async () => {
 		if (!taxiInfo?.rideId || !user?.id) {

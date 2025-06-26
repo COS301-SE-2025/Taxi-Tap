@@ -699,8 +699,31 @@ export default function HomeScreen() {
         ],
         { cancelable: false }
       );
-    }
+   }
   }, [notifications, markAsRead, currentLocation, destination]);
+
+  useEffect(() => {
+    const rideDeclined = notifications.find(
+      n => n.type === 'ride_declined' && !n.isRead
+    );
+    if (rideDeclined) {
+      Alert.alert(
+        'Ride Declined',
+        rideDeclined.message || 'Your ride request was declined.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              markAsRead(rideDeclined._id);
+              // Optionally, navigate somewhere if needed
+            },
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
 
   // Fix: Improved initial region logic
   const getInitialRegion = () => {

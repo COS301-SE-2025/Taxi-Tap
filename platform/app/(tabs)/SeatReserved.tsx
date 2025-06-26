@@ -11,6 +11,10 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 
+const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
+	? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
+	: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
+
 export default function SeatReserved() {
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
@@ -46,12 +50,25 @@ export default function SeatReserved() {
 		return param || fallback;
 	}
 
+	// Simple deep equality check for location objects
+	function deepEqual(obj1: any, obj2: any): boolean {
+		if (obj1 === obj2) return true;
+		if (!obj1 || !obj2) return false;
+		const keys1 = Object.keys(obj1);
+		const keys2 = Object.keys(obj2);
+		if (keys1.length !== keys2.length) return false;
+		for (let key of keys1) {
+			if (obj1[key] !== obj2[key]) return false;
+		}
+		return true;
+	}
+
 	// Parse location data from params and update context
 	useEffect(() => {
 		const newCurrentLocation = {
 			latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
 			longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-			name: getParamAsString(params.currentName, "Current Location")
+			name: getParamAsString(params.currentName, "")
 		};
 
 		const newDestination = {
@@ -60,21 +77,14 @@ export default function SeatReserved() {
 			name: getParamAsString(params.destinationName, "")
 		};
 
-		// Only update context if locations have changed
-		if (!currentLocation || 
-			currentLocation.latitude !== newCurrentLocation.latitude || 
-			currentLocation.longitude !== newCurrentLocation.longitude ||
-			currentLocation.name !== newCurrentLocation.name) {
+		if (!deepEqual(currentLocation, newCurrentLocation)) {
 			setCurrentLocation(newCurrentLocation);
 		}
-
-		if (!destination || 
-			destination.latitude !== newDestination.latitude || 
-			destination.longitude !== newDestination.longitude ||
-			destination.name !== newDestination.name) {
+		if (!deepEqual(destination, newDestination)) {
 			setDestination(newDestination);
 		}
-	}, [params, currentLocation, destination, setCurrentLocation, setDestination]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [params, setCurrentLocation, setDestination]);
 
 	const vehicleInfo = {
 		plate: getParamAsString(params.plate, "Unknown"),
