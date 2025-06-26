@@ -47,13 +47,13 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
       type: notifyType,
       driverId: ride.driverId,
       passengerId: ride.passengerId,
-      message: notifyMessage,
+      //message: notifyMessage,
     });
   }
 
   return {
     _id: updatedRideId,
-    message: "Ride cancelled successfully",
+    //message: "Ride cancelled successfully",
   };
 };
 

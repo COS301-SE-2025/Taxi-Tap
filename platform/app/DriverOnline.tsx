@@ -175,12 +175,14 @@ export default function DriverOnline({
         [
           {
             text: "Decline",
-            onPress: () => {
-              // console.log("DriverOnline: Driver declined ride");
-              cancelRide({
-                rideId: rideRequest.metadata.rideId,
-                userId: user.id as Id<"taxiTap_users">,
-              });
+            onPress: async () => {
+              try {
+                await cancelRide({ rideId: rideRequest.metadata.rideId, userId: user.id as Id<"taxiTap_users">, });
+                markAsRead(rideRequest._id);
+              } catch (error) {
+                console.error(error);
+                Alert.alert("Error", "Failed to decline ride or update seats.");
+              }
               markAsRead(rideRequest._id);
             },
             style: "destructive"
