@@ -36,6 +36,13 @@ export const createActionCtx = (): ActionCtx => ({
 export const query = (handler: any) => handler;
 export const action = (handler: any) => handler;
 
+export const createMutationCtx = () => ({
+  db: {
+    query: jest.fn(),
+    patch: jest.fn(),
+  }
+});
+
 // Export as both default and named exports to support different import styles
 export default {
   createQueryCtx,

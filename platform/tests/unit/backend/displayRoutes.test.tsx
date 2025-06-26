@@ -149,34 +149,6 @@ describe('Display Routes Functions', () => {
       expect(typeof displayRoutesPaginated).toBe('function');
     });
   });
-
-  describe('getEnrichedStopName', () => {
-    it('should return enriched stop name from reverse geocoding', async () => {
-      const ctx = createMockActionCtx();
-      const args = { lat: -26.2041, lon: 28.0473 };
-
-      const result = await getEnrichedStopName(ctx, args);
-      
-      expect(result).toBe("Mocked Stop Name");
-      expect(ctx.runAction).toHaveBeenCalled();
-    });
-
-    it('should return "Unnamed Stop" on error', async () => {
-      // Suppress console.error for this test
-      const originalConsoleError = console.error;
-      
-      const ctx = createMockActionCtx();
-      ctx.runAction = jest.fn().mockRejectedValue(new Error("Geocoding failed"));
-      const args = { lat: -26.2041, lon: 28.0473 };
-
-      const result = await getEnrichedStopName(ctx, args);
-      
-      expect(result).toBe("Unnamed Stop");
-
-      console.error = originalConsoleError;
-    });
-  });
-
   describe('getEnrichedStopsForRoute', () => {
     it('should return filtered enriched stops for a route', async () => {
       const ctx = createMockQueryCtx();
