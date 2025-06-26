@@ -17,20 +17,8 @@ const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
-// Simple deep equality check for location objects
-function deepEqual(obj1: any, obj2: any): boolean {
-	if (obj1 === obj2) return true;
-	if (!obj1 || !obj2) return false;
-	const keys1 = Object.keys(obj1);
-	const keys2 = Object.keys(obj2);
-	if (keys1.length !== keys2.length) return false;
-	for (let key of keys1) {
-		if (obj1[key] !== obj2[key]) return false;
-	}
-	return true;
-}
-
 export default function SeatReserved() {
+	const [useLiveLocation, setUseLiveLocation] = useState(false);
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
 	const { theme, isDark } = useTheme();
@@ -66,9 +54,6 @@ export default function SeatReserved() {
 
 	// Helper to determine ride status
 	const rideStatus = taxiInfo?.status as 'requested' | 'accepted' | 'in_progress' | 'started' | 'completed' | 'cancelled' | undefined;
-	const showStartRide = rideStatus === 'accepted';
-	const showEndRide = rideStatus === 'started' || rideStatus === 'in_progress';
-	const showCancel = rideStatus === 'requested' || rideStatus === 'accepted';
 	const updateTaxiSeatAvailability = useMutation(api.functions.taxis.updateAvailableSeats.updateTaxiSeatAvailability);
 
 	const [hasFittedRoute, setHasFittedRoute] = useState(false);
@@ -87,27 +72,37 @@ export default function SeatReserved() {
 		return param || fallback;
 	}
 
+	useEffect(() => {
+		setUseLiveLocation(false);
+	}, []);
+
 	// Parse location data from params and update context
 	useEffect(() => {
-		const newCurrentLocation = {
-			latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
-			longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-			name: getParamAsString(params.currentName, "Current Location")
-		};
+		if (!useLiveLocation) {
+			const newCurrentLocation = {
+				latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
+				longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
+				name: getParamAsString(params.currentName, "Current Location")
+			};
 
-		const newDestination = {
-			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
-			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-			name: getParamAsString(params.destinationName, "")
-		};
+			const newDestination = {
+				latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
+				longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
+				name: getParamAsString(params.destinationName, "")
+			};
 
-		if (!deepEqual(currentLocation, newCurrentLocation)) {
+			if (
+				isNaN(newCurrentLocation.latitude) || isNaN(newCurrentLocation.longitude) ||
+				isNaN(newDestination.latitude) || isNaN(newDestination.longitude)
+			) {
+				console.warn('Invalid coordinates detected, skipping update');
+				return;
+			}
+
 			setCurrentLocation(newCurrentLocation);
-		}
-		if (!deepEqual(destination, newDestination)) {
 			setDestination(newDestination);
 		}
-	}, [params, setCurrentLocation, setDestination]);
+	}, [useLiveLocation]);
 
 	const vehicleInfo = {
 		plate: getParamAsString(params.plate, "Unknown"),
@@ -380,8 +375,6 @@ export default function SeatReserved() {
 		}
 		try {
 			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
-			//Alert.alert('Success', 'Ride started!');
-			//setRideStartedLocal(true);
 		} catch (error: any) {
 			Alert.alert('Error', error?.message || 'Failed to start ride.');
 		}
@@ -757,13 +750,18 @@ export default function SeatReserved() {
 						<View style={dynamicStyles.locationBox}>
 							{/* Current Location and Destination indicators */}
 							<View style={dynamicStyles.locationIndicator}>
-								{/* Removed Current Location Circle */}
+								{/* Current Location Circle */}
+								<View style={dynamicStyles.currentLocationCircle}>
+									<View style={dynamicStyles.currentLocationDot} />
+								</View>
+								
 								{/* Dotted Line Container */}
 								<View style={dynamicStyles.dottedLineContainer}>
 									{[...Array(8)].map((_, index) => (
 										<View key={index} style={dynamicStyles.dottedLineDot} />
 									))}
 								</View>
+								
 								{/* Destination Pin */}
 								<Icon name="location" size={18} color={isDark ? theme.text : "#121212"} />
 							</View>
@@ -782,7 +780,7 @@ export default function SeatReserved() {
 						{/* Action Buttons */}
 						<View style={dynamicStyles.actionButtonsContainer}>
 							{/* Before ride is accepted: show only Cancel Request */}
-							{rideStatus !== 'accepted' && !showEndRide && showCancel && (
+							{rideStatus === 'requested' && (
 								<TouchableOpacity 
 									style={dynamicStyles.cancelButton} 
 									onPress={handleCancelRequest}>

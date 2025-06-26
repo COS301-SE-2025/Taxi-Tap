@@ -8,10 +8,13 @@ export const endRideHandler = async (ctx: any, args: any) => {
   if (!ride) {
     throw new Error("Ride not found");
   }
+  
   if (ride.passengerId !== args.userId) {
     throw new Error("Only the assigned passenger can end this ride");
   }
-  if (ride.status !== "accepted" && ride.status !== "started") {
+  
+  // Fix: Include "in_progress" status in the check
+  if (ride.status !== "accepted" && ride.status !== "started" && ride.status !== "in_progress") {
     throw new Error("Ride is not in progress or started");
   }
 
@@ -34,6 +37,6 @@ export const endRideHandler = async (ctx: any, args: any) => {
 
   return {
     _id: ride._id,
-    //message: "Ride marked as completed by passenger.",
+    message: "Ride completed successfully",
   };
-}; 
+};

@@ -1,3 +1,4 @@
+
 // platform/app/(tabs)/HomeScreen.tsx
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import {
@@ -79,24 +80,41 @@ export default function HomeScreen() {
     } : "skip"
   );
   
-  // Fix: Update loading state based on userLocation
+  const {
+    currentLocation,
+    destination,
+    routeCoordinates,
+    isLoadingRoute,
+    routeLoaded,
+    setCurrentLocation,
+    setDestination,
+    setRouteCoordinates,
+    setIsLoadingRoute,
+    setRouteLoaded,
+    getCachedRoute,
+    setCachedRoute,
+  } = useMapContext();
+
   useEffect(() => {
-    if (userLocation) {
-      console.log('✅ Live-location sent:', userLocation);
+    if (userLocation && (!currentLocation || currentLocation.name === '')) {
+      // console.log('✅ Setting live location as currentLocation');
       setCurrentLocation({
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
         name: 'Current Location'
       });
       setIsLoadingCurrentLocation(false);
+    } else {
+      // console.log('⚠ currentLocation already set, skipping live location update');
     }
-  }, [userLocation]);
+  }, [userLocation, currentLocation]);
+
 
   // Fix: Add timeout for location loading
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!userLocation && isLoadingCurrentLocation) {
-        console.log('⚠️ Location timeout - stopping loading');
+        console.log('⚠ Location timeout - stopping loading');
         setIsLoadingCurrentLocation(false);
         Alert.alert(
           'Location Error', 
@@ -124,21 +142,6 @@ export default function HomeScreen() {
   const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
-
-  const {
-    currentLocation,
-    destination,
-    routeCoordinates,
-    isLoadingRoute,
-    routeLoaded,
-    setCurrentLocation,
-    setDestination,
-    setRouteCoordinates,
-    setIsLoadingRoute,
-    setRouteLoaded,
-    getCachedRoute,
-    setCachedRoute,
-  } = useMapContext();
 
   const [selectedRouteId, setSelectedRouteId] = React.useState<string | null>(null);
 
@@ -202,7 +205,7 @@ export default function HomeScreen() {
     dest: { latitude: number; longitude: number; name: string }
   ) => {
     if (!uid) {
-      console.log('⚠️ No user ID available for taxi search');
+      console.log('⚠ No user ID available for taxi search');
       return;
     }
 
@@ -261,7 +264,7 @@ export default function HomeScreen() {
         
         setSnapshotDrivers(taxiLocations);
       } else {
-        console.log('⚠️ No available taxis found:', taxiSearchResult.message);
+        console.log('⚠ No available taxis found:', taxiSearchResult.message);
         setAvailableTaxis([]);
         setRouteMatchResults(taxiSearchResult);
         setSnapshotDrivers([]); // Clear drivers if no taxis available
@@ -871,7 +874,7 @@ export default function HomeScreen() {
                 📍 Available taxis: {routeMatchResults.availableTaxis?.length || 0}
               </Text>
               <Text style={dynamicStyles.searchResultsText}>
-                🛣️ Matching routes: {routeMatchResults.matchingRoutes?.length || 0}
+                🛣 Matching routes: {routeMatchResults.matchingRoutes?.length || 0}
               </Text>
               {(routeMatchResults.availableTaxis?.length || 0) > 0 && (
                 <Text style={[dynamicStyles.searchResultsText, { color: theme.primary }]}>
@@ -880,7 +883,7 @@ export default function HomeScreen() {
               )}
               {(routeMatchResults.availableTaxis?.length || 0) === 0 && (
                 <Text style={[dynamicStyles.searchResultsText, { color: theme.textSecondary }]}>
-                  ⚠️ No taxis available on this route
+                  ⚠ No taxis available on this route
                 </Text>
               )}
             </View>
