@@ -13,3 +13,13 @@ jest.mock('react-native-gesture-handler', () => {
     PanGestureHandler: jest.fn(({ children }) => children),
   };
 });
+
+jest.mock('convex/values', () => ({
+  v: {
+    id: () => jest.fn(),
+    optional: (x) => x,
+    string: () => jest.fn(),
+    number: () => jest.fn(),
+    boolean: () => jest.fn(),
+  },
+}));
