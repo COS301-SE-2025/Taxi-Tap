@@ -35,6 +35,3 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
-
-# schema
-schema.ts
