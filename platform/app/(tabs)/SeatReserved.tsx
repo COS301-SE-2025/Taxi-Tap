@@ -294,7 +294,7 @@ export default function SeatReserved() {
 		}
 		try {
 			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
-			alert('Ride started!');
+			//alert('Ride started!');
 		} catch (error: any) {
 			alert(error?.message || 'Failed to start ride.');
 		}
