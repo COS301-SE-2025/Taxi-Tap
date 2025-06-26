@@ -34,6 +34,8 @@ import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.
 import type * as functions_rides_cancelRideHandler from "../functions/rides/cancelRideHandler.js";
 import type * as functions_rides_completeRide from "../functions/rides/completeRide.js";
 import type * as functions_rides_completeRideHandler from "../functions/rides/completeRideHandler.js";
+import type * as functions_rides_declineRide from "../functions/rides/declineRide.js";
+import type * as functions_rides_declineRideHandler from "../functions/rides/declineRideHandler.js";
 import type * as functions_rides_endRide from "../functions/rides/endRide.js";
 import type * as functions_rides_endRideHandler from "../functions/rides/endRideHandler.js";
 import type * as functions_rides_getRideById from "../functions/rides/getRideById.js";
@@ -88,6 +90,8 @@ declare const fullApi: ApiFromModules<{
   "functions/rides/cancelRideHandler": typeof functions_rides_cancelRideHandler;
   "functions/rides/completeRide": typeof functions_rides_completeRide;
   "functions/rides/completeRideHandler": typeof functions_rides_completeRideHandler;
+  "functions/rides/declineRide": typeof functions_rides_declineRide;
+  "functions/rides/declineRideHandler": typeof functions_rides_declineRideHandler;
   "functions/rides/endRide": typeof functions_rides_endRide;
   "functions/rides/endRideHandler": typeof functions_rides_endRideHandler;
   "functions/rides/getRideById": typeof functions_rides_getRideById;

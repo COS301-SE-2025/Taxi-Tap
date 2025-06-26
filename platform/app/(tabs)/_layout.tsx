@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { TouchableOpacity, Image, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { TouchableOpacity, Image, View, Alert } from 'react-native';
 import { FontAwesome, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -8,6 +8,7 @@ import { UserProvider } from '../../contexts/UserContext';
 import { router } from 'expo-router';
 import dark from '../../assets/images/icon-dark.png';
 import light from '../../assets/images/icon.png';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 // Notification Button Component
 const NotificationButton: React.FC = () => {
@@ -225,6 +226,29 @@ const TabNavigation: React.FC = () => {
 };
 
 export default function TabLayout() {
+  const { notifications, markAsRead } = useNotifications();
+  useEffect(() => {
+    const rideDeclined = notifications.find(
+      n => n.type === 'ride_declined' && !n.isRead
+    );
+    if (rideDeclined) {
+      Alert.alert(
+        'Ride Declined',
+        rideDeclined.message || 'Your ride request was declined.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              markAsRead(rideDeclined._id);
+              router.push('/HomeScreen');
+            },
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
   return (
     <SafeAreaProvider>
       <UserProvider>
