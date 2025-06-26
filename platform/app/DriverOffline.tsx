@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRouter,useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useRouteContext } from '../contexts/RouteContext';
-
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
+import { useUser } from '@/contexts/UserContext';
 
 interface DriverOfflineProps {
   onGoOnline: () => void;
   todaysEarnings: number;
-  currentRoute?: string;
-  availableSeats?: number;
 }
 
 interface MenuItemType {
@@ -50,17 +51,20 @@ interface SafetyOptionType {
 export default function DriverOffline({ 
   onGoOnline, 
   todaysEarnings, 
-  currentRoute: propCurrentRoute,
-  availableSeats = 4,
 }: DriverOfflineProps) {
   const navigation = useNavigation();
   const { theme, isDark, setThemeMode } = useTheme();
-  
+  const { user } = useUser();
   const router = useRouter();
   const { setCurrentRoute, currentRoute } = useRouteContext();
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
+
+  const taxiInfo = useQuery(
+      api.functions.taxis.getTaxiForDriver.getTaxiForDriver,
+      user?.id ? { userId: user.id as Id<"taxiTap_users"> } : "skip"
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -68,6 +72,13 @@ export default function DriverOffline({
       tabBarStyle: { display: 'none' },
     });
   }, [navigation]);
+
+  useEffect(() => {
+    // Redirect if accessed directly (not via DriverHomeScreen)
+    if (typeof onGoOnline !== 'function') {
+      router.replace('/DriverHomeScreen');
+    }
+  }, [onGoOnline, router]);
 
   const handleSetRoute = () => {
     router.push('/SetRoute');
@@ -142,19 +153,23 @@ export default function DriverOffline({
     {
       icon: "location-outline",
       title: "Current Route",
-      value: (propCurrentRoute || "Not Set") as string,
+      value: (currentRoute || "Not Set") as string,
       subtitle: "Tap to set route",
-      color: (propCurrentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
-      onPress: () => console.log('Route pressed')
+      color: (currentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
+      onPress: () => router.push('/SetRoute'),
     },
     {
       icon: "car-outline",
       title: "Available Seats",
-      value: availableSeats.toString(),
-      subtitle: `of 14 seats free`,
+      value: taxiInfo?.capacity === 0
+        ? "No seats available"
+        : taxiInfo?.capacity?.toString() ?? "Loading...",
+      subtitle: taxiInfo?.capacity === 0
+        ? ""
+        : `of 14 seats free`,
       color: "#FF9900",
       onPress: () => console.log('Seats pressed')
-    },
+    }
   ];
 
   const safetyOptions: SafetyOptionType[] = [
@@ -587,12 +602,7 @@ export default function DriverOffline({
                 flexDirection: 'row',
                 elevation: 4,
               }}
-              onPress={() =>
-              router.push({
-                pathname: '/DriverOnline',
-                params: { userId }
-              })
-            }
+              onPress={onGoOnline}
               activeOpacity={0.8}
               accessibilityLabel="Go online to accept passengers"
             >

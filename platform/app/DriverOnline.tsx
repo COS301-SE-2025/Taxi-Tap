@@ -13,17 +13,19 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLocationSystem } from '../hooks/useLocationSystem';
-
-const { width, height } = Dimensions.get('window');
+import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../convex/_generated/api';
+import { Id } from '../convex/_generated/dataModel';
 
 interface DriverOnlineProps {
   onGoOffline: () => void;
   todaysEarnings: number;
   currentRoute?: string;
-  availableSeats?: number;
 }
 
 interface LocationData {
@@ -51,17 +53,39 @@ export default function DriverOnline({
   onGoOffline, 
   todaysEarnings,
   currentRoute = "Not Set",
-  availableSeats = 4,
 }: DriverOnlineProps) {
+  // console.log("DriverOnline: Function called");
+  const { width, height } = Dimensions.get('window');
+
+  const updateTaxiSeatAvailability = useMutation(api.functions.taxis.updateAvailableSeats.updateTaxiSeatAvailability);
+  
   const navigation = useNavigation();
   const { theme, isDark, themeMode, setThemeMode } = useTheme();
   const router = useRouter();
-  const { userId } = useLocalSearchParams<{ userId: string }>();
+  const { user } = useUser();
+  const userId = user?.id;
+  const { userLocation } = useLocationSystem(userId);
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
   const mapRef = useRef<MapView | null>(null);
-  const { userLocation } = useLocationSystem(userId || '');
+  
+  // console.log("DriverOnline: About to call useNotifications");
+  const { notifications, markAsRead } = useNotifications();
+  // console.log("DriverOnline: useNotifications called");
+  
+  const taxiInfo = useQuery(
+    api.functions.taxis.getTaxiForDriver.getTaxiForDriver,
+    user?.id ? { userId: user.id as Id<"taxiTap_users"> } : "skip"
+  );
+
+  const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
+  const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
+
+  // console.log("DriverOnline: Component mounted");
+  // console.log("DriverOnline: user", user);
+  // console.log("DriverOnline: userId", userId);
+  // console.log("DriverOnline: notifications from hook", notifications);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -121,6 +145,108 @@ export default function DriverOnline({
 
     getCurrentLocation();
   }, []);
+
+  useEffect(() => {
+    // Redirect if accessed directly (not via DriverHomeScreen)
+    if (typeof onGoOffline !== 'function') {
+      router.replace('/DriverHomeScreen');
+    }
+  }, [onGoOffline, router]);
+
+  useEffect(() => {
+   // console.log("DriverOnline: useEffect triggered");
+   // console.log("DriverOnline: user exists?", !!user);
+   // console.log("DriverOnline: notifications length", notifications?.length || 0);
+    if (!user) {
+    //  console.log("DriverOnline: No user, returning early");
+      return; // Guard: only proceed if user is defined
+    }
+   // console.log("DriverOnline: notifications", notifications);
+    const rideRequest = notifications.find(
+      n => n.type === "ride_request" && !n.isRead
+    );
+   // console.log("DriverOnline: found rideRequest", rideRequest);
+    if (rideRequest) {
+   //   console.log("DriverOnline: Showing Alert for ride request");
+
+      Alert.alert(
+        "New Ride Request",
+        rideRequest.message,
+        [
+          {
+            text: "Decline",
+            onPress: async () => {
+              try {
+                await cancelRide({ rideId: rideRequest.metadata.rideId, userId: user.id as Id<"taxiTap_users">, });
+                markAsRead(rideRequest._id);
+              } catch (error) {
+                console.error(error);
+                Alert.alert("Error", "Failed to decline ride or update seats.");
+              }
+              markAsRead(rideRequest._id);
+            },
+            style: "destructive"
+          },
+          {
+            text: "Accept",
+            onPress: async () => {
+              try {
+                await acceptRide({ rideId: rideRequest.metadata.rideId, driverId: user.id as Id<"taxiTap_users">, });
+                await updateTaxiSeatAvailability({ rideId: rideRequest.metadata.rideId, action: "decrease" });
+                markAsRead(rideRequest._id);
+              } catch (error) {
+                console.error(error);
+                Alert.alert("Error", "Failed to accept ride or update seats.");
+              }
+              markAsRead(rideRequest._id);
+            },
+            style: "default"
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, user]);
+
+  useEffect(() => {
+    const rideCancelled = notifications.find(
+      n => n.type === 'ride_cancelled' && !n.isRead
+    );
+    if (rideCancelled) {
+      Alert.alert(
+        'Ride Cancelled',
+        rideCancelled.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => markAsRead(rideCancelled._id),
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
+
+  useEffect(() => {
+    const rideStarted = notifications.find(
+      n => n.type === 'ride_started' && !n.isRead
+    );
+    if (rideStarted) {
+      Alert.alert(
+        'Ride Started',
+        rideStarted.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => markAsRead(rideStarted._id),
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
 
   const handleMenuPress = () => {
     setShowMenu(!showMenu);
@@ -565,12 +691,18 @@ export default function DriverOnline({
 
               <View style={dynamicStyles.bottomContainer}>
                 <View style={dynamicStyles.quickStatus}>
+                  {currentRoute && currentRoute !== 'Not Set' && (
+                    <View style={dynamicStyles.quickStatusItem}>
+                      <Text style={dynamicStyles.quickStatusValue}>{currentRoute}</Text>
+                      <Text style={dynamicStyles.quickStatusLabel}>Current Route</Text>
+                    </View>
+                  )}
                   <View style={dynamicStyles.quickStatusItem}>
-                    <Text style={dynamicStyles.quickStatusValue}>{currentRoute}</Text>
-                    <Text style={dynamicStyles.quickStatusLabel}>Current Route</Text>
-                  </View>
-                  <View style={dynamicStyles.quickStatusItem}>
-                    <Text style={dynamicStyles.quickStatusValue}>{availableSeats}</Text>
+                    <Text style={dynamicStyles.quickStatusValue}>
+                      {taxiInfo?.capacity === 0
+                        ? "No seats available"
+                        : taxiInfo?.capacity?.toString() ?? "Loading..."}
+                    </Text>
                     <Text style={dynamicStyles.quickStatusLabel}>Available Seats</Text>
                   </View>
                 </View>

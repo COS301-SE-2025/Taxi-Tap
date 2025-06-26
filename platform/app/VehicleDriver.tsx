@@ -62,7 +62,7 @@ export default function VehicleDriver() {
 
     const handleSaveChanges = async () => {
         if (!user) {
-            Alert.alert("Error", "User not loaded.");
+            Alert.alert("Not found", "User not loaded.");
             return;
         }
         try {

@@ -70,7 +70,7 @@ export default function PassengerProfile() {
     const handleSwitchToDriver = async () => {
         try {
             if (!user?.id) {
-                Alert.alert('Error', 'User data not found');
+                Alert.alert('Not Found', 'User data not found');
                 return;
             }
 
@@ -100,10 +100,10 @@ export default function PassengerProfile() {
                                     await updateAccountType('both');
                                     await updateUserRole('driver');
                                     
-                                    Alert.alert('Success', 'Successfully switched to driver mode!');
+                                    console.log('Success', 'Successfully switched to driver mode!');
                                     router.push('../DriverOffline');
                                 } catch (error: any) {
-                                    Alert.alert('Error', error.message || 'Failed to switch to driver mode');
+                                    console.log('Error', error.message || 'Failed to switch to driver mode');
                                 }
                             },
                         },
@@ -130,27 +130,27 @@ export default function PassengerProfile() {
                                     // Update context
                                     await updateUserRole('driver');
                                     
-                                    Alert.alert('Success', 'Switched to driver mode!');
+                                    console.log('Success', 'Switched to driver mode!');
                                     router.push('../DriverOffline');
                                 } catch (error: any) {
-                                    Alert.alert('Error', error.message || 'Failed to switch to driver mode');
+                                    console.log('Error', error.message || 'Failed to switch to driver mode');
                                 }
                             },
                         },
                     ]
                 );
             } else {
-                Alert.alert('Error', 'Invalid account type for switching to driver mode');
+                console.log('Error', 'Invalid account type for switching to driver mode');
             }
         } catch {
-            Alert.alert('Error', 'An unexpected error occurred');
+            console.log('Error', 'An unexpected error occurred');
         }
     };
 
     const handleSave = async () => {
         try {
             if (!user?.id) {
-                Alert.alert('Error', 'User not found');
+                Alert.alert('Not found', 'User not found');
                 return;
             }
             // Update name in context

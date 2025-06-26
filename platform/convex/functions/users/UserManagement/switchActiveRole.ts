@@ -69,6 +69,23 @@ export const switchActiveRoleHandler = async (
     lastRoleSwitchAt: Date.now(),
     updatedAt: Date.now(),
   });
+
+  // If switching to driver, ensure a location record exists
+  if (args.newRole === "driver") {
+    const existingLocation = await ctx.db
+      .query("locations")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+    if (!existingLocation) {
+      await ctx.db.insert("locations", {
+        userId: args.userId,
+        latitude: 0,
+        longitude: 0,
+        updatedAt: new Date().toISOString(),
+        role: "driver",
+      });
+    }
+  }
   
   return { 
     success: true, 

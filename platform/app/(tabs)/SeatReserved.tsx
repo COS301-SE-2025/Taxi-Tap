@@ -1,20 +1,19 @@
 import React, { useLayoutEffect, useState, useRef, useEffect } from "react";
-import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, Platform, Alert } from "react-native";
+import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMapContext, createRouteKey } from '../../contexts/MapContext';
-
-// Get platform-specific API key
-const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
-  ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
-  : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 import { useUser } from '../../contexts/UserContext';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
+
+const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
+	? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
+	: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
 export default function SeatReserved() {
 	const params = useLocalSearchParams();
@@ -51,35 +50,40 @@ export default function SeatReserved() {
 		return param || fallback;
 	}
 
+	// Simple deep equality check for location objects
+	function deepEqual(obj1: any, obj2: any): boolean {
+		if (obj1 === obj2) return true;
+		if (!obj1 || !obj2) return false;
+		const keys1 = Object.keys(obj1);
+		const keys2 = Object.keys(obj2);
+		if (keys1.length !== keys2.length) return false;
+		for (let key of keys1) {
+			if (obj1[key] !== obj2[key]) return false;
+		}
+		return true;
+	}
+
 	// Parse location data from params and update context
 	useEffect(() => {
 		const newCurrentLocation = {
 			latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
 			longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-			name: getParamAsString(params.currentName, "Current Location")
+			name: getParamAsString(params.currentName, "")
 		};
 
 		const newDestination = {
 			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
 			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-			name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+			name: getParamAsString(params.destinationName, "")
 		};
 
-		// Only update context if locations have changed
-		if (!currentLocation || 
-			currentLocation.latitude !== newCurrentLocation.latitude || 
-			currentLocation.longitude !== newCurrentLocation.longitude ||
-			currentLocation.name !== newCurrentLocation.name) {
+		if (!deepEqual(currentLocation, newCurrentLocation)) {
 			setCurrentLocation(newCurrentLocation);
 		}
-
-		if (!destination || 
-			destination.latitude !== newDestination.latitude || 
-			destination.longitude !== newDestination.longitude ||
-			destination.name !== newDestination.name) {
+		if (!deepEqual(destination, newDestination)) {
 			setDestination(newDestination);
 		}
-	}, [params, currentLocation, destination, setCurrentLocation, setDestination]);
+	}, [params, setCurrentLocation, setDestination]);
 
 	const vehicleInfo = {
 		plate: getParamAsString(params.plate, "Unknown"),
@@ -87,7 +91,7 @@ export default function SeatReserved() {
 		seats: getParamAsString(params.seats, "0"),
 		price: getParamAsString(params.price, "0"),
 		selectedVehicleId: getParamAsString(params.selectedVehicleId, ""),
-		userId: getParamAsString(params.userId, ""),   // <-- ADD THIS LINE
+		userId: getParamAsString(params.userId, ""),
 	};
 
 	// Function to decode Google's polyline format
@@ -270,25 +274,42 @@ export default function SeatReserved() {
 	}, [routeCoordinates, currentLocation, destination]);
 
 	// Fetch taxi and driver info for the current reservation using Convex
-	// I made use of 'skip' instead of undefined to avoid getting a type error, and cast user.id to Id<"taxiTap_users"> for Convex
 	const taxiInfo = useQuery(
 		api.functions.taxis.viewTaxiInfo.viewTaxiInfo,
 		user ? { passengerId: user.id as Id<"taxiTap_users"> } : "skip"
 	);
 
-	const handleCancelReservation = () => {
-		if (destination && currentLocation) {
-			router.push({
-				pathname: './TaxiInformation',
-				params: {
-					destinationName: destination.name,
-					destinationLat: destination.latitude.toString(),
-					destinationLng: destination.longitude.toString(),
-					currentName: currentLocation.name,
-					currentLat: currentLocation.latitude.toString(),
-					currentLng: currentLocation.longitude.toString(),
-				}
-			});
+	const startRide = useMutation(api.functions.rides.startRide.startRide);
+	const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
+
+	const rideStatus = taxiInfo?.status as 'requested' | 'accepted' | 'in_progress' | 'started' | 'completed' | 'cancelled' | undefined;
+	const showStartRide = rideStatus === 'accepted';
+	const showCancel = rideStatus === 'requested' || rideStatus === 'accepted';
+
+	const handleStartRide = async () => {
+		if (!taxiInfo?.rideId || !user?.id) {
+			alert('No ride or user information available.');
+			return;
+		}
+		try {
+			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			//alert('Ride started!');
+		} catch (error: any) {
+			alert(error?.message || 'Failed to start ride.');
+		}
+	};
+
+	const handleCancelRequest = async () => {
+		if (!taxiInfo?.rideId || !user?.id) {
+			alert('No ride or user information available.');
+			return;
+		}
+		try {
+			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			alert('Ride cancelled.');
+			router.push('/HomeScreen');
+		} catch (error: any) {
+			alert(error?.message || 'Failed to cancel ride.');
 		}
 	};
 
@@ -484,14 +505,20 @@ export default function SeatReserved() {
 			fontWeight: "bold",
 			marginLeft: 2,
 		},
-		cancelButton: {
+		actionButtonsContainer: {
+			width: '100%',
+			alignItems: 'center',
+			marginTop: 10,
+		},
+		startRideButton: {
 			alignItems: "center",
-			backgroundColor: isDark ? theme.primary : "#121212",
+			backgroundColor: theme.primary,
 			borderRadius: 30,
 			paddingVertical: 24,
 			width: 330,
+			marginBottom: 15,
 		},
-		cancelButtonText: {
+		startRideButtonText: {
 			color: isDark ? "#121212" : "#FFFFFF",
 			fontSize: 20,
 			fontWeight: "bold",
@@ -602,6 +629,7 @@ export default function SeatReserved() {
 							))}
 						</View>
 						
+						{/* Location Box - Start and Destination */}
 						<View style={dynamicStyles.locationBox}>
 							{/* Current Location and Destination indicators */}
 							<View style={dynamicStyles.locationIndicator}>
@@ -632,14 +660,26 @@ export default function SeatReserved() {
 							</View>
 						</View>
 						
-						<View style={{ width: '100%', alignItems: 'center' }}>
-							<TouchableOpacity 
-								style={dynamicStyles.cancelButton} 
-								onPress={handleCancelReservation}>
-								<Text style={dynamicStyles.cancelButtonText}>
-									{"Cancel reservation"}
-								</Text>
-							</TouchableOpacity>
+						{/* Action Buttons */}
+						<View style={dynamicStyles.actionButtonsContainer}>
+							{showStartRide && (
+								<TouchableOpacity 
+									style={dynamicStyles.startRideButton} 
+									onPress={handleStartRide}>
+									<Text style={dynamicStyles.startRideButtonText}>
+										{"Start Ride"}
+									</Text>
+								</TouchableOpacity>
+							)}
+							{showCancel && (
+								<TouchableOpacity 
+									style={dynamicStyles.startRideButton} 
+									onPress={handleCancelRequest}>
+									<Text style={dynamicStyles.startRideButtonText}>
+										{"Cancel Request"}
+									</Text>
+								</TouchableOpacity>
+							)}
 						</View>
 					</View>
 				</View>
