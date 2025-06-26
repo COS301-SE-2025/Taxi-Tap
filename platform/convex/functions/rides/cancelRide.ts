@@ -1,7 +1,7 @@
 //this os the funtionc for a user to cancel a ride
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
-import { internal } from "../../_generated/api";
+import { cancelRideHandler } from "./cancelRideHandler";
 // import { Doc } from './_generated/dataModel';
 
 export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId: string }) => {
