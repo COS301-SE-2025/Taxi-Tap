@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { mutation } from "../../_generated/server";
+import { mutation, MutationCtx } from "../../_generated/server";
+import { Id } from "../../_generated/dataModel";
 
 export const markAsRead = mutation({
   args: {
@@ -12,3 +13,13 @@ export const markAsRead = mutation({
     });
   }
 });
+
+export const markAsReadHandler = async (
+  ctx: MutationCtx,
+  args: { notificationId: Id<"notifications"> }
+) => {
+  return await ctx.db.patch(args.notificationId, {
+    isRead: true,
+    readAt: Date.now()
+  });
+};

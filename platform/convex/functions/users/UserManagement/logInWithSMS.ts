@@ -2,7 +2,7 @@ import { query } from "../../../_generated/server";
 import { v } from "convex/values";
 import { QueryCtx } from "../../../_generated/server";
 
-async function verifyPassword(stored: string, passwordAttempt: string): Promise<boolean> {
+export async function verifyPassword(stored: string, passwordAttempt: string): Promise<boolean> {
   const [saltHex, storedHashHex] = stored.split(":");
   if (!saltHex || !storedHashHex) return false;
 
@@ -37,42 +37,44 @@ async function verifyPassword(stored: string, passwordAttempt: string): Promise<
     storedHash.every((byte, i) => byte === derivedHash[i]);
 }
 
+export async function loginSMSHandler(ctx: QueryCtx, args: { phoneNumber: string; password: string; }) {
+  const user = await ctx.db
+    .query("taxiTap_users")
+    .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+    .first();
+
+  if (!user) throw new Error("User not found");
+
+  const isValid = await verifyPassword(user.password, args.password);
+  if (!isValid) throw new Error("Invalid password");
+
+  if (!user.isActive) throw new Error("Account is deactivated. Please contact support.");
+
+  const activeRole = user.currentActiveRole;
+  if (!activeRole) throw new Error("No active role set. Please contact support.");
+
+  const hasPermission = user.accountType === activeRole || user.accountType === "both";
+
+  if (!hasPermission) {
+    throw new Error(
+      `Role mismatch: Current active role (${activeRole}) doesn't match your account permissions (${user.accountType})`
+    );
+  }
+
+  return {
+    id: user._id,
+    phoneNumber: user.phoneNumber,
+    name: user.name,
+    accountType: user.accountType,
+    currentActiveRole: user.currentActiveRole,
+    isVerified: user.isVerified,
+  };
+}
+
 export const loginSMS = query({
   args: {
     phoneNumber: v.string(),
     password: v.string(),
   },
-  handler: async (ctx: QueryCtx, args) => {
-    const user = await ctx.db
-      .query("taxiTap_users")
-      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
-      .first();
-
-    if (!user) throw new Error("User not found");
-
-    const isValid = await verifyPassword(user.password, args.password);
-    if (!isValid) throw new Error("Invalid password");
-
-    if (!user.isActive) throw new Error("Account is deactivated. Please contact support.");
-
-    const activeRole = user.currentActiveRole;
-    if (!activeRole) throw new Error("No active role set. Please contact support.");
-
-    const hasPermission = user.accountType === activeRole || user.accountType === "both";
-
-    if (!hasPermission) {
-      throw new Error(
-        `Role mismatch: Current active role (${activeRole}) doesn't match your account permissions (${user.accountType})`
-      );
-    }
-
-    return {
-      id: user._id,
-      phoneNumber: user.phoneNumber,
-      name: user.name,
-      accountType: user.accountType,
-      currentActiveRole: user.currentActiveRole,
-      isVerified: user.isVerified,
-    };
-  }
+  handler: loginSMSHandler,
 });

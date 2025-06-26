@@ -130,8 +130,8 @@ export const displayRoutesHandler = async ({ db }: QueryCtx) => {
     if (!Array.isArray(coordinates) || coordinates.length === 0) {
       return {
         routeId: route.routeId,
-        start: formatRouteName(parts[0]) || "unknown",
-        destination: formatRouteName(parts[1]) || "unknown",
+        start: formatRouteName(parts[0]) ?? "Unknown",
+        destination: formatRouteName(parts[1]) ?? "Unknown",
         startCoords: null,
         destinationCoords: null,
         stops: [], // No stops available
@@ -148,8 +148,8 @@ export const displayRoutesHandler = async ({ db }: QueryCtx) => {
     if (!Array.isArray(firstCoord) || firstCoord.length < 2 || !Array.isArray(lastCoord) || lastCoord.length < 2) {
       return {
         routeId: route.routeId,
-        start: formatRouteName(parts[0]) || "unknown",
-        destination: formatRouteName(parts[1]) || "unknown",
+        start: formatRouteName(parts[0]) ?? "Unknown",
+        destination: formatRouteName(parts[1]) ?? "Unknown",
         startCoords: null,
         destinationCoords: null,
         stops: [], // No stops available
@@ -180,8 +180,8 @@ export const displayRoutesHandler = async ({ db }: QueryCtx) => {
 
     return {
       routeId: route.routeId,
-      start: formatRouteName(parts[0]) || "unknown",
-      destination: formatRouteName(parts[1]) || "unknown",
+      start: formatRouteName(parts[0]) ?? "Unknown",
+      destination: formatRouteName(parts[1]) ?? "Unknown",
       startCoords,
       destinationCoords,
       stops: processedStops,
