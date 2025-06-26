@@ -73,6 +73,7 @@ export default function SeatReserved() {
 
 	const [hasFittedRoute, setHasFittedRoute] = useState(false);
 	const [isFollowing, setIsFollowing] = useState(true);
+	const [rideStartedLocal, setRideStartedLocal] = useState(false);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -381,6 +382,7 @@ export default function SeatReserved() {
 		try {
 			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
 			Alert.alert('Success', 'Ride started!');
+			setRideStartedLocal(true);
 		} catch (error: any) {
 			Alert.alert('Error', error?.message || 'Failed to start ride.');
 		}
@@ -780,25 +782,8 @@ export default function SeatReserved() {
 						
 						{/* Action Buttons */}
 						<View style={dynamicStyles.actionButtonsContainer}>
-							{showEndRide && (
-								<TouchableOpacity 
-									style={dynamicStyles.startRideButton} 
-									onPress={handleEndRide}>
-									<Text style={dynamicStyles.startRideButtonText}>
-										{"End Ride"}
-									</Text>
-								</TouchableOpacity>
-							)}
-							{showStartRide && !showCancel && (
-								<TouchableOpacity 
-									style={dynamicStyles.startRideButton} 
-									onPress={handleStartRide}>
-									<Text style={dynamicStyles.startRideButtonText}>
-										{"Start Ride"}
-									</Text>
-								</TouchableOpacity>
-							)}
-							{showCancel && !showStartRide && (
+							{/* Before ride is accepted: show only Cancel Request */}
+							{rideStatus !== 'accepted' && !showEndRide && !rideStartedLocal && showCancel && (
 								<TouchableOpacity 
 									style={dynamicStyles.cancelButton} 
 									onPress={handleCancelRequest}>
@@ -807,11 +792,31 @@ export default function SeatReserved() {
 									</Text>
 								</TouchableOpacity>
 							)}
-							{showCancel && showStartRide && (
+							{/* When ride is accepted and ride has not started: show both Start Ride and End Ride */}
+							{rideStatus === 'accepted' && !rideStartedLocal && (
+								<>
+									<TouchableOpacity 
+										style={dynamicStyles.startRideButton} 
+										onPress={handleStartRide}>
+										<Text style={dynamicStyles.startRideButtonText}>
+											{"Start Ride"}
+										</Text>
+									</TouchableOpacity>
+									<TouchableOpacity 
+										style={dynamicStyles.cancelButton} 
+										onPress={handleEndRide}>
+										<Text style={dynamicStyles.cancelButtonText}>
+											{"End Ride"}
+										</Text>
+									</TouchableOpacity>
+								</>
+							)}
+							{/* After Start Ride is pressed: show only End Ride */}
+							{(rideStartedLocal || showEndRide) && (
 								<TouchableOpacity 
-									style={dynamicStyles.cancelButton} 
+									style={dynamicStyles.startRideButton} 
 									onPress={handleEndRide}>
-									<Text style={dynamicStyles.cancelButtonText}>
+									<Text style={dynamicStyles.startRideButtonText}>
 										{"End Ride"}
 									</Text>
 								</TouchableOpacity>
