@@ -84,7 +84,7 @@ This design provides modularity, scalability, and testability with minimal DevOp
   \item \textbf{Client Constraints:} Must remain within the AWS Free Tier; performance must be maintained under low-cost infrastructure.
   \item \textbf{Deployment Constraints:} Fully serverless; no Docker/Kubernetes; must deploy via CI/CD with minimal setup.
   \item \textbf{Security Constraints:} Only verified users may access trip, payment, or GPS functionality.
-  \item \textbf{Latency Constraints:} Real-time location updates must occur under \textbf{1 second}.
+  \item \textbf{Latency Constraints:} Real-time location updates must occur under \textbf{5 second}.
   \item \textbf{Scalability Constraints:} Design must accommodate scaling to 1,000+ users without architectural changes.
 \end{itemize}
 
