@@ -9,6 +9,7 @@
 \geometry{margin=1in}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{hyperref}
 
 \title{Software Requirements Specification\\Taxi Tap by Git It Done}
 \date{}
@@ -2331,6 +2332,8 @@ null
 
 \section{Architectural Requirements}
 
+\textbf{\href{run:./Architectural Requirements.pdf}{Architectural Requirements Document}}
+
 \subsection{Quality Requirements}
 Quality requirements determine the overall quality of Taxi Tap by specifying criteria that define how well the system performs and behaves.
 
@@ -2383,46 +2386,6 @@ Quality requirements determine the overall quality of Taxi Tap by specifying cri
         \item \textbf{Low data consumption:} The app must use data sparingly to remain cost-effective for users in regions with expensive or limited mobile data.
         \item \textbf{Resource efficiency:} The system should minimize server and client-side consumption to reduce infrastructure and battery costs.
     \end{itemize}
-\end{enumerate}
-
-\subsection{Architectural Patterns}
-Architectural patterns are compositions of architectural elements which allow a system to effectively meet its quality requirements.
-
-The Taxi Tap system consists of three components:
-\begin{itemize}
-    \item The mobile interface for passengers and drivers
-    \item The backend service that handles ride coordination
-    \item The real-time notification system
-\end{itemize}
-
-To meet its performance, scalability, and usability goals under strict constraints (low bandwidth, battery efficiency, AWS Free Tier), our team plans to use a combination of architectural patterns that balance simplicity with flexibility.
-
-\paragraph{How the patterns will be applied in the Taxi Tap system:}
-
-\begin{enumerate}
-    \item \textbf{Event-Driven Architecture (EDA) with Publisher-Subscriber}\\
-    The system will use the Publisher-Subscriber pattern to implement an Event-Driven Architecture. When a passenger requests a ride, an event is published (\texttt{RideRequested}) that triggers subscribed modules like ride matching, GPS location updates, and notifications. This design enables loose coupling, scalability, and real-time responsiveness, which are essential for a transportation app operating under varying loads.\\
-    \textbf{Key Events:} RideRequested, TaxiApproaching, PassengerWaiting, etc.
-
-    \item \textbf{Client-Server Architecture}\\
-    The system will use the Client-Server architecture, where the mobile application acts as a client and communicates with a backend server. The application handles user input, displays route and ride information, and temporarily stores data when offline. The backend processes requests like user authentication, route announcements, ride matching, and storing data.\\
-    We will use Convex as our serverless backend. This will allow us to write backend logic without managing infrastructure. Convex automatically handles scaling and storage, which helps us focus on building features rather than maintaining servers. It also supports real-time updates and is well-suited for low-latency mobile apps like Taxi Tap. 
-\end{enumerate}
-
-\subsection{Implementation Strategies}
-To complement these architectural patterns, the following strategies will be considered.
-
-\begin{enumerate}
-    \item \textbf{Offline-First Strategy:}\\
-    Users may have limited internet connectivity, therefore, the mobile application should be designed with offline-first capabilities. Actions such as ride requests or location tracking are stored locally and queued for syncing when the connection is re-established. This ensures continuity in usage and improves the app’s reliability in low-bandwidth environments.
-
-    \item \textbf{Security Strategy:}\\
-    To meet the requirement for secure handling of user data in line with POPIA and best practices, the following strategies will be used:
-    \begin{itemize}
-        \item \textbf{Data in Transit:} All data exchanged between the mobile application and backend services will be encrypted using HTTPS with TLS (Transport Layer Security).
-        \item \textbf{Access Control:} Role-based access policies and authentication mechanisms (e.g., JWTs) ensure only authorised users can access specific system resources.
-    \end{itemize}
-    These strategies work within the architectural patterns to address the specific constraints of the South African minibus taxi ecosystem.
 \end{enumerate}
 
 \subsection{Design Patterns}
