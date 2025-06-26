@@ -48,8 +48,13 @@ The system connects passengers and taxi operators through a location-aware mobil
 ### Presentation:
 
 ### Live Demo:
+[Watch the Live Demo Video](https://drive.google.com/file/d/11mDZAy1Mt7-55KsPhjvOCNG1LzdTNvwG/view?usp=sharing)
 
 ### SRS Document:
+[Functional Requirements (SRS)](docs/SRS.pdf)
+
+### User Manual:
+[User Manual](docs/Taxi%20Tap%20User%20Manual.pdf)
 
 ## Technology Stack
 
