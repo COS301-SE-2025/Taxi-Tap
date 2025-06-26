@@ -78,9 +78,9 @@ export default function DriverOnline({
   const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
   const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 
-  console.log("DriverOnline: Component mounted");
-  console.log("DriverOnline: user", user);
-  console.log("DriverOnline: userId", userId);
+ // console.log("DriverOnline: Component mounted");
+ // console.log("DriverOnline: user", user);
+ // console.log("DriverOnline: userId", userId);
  // console.log("DriverOnline: notifications from hook", notifications);
 
   useLayoutEffect(() => {
@@ -150,20 +150,20 @@ export default function DriverOnline({
   }, [onGoOffline, router]);
 
   useEffect(() => {
-    console.log("DriverOnline: useEffect triggered");
-    console.log("DriverOnline: user exists?", !!user);
-    console.log("DriverOnline: notifications length", notifications?.length || 0);
+   // console.log("DriverOnline: useEffect triggered");
+   // console.log("DriverOnline: user exists?", !!user);
+   // console.log("DriverOnline: notifications length", notifications?.length || 0);
     if (!user) {
-      console.log("DriverOnline: No user, returning early");
+    //  console.log("DriverOnline: No user, returning early");
       return; // Guard: only proceed if user is defined
     }
-    console.log("DriverOnline: notifications", notifications);
+   // console.log("DriverOnline: notifications", notifications);
     const rideRequest = notifications.find(
       n => n.type === "ride_request" && !n.isRead
     );
-    console.log("DriverOnline: found rideRequest", rideRequest);
+   // console.log("DriverOnline: found rideRequest", rideRequest);
     if (rideRequest) {
-      console.log("DriverOnline: Showing Alert for ride request");
+   //   console.log("DriverOnline: Showing Alert for ride request");
       Alert.alert(
         "New Ride Request",
         rideRequest.message,

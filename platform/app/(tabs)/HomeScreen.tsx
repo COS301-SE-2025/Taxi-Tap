@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   Animated,
+  TextInput,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -44,38 +45,85 @@ export default function HomeScreen() {
   { _id: string; latitude: number; longitude: number }[]
 >([]);
 
+  // Address input states
+  const [originAddress, setOriginAddress] = useState('');
+  const [destinationAddress, setDestinationAddress] = useState('');
+  const [isGeocodingOrigin, setIsGeocodingOrigin] = useState(false);
+  const [isGeocodingDestination, setIsGeocodingDestination] = useState(false);
+  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] = useState(true);
+
+  // Enhanced taxi matching states
+  const [availableTaxis, setAvailableTaxis] = useState<any[]>([]);
+  const [isSearchingTaxis, setIsSearchingTaxis] = useState(false);
+  const [routeMatchResults, setRouteMatchResults] = useState<any>(null);
+
+  // Enhanced state to trigger taxi search
+  const [taxiSearchParams, setTaxiSearchParams] = useState<{
+    originLat: number;
+    originLng: number;
+    destinationLat: number;
+    destinationLng: number;
+  } | null>(null);
+
   const { userLocation, nearbyTaxis } = useLocationSystem(uid);
+
+  // Query for enhanced taxi matching - only runs when we have search params
+  const taxiSearchResult = useQuery(
+    api.functions.routes.enhancedTaxiMatching.findAvailableTaxisForJourney,
+    taxiSearchParams ? {
+      ...taxiSearchParams,
+      maxOriginDistance: 3.0,      // 3km radius from origin
+      maxDestinationDistance: 3.0, // 3km radius from destination
+      maxTaxiDistance: 3.0,        // 3km radius for taxi proximity
+      maxResults: 10
+    } : "skip"
+  );
+  
+  // Fix: Update loading state based on userLocation
   useEffect(() => {
     if (userLocation) {
       console.log('✅ Live-location sent:', userLocation);
+      setCurrentLocation({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        name: 'Current Location'
+      });
+      setIsLoadingCurrentLocation(false);
     }
   }, [userLocation]);
 
-useEffect(() => {
-  if (nearbyTaxis && nearbyTaxis.length) {
-    console.log(`🚖 Nearby drivers (${nearbyTaxis.length}):`, nearbyTaxis);
-  }
-}, [nearbyTaxis]);
+  // Fix: Add timeout for location loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!userLocation && isLoadingCurrentLocation) {
+        console.log('⚠️ Location timeout - stopping loading');
+        setIsLoadingCurrentLocation(false);
+        Alert.alert(
+          'Location Error', 
+          'Unable to get your current location. Please enter your address manually.',
+          [{ text: 'OK' }]
+        );
+      }
+    }, 10000); // 10 second timeout
 
-useEffect(() => {
-  if (nearbyTaxis?.length && snapshotDrivers.length === 0) {
-    setSnapshotDrivers(nearbyTaxis);
-  }
-}, [nearbyTaxis, snapshotDrivers.length]);
+    return () => clearTimeout(timeout);
+  }, [userLocation, isLoadingCurrentLocation]);
+
+  useEffect(() => {
+    if (nearbyTaxis && nearbyTaxis.length) {
+      console.log(`🚖 Nearby drivers (${nearbyTaxis.length}):`, nearbyTaxis);
+    }
+  }, [nearbyTaxis]);
+
+  useEffect(() => {
+    if (nearbyTaxis?.length && snapshotDrivers.length === 0) {
+      setSnapshotDrivers(nearbyTaxis);
+    }
+  }, [nearbyTaxis, snapshotDrivers.length]);
 
   const routes = useQuery(api.functions.routes.displayRoutes.displayRoutes);
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
-
-  useFocusEffect(
-    React.useCallback(() => {
-      // When screen is focused
-      setRouteLoaded(false);
-      setDestination(null);
-      setRouteCoordinates([]);
-      setSelectedRouteId(null);
-    }, [])
-  );
 
   const {
     currentLocation,
@@ -99,18 +147,191 @@ useEffect(() => {
 
   const { notifications, markAsRead } = useNotifications();
 
+  useFocusEffect(
+    React.useCallback(() => {
+      // When screen is focused
+      setRouteLoaded(false);
+      setDestination(null);
+      setRouteCoordinates([]);
+      setSelectedRouteId(null);
+      // Reset destination input only (keep origin as current location)
+      setDestinationAddress('');
+      // Reset enhanced taxi states
+      setAvailableTaxis([]);
+      setRouteMatchResults(null);
+      setIsSearchingTaxis(false);
+    }, [setRouteLoaded, setDestination, setRouteCoordinates])
+  );
+
   useLayoutEffect(() => {
     navigation.setOptions({ title: 'Home' });
   }, [navigation]);
 
+  // Geocoding function
+  const geocodeAddress = async (address: string): Promise<{ latitude: number; longitude: number; name: string } | null> => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      Alert.alert('Error', 'Google Maps API key is not configured');
+      return null;
+    }
+
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results.length > 0) {
+        const result = data.results[0];
+        return {
+          latitude: result.geometry.location.lat,
+          longitude: result.geometry.location.lng,
+          name: result.formatted_address,
+        };
+      } else {
+        throw new Error('Address not found');
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      Alert.alert('Error', 'Could not find the address. Please try again.');
+      return null;
+    }
+  };
+
+  // Enhanced function to search for available taxis using the actual enhanced matching
+  const searchForAvailableTaxis = async (
+    origin: { latitude: number; longitude: number; name: string },
+    dest: { latitude: number; longitude: number; name: string }
+  ) => {
+    if (!uid) {
+      console.log('⚠️ No user ID available for taxi search');
+      return;
+    }
+
+    setIsSearchingTaxis(true);
+    
+    try {
+      console.log('🔍 Searching for available taxis:', {
+        origin: { lat: origin.latitude, lng: origin.longitude },
+        destination: { lat: dest.latitude, lng: dest.longitude }
+      });
+
+      // Trigger the enhanced taxi search by setting search parameters
+      setTaxiSearchParams({
+        originLat: origin.latitude,
+        originLng: origin.longitude,
+        destinationLat: dest.latitude,
+        destinationLng: dest.longitude,
+      });
+      
+    } catch (error) {
+      console.error('❌ Error searching for taxis:', error);
+      setIsSearchingTaxis(false);
+      Alert.alert(
+        'Search Error', 
+        'Unable to find available taxis. Please try again.',
+        [{ text: 'OK' }]
+      );
+      setAvailableTaxis([]);
+      setRouteMatchResults(null);
+    }
+  };
+
+  // Handle taxi search results
+  useEffect(() => {
+    if (taxiSearchResult) {
+      setIsSearchingTaxis(false);
+      
+      if (taxiSearchResult.success) {
+        console.log(`✅ Found ${taxiSearchResult.availableTaxis.length} available taxis`);
+        console.log(`📊 Matching routes: ${taxiSearchResult.matchingRoutes.length}`);
+        
+        setAvailableTaxis(taxiSearchResult.availableTaxis);
+        setRouteMatchResults(taxiSearchResult);
+        
+        // Update the snapshot drivers to show available taxis instead of all nearby
+        const taxiLocations = taxiSearchResult.availableTaxis.map((taxi: any) => ({
+          _id: taxi.driverId,
+          latitude: taxi.currentLocation.latitude,
+          longitude: taxi.currentLocation.longitude,
+          name: taxi.name,
+          vehicle: taxi.vehicleModel,
+          registration: taxi.vehicleRegistration,
+          distance: taxi.distanceToOrigin,
+          routeName: taxi.routeInfo.routeName
+        }));
+        
+        setSnapshotDrivers(taxiLocations);
+      } else {
+        console.log('⚠️ No available taxis found:', taxiSearchResult.message);
+        setAvailableTaxis([]);
+        setRouteMatchResults(taxiSearchResult);
+        setSnapshotDrivers([]); // Clear drivers if no taxis available
+      }
+    }
+  }, [taxiSearchResult]);
+
+  // Handle origin address submission
+  const handleOriginSubmit = async () => {
+    if (!originAddress.trim()) return;
+    
+    setIsGeocodingOrigin(true);
+    const result = await geocodeAddress(originAddress);
+    setIsGeocodingOrigin(false);
+
+    if (result) {
+      setCurrentLocation(result);
+      // If we have both origin and destination, get route
+      if (destination) {
+        getRoute(result, destination);
+      }
+      // Animate map to origin
+      mapRef.current?.animateToRegion(
+        {
+          latitude: result.latitude,
+          longitude: result.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        1000
+      );
+    }
+  };
+
+  // Handle destination address submission
+  const handleDestinationSubmit = async () => {
+    if (!destinationAddress.trim()) return;
+    
+    setIsGeocodingDestination(true);
+    const result = await geocodeAddress(destinationAddress);
+    setIsGeocodingDestination(false);
+
+    if (result) {
+      setDestination(result);
+      setSelectedRouteId('manual-route'); // Set a manual route ID
+      // If we have both origin and destination, get route
+      if (currentLocation) {
+        getRoute(currentLocation, result);
+      }
+    }
+  };
+
   const handleReserveSeat = () => {
     if (!destination || !currentLocation) {
-      Alert.alert('Error', 'Please select a destination first');
+      Alert.alert('Error', 'Please enter both origin and destination addresses');
       return;
     }
 
     if (!selectedRouteId) {
       Alert.alert('Error', 'Route not selected');
+      return;
+    }
+
+    // Check if we have available taxis
+    if (availableTaxis.length === 0) {
+      Alert.alert(
+        'No Taxis Available', 
+        'No taxis are currently available on routes that connect your origin and destination. Please try a different route or check again later.',
+        [{ text: 'OK' }]
+      );
       return;
     }
 
@@ -124,6 +345,9 @@ useEffect(() => {
         currentLat: currentLocation.latitude.toString(),
         currentLng: currentLocation.longitude.toString(),
         routeId: selectedRouteId,
+        // Pass the available taxis data
+        availableTaxisCount: availableTaxis.length.toString(),
+        routeMatchData: JSON.stringify(routeMatchResults),
       },
     });
   };
@@ -141,8 +365,8 @@ useEffect(() => {
   }, [routeLoaded]);
 
   const getRoute = async (
-    origin: { latitude: number; longitude: number },
-    dest: { latitude: number; longitude: number }
+    origin: { latitude: number; longitude: number; name: string },
+    dest: { latitude: number; longitude: number; name: string }
   ) => {
     if (!GOOGLE_MAPS_API_KEY) {
       console.log('Error', 'Google Maps API key is not configured');
@@ -158,6 +382,8 @@ useEffect(() => {
     if (cached) {
       setRouteCoordinates(cached);
       setRouteLoaded(true);
+      // Also search for available taxis when route is loaded from cache
+      searchForAvailableTaxis(origin, dest);
       return;
     }
 
@@ -180,6 +406,10 @@ useEffect(() => {
         animated: true,
       });
       setRouteLoaded(true);
+      
+      // Search for available taxis on matching routes
+      searchForAvailableTaxis(origin, dest);
+      
     } catch (err) {
       console.error(err);
       // Alert.alert('Route Error', err instanceof Error ? err.message : 'Unknown error');
@@ -221,35 +451,6 @@ useEffect(() => {
     return pts;
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
-      });
-      const [place] = await Location.reverseGeocodeAsync(loc.coords);
-      setCurrentLocation({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-        name:
-          `${place.name || ''} ${place.street || ''}, ${place.city || place.region || ''}`.trim() ||
-          'Unknown Location',
-      });
-
-      mapRef.current?.animateToRegion(
-        {
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        1000
-      );
-    })();
-  }, []);
-
   const handleDestinationSelect = (route: {
     routeId: string;
     destination: string;
@@ -262,6 +463,7 @@ useEffect(() => {
       name: route.destination,
     };
     setDestination(dest);
+    setDestinationAddress(route.destination); // Update the input field
     setSelectedRouteId(route.routeId);
     getRoute(currentLocation, dest);
   };
@@ -337,11 +539,20 @@ useEffect(() => {
     locationTextContainer: {
       flex: 1,
     },
-    currentLocationText: {
-      color: isDark ? theme.primary : "#A66400",
+    addressInput: {
+      color: theme.text,
       fontSize: 14,
       fontWeight: "bold",
+      backgroundColor: 'transparent',
+      padding: 0,
+      margin: 0,
+    },
+    originInput: {
+      color: isDark ? theme.primary : "#A66400",
       marginBottom: 17,
+    },
+    destinationInput: {
+      marginLeft: 2,
     },
     locationSeparator: {
       height: 1,
@@ -349,11 +560,32 @@ useEffect(() => {
       marginBottom: 19,
       marginHorizontal: 2,
     },
-    destinationText: {
+    geocodingText: {
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontStyle: 'italic',
+      marginTop: 4,
+    },
+    searchResultsContainer: {
+      marginBottom: 20,
+    },
+    searchResultsTitle: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      marginBottom: 8,
       color: theme.text,
+    },
+    searchResultsCard: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 12,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    searchResultsText: {
       fontSize: 14,
-      fontWeight: "bold",
-      marginLeft: 2,
+      color: theme.text,
+      marginBottom: 4,
     },
     savedRoutesTitle: {
       fontWeight: 'bold',
@@ -395,7 +627,7 @@ useEffect(() => {
       bottom: 80,
       left: 20,
       right: 20,
-      backgroundColor: theme.primary,
+      backgroundColor: availableTaxis.length > 0 ? theme.primary : theme.textSecondary,
       borderRadius: 25,
       paddingVertical: 15,
       alignItems: 'center',
@@ -405,17 +637,23 @@ useEffect(() => {
       shadowOffset: { width: 0, height: 2 },
       shadowRadius: 4,
       elevation: 5,
+      minHeight: 50,
     },
     reserveButtonText: {
       color: theme.buttonText || '#FFFFFF',
       fontSize: 18,
       fontWeight: 'bold',
     },
+    reserveButtonSubtext: {
+      color: theme.buttonText || '#FFFFFF',
+      fontSize: 12,
+      marginTop: 4,
+    },
   });
 
   useEffect(() => {
     const rideAccepted = notifications.find(
-      n => n.type === "ride_accepted" && !n.isRead
+      (n: any) => n.type === "ride_accepted" && !n.isRead
     );
     if (rideAccepted) {
       Alert.alert(
@@ -446,7 +684,7 @@ useEffect(() => {
     }
 
     const rideCancelled = notifications.find(
-      n => n.type === "ride_cancelled" && !n.isRead
+      (n: any) => n.type === "ride_cancelled" && !n.isRead
     );
     if (rideCancelled) {
       Alert.alert(
@@ -462,41 +700,68 @@ useEffect(() => {
         { cancelable: false }
       );
     }
-  }, [notifications, markAsRead]);
+  }, [notifications, markAsRead, currentLocation, destination]);
+
+  // Fix: Improved initial region logic
+  const getInitialRegion = () => {
+    if (userLocation) {
+      return {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+    if (currentLocation) {
+      return {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+    // Default to Johannesburg coordinates
+    return {
+      latitude: -26.2041,
+      longitude: 28.0473,
+      latitudeDelta: 0.1,
+      longitudeDelta: 0.1,
+    };
+  };
 
   return (
     <View style={s.container}>
-      {!currentLocation ? (
+      {isLoadingCurrentLocation ? (
         <View style={[s.map, { justifyContent: 'center', alignItems: 'center' }]}>
           <Image source={loading} style={{ width: 120, height: 120 }} resizeMode="contain" />
+          <Text style={{ color: theme.textSecondary, marginTop: 10 }}>Getting your location...</Text>
         </View>
       ) : (
         <MapView
           ref={mapRef}
           style={s.map}
           provider={PROVIDER_GOOGLE}
-          initialRegion={{
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
+          initialRegion={getInitialRegion()}
           customMapStyle={isDark ? darkMapStyle : []}
         >
-          <Marker coordinate={currentLocation} title="You are here" pinColor="blue" />
+          {currentLocation && (
+            <Marker coordinate={currentLocation} title="Origin" pinColor="blue" />
+          )}
           
-                {snapshotDrivers.map((driver) => (
-        <Marker
-          key={driver._id}
-          coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
-          pinColor="green"
-          tracksViewChanges={false}
-          title="Driver"
-        />
-      ))}
+          {snapshotDrivers.map((driver) => (
+            <Marker
+              key={driver._id}
+              coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
+              pinColor="green"
+              tracksViewChanges={false}
+              title="Available Driver"
+            />
+          ))}
+
           {destination && (
             <Marker coordinate={destination} title={destination.name} pinColor="orange" />
           )}
+
           {routeLoaded && routeCoordinates.length > 0 && (
             <Polyline coordinates={routeCoordinates} strokeColor={theme.primary} strokeWidth={4} />
           )}
@@ -522,29 +787,86 @@ useEffect(() => {
             />
           </View>
           <View style={dynamicStyles.locationTextContainer}>
-            <Text style={dynamicStyles.currentLocationText}>
-              {currentLocation ? currentLocation.name : 'Getting current location...'}
-            </Text>
+            <TextInput
+              style={[dynamicStyles.addressInput, dynamicStyles.originInput]}
+              placeholder={currentLocation ? currentLocation.name : "Enter origin address..."}
+              value={originAddress}
+              onChangeText={setOriginAddress}
+              onSubmitEditing={handleOriginSubmit}
+              returnKeyType="search"
+              placeholderTextColor={isDark ? theme.textSecondary : "#A66400"}
+              editable={!isLoadingCurrentLocation}
+            />
+            {isGeocodingOrigin && (
+              <Text style={dynamicStyles.geocodingText}>Finding address...</Text>
+            )}
+            {isLoadingCurrentLocation && (
+              <Text style={dynamicStyles.geocodingText}>Getting current location...</Text>
+            )}
+            
             <View style={dynamicStyles.locationSeparator} />
-            <Text style={dynamicStyles.destinationText}>
-              {destination ? destination.name : 'No destination selected'}
-            </Text>
+            
+            <TextInput
+              style={[dynamicStyles.addressInput, dynamicStyles.destinationInput]}
+              placeholder="Enter destination address..."
+              value={destinationAddress}
+              onChangeText={setDestinationAddress}
+              onSubmitEditing={handleDestinationSubmit}
+              returnKeyType="search"
+              placeholderTextColor={theme.textSecondary}
+            />
+            {isGeocodingDestination && (
+              <Text style={dynamicStyles.geocodingText}>Finding address...</Text>
+            )}
+            
             {isLoadingRoute && (
               <Text style={dynamicStyles.routeLoadingText}>
                 Loading route...
               </Text>
             )}
-            {routeLoaded && !isLoadingRoute && (
+            {routeLoaded && !isLoadingRoute && !isSearchingTaxis && (
               <Text style={[dynamicStyles.routeLoadingText, { color: theme.primary }]}>
                 Route loaded ✓
+              </Text>
+            )}
+            {isSearchingTaxis && (
+              <Text style={dynamicStyles.routeLoadingText}>
+                Searching for available taxis...
               </Text>
             )}
           </View>
         </View>
 
+        {/* Journey Status */}
+        {routeMatchResults && (
+          <View style={dynamicStyles.searchResultsContainer}>
+            <Text style={dynamicStyles.searchResultsTitle}>
+              Journey Status
+            </Text>
+            <View style={dynamicStyles.searchResultsCard}>
+              <Text style={dynamicStyles.searchResultsText}>
+                📍 Available taxis: {routeMatchResults.availableTaxis?.length || 0}
+              </Text>
+              <Text style={dynamicStyles.searchResultsText}>
+                🛣️ Matching routes: {routeMatchResults.matchingRoutes?.length || 0}
+              </Text>
+              {(routeMatchResults.availableTaxis?.length || 0) > 0 && (
+                <Text style={[dynamicStyles.searchResultsText, { color: theme.primary }]}>
+                  ✅ Ready to book your ride!
+                </Text>
+              )}
+              {(routeMatchResults.availableTaxis?.length || 0) === 0 && (
+                <Text style={[dynamicStyles.searchResultsText, { color: theme.textSecondary }]}>
+                  ⚠️ No taxis available on this route
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
         <Text style={dynamicStyles.savedRoutesTitle}>Recently Used Taxi Ranks</Text>
         <ScrollView style={{ marginTop: 10 }}>
-          {routes?.map((route, idx) => (
+          {routes?.map((route: any, idx: number) => (
             <TouchableOpacity
               key={idx}
               style={dynamicStyles.routeCard}
@@ -569,7 +891,19 @@ useEffect(() => {
       {routeLoaded && !isLoadingRoute && (
         <Animated.View style={{ opacity: buttonOpacity }}>
           <TouchableOpacity style={dynamicStyles.reserveButton} onPress={handleReserveSeat}>
-            <Text style={dynamicStyles.reserveButtonText}>Reserve a Seat</Text>
+            <Text style={dynamicStyles.reserveButtonText}>
+              {isSearchingTaxis 
+                ? 'Finding Taxis...' 
+                : availableTaxis.length > 0 
+                  ? `Reserve a Seat (${availableTaxis.length} taxis available)`
+                  : 'Reserve a Seat'
+              }
+            </Text>
+            {isSearchingTaxis && (
+              <Text style={dynamicStyles.reserveButtonSubtext}>
+                Searching for available drivers...
+              </Text>
+            )}
           </TouchableOpacity>
         </Animated.View>
       )}
