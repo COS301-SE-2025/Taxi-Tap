@@ -159,13 +159,13 @@ export default function DriverOnline({
     console.log("DriverOnline: notifications length", notifications?.length || 0);
     if (!user) {
       console.log("DriverOnline: No user, returning early");
-      return; // Guard: only proceed if user is defined
+      return;
     }
-    console.log("DriverOnline: notifications", notifications);
+    // console.log("DriverOnline: notifications", notifications);
     const rideRequest = notifications.find(
       n => n.type === "ride_request" && !n.isRead
     );
-    console.log("DriverOnline: found rideRequest", rideRequest);
+    // console.log("DriverOnline: found rideRequest", rideRequest);
     if (rideRequest) {
       console.log("DriverOnline: Showing Alert for ride request");
       Alert.alert(
