@@ -4,7 +4,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap/issues)
 [![codecov](https://codecov.io/gh/COS301-SE-2025/Taxi-Tap/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/Taxi-Tap)
 [![Dependencies](https://img.shields.io/librariesio/github/COS301-SE-2025/Taxi-Tap)](https://libraries.io/github/COS301-SE-2025/Taxi-Tap)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/COS301-SE-2025/Taxi-Tap/ci.yml?branch=main)](https://github.com/COS301-SE-2025/Taxi-Tap/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/COS301-SE-2025/Taxi-Tap/platform.yml?branch=main)](https://github.com/COS301-SE-2025/Taxi-Tap/actions)
 [![Languages](https://img.shields.io/github/languages/count/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
 [![Top Language](https://img.shields.io/github/languages/top/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
 [![Repo Size](https://img.shields.io/github/repo-size/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
