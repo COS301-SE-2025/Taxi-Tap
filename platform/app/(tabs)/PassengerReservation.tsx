@@ -49,7 +49,14 @@ export default function SeatReserved() {
 
 	const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 	const startRide = useMutation(api.functions.rides.startRide.startRide);
-	
+	const endRide = useMutation(api.functions.rides.endRide.endRide);
+
+	// Helper to determine ride status
+	const rideStatus = taxiInfo?.status as 'requested' | 'accepted' | 'in_progress' | 'started' | 'completed' | 'cancelled' | undefined;
+	const showStartRide = rideStatus === 'accepted';
+	const showEndRide = rideStatus === 'started' || rideStatus === 'in_progress';
+	const showCancel = rideStatus === 'requested' || rideStatus === 'accepted';
+
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: false
@@ -315,8 +322,23 @@ export default function SeatReserved() {
 		}
 		try {
 			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
-		} catch (error) {
-			Alert.alert('Error', 'Failed to start ride.');
+			Alert.alert('Success', 'Ride started!');
+		} catch (error: any) {
+			Alert.alert('Error', error?.message || 'Failed to start ride.');
+		}
+	};
+
+	const handleEndRide = async () => {
+		if (!taxiInfo?.rideId || !user?.id) {
+			Alert.alert('Error', 'No ride or user information available.');
+			return;
+		}
+		try {
+			await endRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			Alert.alert('Success', 'Ride ended!');
+			router.push('/HomeScreen');
+		} catch (error: any) {
+			Alert.alert('Error', error?.message || 'Failed to end ride.');
 		}
 	};
 
@@ -326,10 +348,11 @@ export default function SeatReserved() {
 			return;
 		}
 		try {
-			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id });
+			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			Alert.alert('Success', 'Ride cancelled.');
 			router.push('/HomeScreen');
-		} catch (error) {
-			Alert.alert('Error', 'Failed to cancel ride.');
+		} catch (error: any) {
+			Alert.alert('Error', error?.message || 'Failed to cancel ride.');
 		}
 	};
 
@@ -702,21 +725,33 @@ export default function SeatReserved() {
 						
 						{/* Action Buttons */}
 						<View style={dynamicStyles.actionButtonsContainer}>
-							<TouchableOpacity 
-								style={dynamicStyles.startRideButton} 
-								onPress={handleStartRide}>
-								<Text style={dynamicStyles.startRideButtonText}>
-									{"Start Ride"}
-								</Text>
-							</TouchableOpacity>
-							
-							<TouchableOpacity 
-								style={dynamicStyles.cancelButton} 
-								onPress={handleCancelRequest}>
-								<Text style={dynamicStyles.cancelButtonText}>
-									{"Cancel Request"}
-								</Text>
-							</TouchableOpacity>
+							{showEndRide && (
+								<TouchableOpacity 
+									style={dynamicStyles.startRideButton} 
+									onPress={handleEndRide}>
+									<Text style={dynamicStyles.startRideButtonText}>
+										{"End Ride"}
+									</Text>
+								</TouchableOpacity>
+							)}
+							{showStartRide && (
+								<TouchableOpacity 
+									style={dynamicStyles.startRideButton} 
+									onPress={handleStartRide}>
+									<Text style={dynamicStyles.startRideButtonText}>
+										{"Start Ride"}
+									</Text>
+								</TouchableOpacity>
+							)}
+							{showCancel && (
+								<TouchableOpacity 
+									style={dynamicStyles.cancelButton} 
+									onPress={handleCancelRequest}>
+									<Text style={dynamicStyles.cancelButtonText}>
+										{"Cancel Request"}
+									</Text>
+								</TouchableOpacity>
+							)}
 						</View>
 					</View>
 				</View>

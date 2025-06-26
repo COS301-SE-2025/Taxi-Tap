@@ -6,13 +6,8 @@ import { router } from 'expo-router';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useMapContext, createRouteKey } from '../../contexts/MapContext';
-
-// Get platform-specific API key
-const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
-  ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
-  : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 import { useUser } from '../../contexts/UserContext';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Id } from '../../convex/_generated/dataModel';
 
@@ -62,7 +57,7 @@ export default function SeatReserved() {
 		const newDestination = {
 			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
 			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-			name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+			name: getParamAsString(params.destinationName, "")
 		};
 
 		// Only update context if locations have changed
@@ -275,30 +270,37 @@ export default function SeatReserved() {
 		user ? { passengerId: user.id as Id<"taxiTap_users"> } : "skip"
 	);
 
-	const handleStartRide = () => {
-		console.log('Starting ride...');
-		// Implement logic to start the ride
-		// This would typically involve updating the ride status and navigating to a ride-in-progress screen
-		// For now, we'll just show a placeholder action
-		alert('Ride started! Make sure you are in the taxi before confirming.');
+	const startRide = useMutation(api.functions.rides.startRide.startRide);
+	const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
+
+	const rideStatus = taxiInfo?.status as 'requested' | 'accepted' | 'in_progress' | 'started' | 'completed' | 'cancelled' | undefined;
+	const showStartRide = rideStatus === 'accepted';
+	const showCancel = rideStatus === 'requested' || rideStatus === 'accepted';
+
+	const handleStartRide = async () => {
+		if (!taxiInfo?.rideId || !user?.id) {
+			alert('No ride or user information available.');
+			return;
+		}
+		try {
+			await startRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			alert('Ride started!');
+		} catch (error: any) {
+			alert(error?.message || 'Failed to start ride.');
+		}
 	};
 
-	const handleCancelRequest = () => {
-		console.log('Cancelling seat request...');
-		// Implement logic to cancel the seat request
-		// This would typically involve calling an API to cancel the reservation
-		if (destination && currentLocation) {
-			router.push({
-				pathname: './TaxiInformation',
-				params: {
-					destinationName: destination.name,
-					destinationLat: destination.latitude.toString(),
-					destinationLng: destination.longitude.toString(),
-					currentName: currentLocation.name,
-					currentLat: currentLocation.latitude.toString(),
-					currentLng: currentLocation.longitude.toString(),
-				}
-			});
+	const handleCancelRequest = async () => {
+		if (!taxiInfo?.rideId || !user?.id) {
+			alert('No ride or user information available.');
+			return;
+		}
+		try {
+			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			alert('Ride cancelled.');
+			router.push('/HomeScreen');
+		} catch (error: any) {
+			alert(error?.message || 'Failed to cancel ride.');
 		}
 	};
 
@@ -651,13 +653,24 @@ export default function SeatReserved() {
 						
 						{/* Action Buttons */}
 						<View style={dynamicStyles.actionButtonsContainer}>
-							<TouchableOpacity 
-								style={dynamicStyles.startRideButton} 
-								onPress={handleStartRide}>
-								<Text style={dynamicStyles.startRideButtonText}>
-									{"End Ride"}
-								</Text>
-							</TouchableOpacity>
+							{showStartRide && (
+								<TouchableOpacity 
+									style={dynamicStyles.startRideButton} 
+									onPress={handleStartRide}>
+									<Text style={dynamicStyles.startRideButtonText}>
+										{"Start Ride"}
+									</Text>
+								</TouchableOpacity>
+							)}
+							{showCancel && (
+								<TouchableOpacity 
+									style={dynamicStyles.startRideButton} 
+									onPress={handleCancelRequest}>
+									<Text style={dynamicStyles.startRideButtonText}>
+										{"Cancel Request"}
+									</Text>
+								</TouchableOpacity>
+							)}
 						</View>
 					</View>
 				</View>
