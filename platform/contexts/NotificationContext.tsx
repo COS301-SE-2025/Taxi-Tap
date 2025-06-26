@@ -176,21 +176,29 @@ export const NotificationProvider: React.FC<{
   const handleNotificationTap = (data: any) => {
     console.log("Handling notification tap with data:", data);
 
-    // Navigate to ride request page for driver
-    if (data?.type === "ride_request" && data?.rideId) {
-      router.push({
-        pathname: "/DriverRequestPage",
-        params: { rideId: data.rideId },
-      });
-      return;
-    }
+    try {
+      // Navigate to ride request page for driver
+      if (data?.type === "ride_request" && data?.rideId) {
+        router.push({
+          pathname: "/DriverRequestPage",
+          params: { rideId: data.rideId },
+        });
+        return;
+      }
 
-    // Navigate to a general notifications screen or other relevant page
-    if (data?.screen) {
-      router.push(`/${data.screen}`);
-    } else {
-      // Default navigation
-      router.push("/(tabs)/NotificationsScreen");
+      // Navigate to specific screen if provided
+      if (data?.screen) {
+        // Use router.push with proper type casting for dynamic routes
+        router.push(data.screen as any);
+        return;
+      }
+
+      // Default navigation - update this path to match your actual route structure
+      router.push("/NotificationsScreen");
+    } catch (error) {
+      console.error("Error navigating from notification:", error);
+      // Fallback navigation
+      router.push("/");
     }
   };
 

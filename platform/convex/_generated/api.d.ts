@@ -31,7 +31,10 @@ import type * as functions_rides_acceptRide from "../functions/rides/acceptRide.
 import type * as functions_rides_cancelRide from "../functions/rides/cancelRide.js";
 import type * as functions_rides_completeRide from "../functions/rides/completeRide.js";
 import type * as functions_rides_getRideById from "../functions/rides/getRideById.js";
+import type * as functions_rides_startRide from "../functions/rides/startRide.js";
+import type * as functions_routes_calculateRoute from "../functions/routes/calculateRoute.js";
 import type * as functions_routes_displayRoutes from "../functions/routes/displayRoutes.js";
+import type * as functions_routes_enhancedTaxiMatching from "../functions/routes/enhancedTaxiMatching.js";
 import type * as functions_routes_mutations from "../functions/routes/mutations.js";
 import type * as functions_routes_queries from "../functions/routes/queries.js";
 import type * as functions_routes_reverseGeocode from "../functions/routes/reverseGeocode.js";
@@ -76,7 +79,10 @@ declare const fullApi: ApiFromModules<{
   "functions/rides/cancelRide": typeof functions_rides_cancelRide;
   "functions/rides/completeRide": typeof functions_rides_completeRide;
   "functions/rides/getRideById": typeof functions_rides_getRideById;
+  "functions/rides/startRide": typeof functions_rides_startRide;
+  "functions/routes/calculateRoute": typeof functions_routes_calculateRoute;
   "functions/routes/displayRoutes": typeof functions_routes_displayRoutes;
+  "functions/routes/enhancedTaxiMatching": typeof functions_routes_enhancedTaxiMatching;
   "functions/routes/mutations": typeof functions_routes_mutations;
   "functions/routes/queries": typeof functions_routes_queries;
   "functions/routes/reverseGeocode": typeof functions_routes_reverseGeocode;

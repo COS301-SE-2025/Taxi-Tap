@@ -1,867 +1,706 @@
-import React, { useState, useLayoutEffect, useRef, useEffect, useCallback } from "react";
-import { SafeAreaView, View, ScrollView, StyleSheet, Image, Text, TouchableOpacity, Alert, Platform, ActivityIndicator } from "react-native";
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { router } from 'expo-router';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+// platform/app/(tabs)/TaxiInformation.tsx
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Animated,
+  Linking,
+  Image,
+} from 'react-native';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useMapContext, createRouteKey } from '../../contexts/MapContext';
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import { useUser } from "../../contexts/UserContext";
-import { Id } from "../../convex/_generated/dataModel";
-import { useNotifications } from '../../contexts/NotificationContext';
-
-// Get platform-specific API key
-const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios' 
-  ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
-  : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
+import { Id } from '../../convex/_generated/dataModel';
+import { useUser } from '../../contexts/UserContext';
+import Icon from 'react-native-vector-icons/Ionicons';
+import loading from '../../assets/images/loading4.png';
 
 export default function TaxiInformation() {
-	const [selectedTaxi, setSelectedTaxi] = useState<any | null>(null);
-	const [routeError, setRouteError] = useState<string | null>(null);
-	
-	const params = useLocalSearchParams();
-	const navigation = useNavigation();
-	const { theme, isDark } = useTheme();
-	const mapRef = useRef<MapView | null>(null);
-	const { routeId } = useLocalSearchParams();
+  const navigation = useNavigation();
+  const { theme, isDark } = useTheme();
+  const { user } = useUser();
 
-	// Use MapContext instead of local state
-	const {
-		currentLocation,
-		destination,
-		routeCoordinates,
-		isLoadingRoute,
-		routeLoaded,
-		setCurrentLocation,
-		setDestination,
-		setRouteCoordinates,
-		setIsLoadingRoute,
-		setRouteLoaded,
-		getCachedRoute,
-		setCachedRoute
-	} = useMapContext();
+  // Get route parameters
+  const {
+    destinationName,
+    destinationLat,
+    destinationLng,
+    currentName,
+    currentLat,
+    currentLng,
+    routeId,
+    availableTaxisCount,
+    routeMatchData: routeMatchDataString,
+  } = useLocalSearchParams<{
+    destinationName: string;
+    destinationLat: string;
+    destinationLng: string;
+    currentName: string;
+    currentLat: string;
+    currentLng: string;
+    routeId: string;
+    availableTaxisCount?: string;
+    routeMatchData?: string;
+  }>();
 
-	const { user } = useUser();
-	const requestRide = useMutation(api.functions.rides.RequestRide.requestRide);
-	const availableTaxis = useQuery(api.functions.taxis.displayTaxis.getAvailableTaxis);
+  // State management
+  const [selectedTaxi, setSelectedTaxi] = useState<any>(null);
+  const [nearbyTaxis, setNearbyTaxis] = useState<any[]>([]);
+  const [availableTaxis, setAvailableTaxis] = useState<any[]>([]);
+  const [routeMatchData, setRouteMatchData] = useState<any>(null);
+  const [isLoadingTaxis, setIsLoadingTaxis] = useState(true);
+  const [isBooking, setIsBooking] = useState(false);
 
-	const routeInfo = useQuery(api.functions.routes.displayRoutes.displayRoutes);
+  const buttonOpacity = useRef(new Animated.Value(0)).current;
 
-	const currentRoute = routeInfo?.find(route => route.routeId === routeId);
+  // Convex mutations - using your existing requestRide function
+  const requestRide = useMutation(api.functions.rides.RequestRide.requestRide);
 
-	const { notifications, markAsRead } = useNotifications();
+  // Process enhanced data from HomeScreen
+  useEffect(() => {
+    if (routeMatchDataString) {
+      try {
+        const parsedData = JSON.parse(routeMatchDataString);
+        setRouteMatchData(parsedData);
+        setAvailableTaxis(parsedData.availableTaxis || []);
+        setIsLoadingTaxis(false);
+        
+        console.log('📊 TaxiInformation received enhanced data:', {
+          availableTaxis: parsedData.availableTaxis?.length || 0,
+          matchingRoutes: parsedData.matchingRoutes?.length || 0
+        });
+        
+        // Transform enhanced data to display format
+        const enhancedTaxiData = parsedData.availableTaxis?.map((taxi: any) => ({
+          _id: taxi.driverId,
+          userId: taxi.userId,
+          latitude: taxi.currentLocation.latitude,
+          longitude: taxi.currentLocation.longitude,
+          name: taxi.name,
+          phoneNumber: taxi.phoneNumber,
+          vehicleRegistration: taxi.vehicleRegistration,
+          vehicleModel: taxi.vehicleModel,
+          distanceToOrigin: taxi.distanceToOrigin,
+          routeInfo: taxi.routeInfo,
+          // Additional display fields
+          displayName: `${taxi.name} - ${taxi.vehicleModel}`,
+          displayDistance: `${taxi.distanceToOrigin}km away`,
+          routeName: taxi.routeInfo.routeName,
+          fare: taxi.routeInfo.fare,
+        })) || [];
+        
+        setNearbyTaxis(enhancedTaxiData);
+        
+      } catch (error) {
+        console.error('❌ Error parsing route match data:', error);
+        setIsLoadingTaxis(false);
+      }
+    } else {
+      console.log('⚠️ No enhanced data received, falling back to original query');
+      setIsLoadingTaxis(false);
+    }
+  }, [routeMatchDataString]);
 
-	useLayoutEffect(() => {
-		navigation.setOptions({
-			headerShown: false,
-		});
-	});
-	
-	// Parse location data from params and set in context
-	useEffect(() => {
-		const parsedCurrentLocation = {
-			latitude: parseFloat(getParamAsString(params.currentLat, "-25.7479")),
-			longitude: parseFloat(getParamAsString(params.currentLng, "28.2293")),
-			name: getParamAsString(params.currentName, "Current Location")
-		};
+  // Fallback query for backward compatibility
+  const shouldUseOriginalQuery = !routeMatchDataString;
+  
+  const fallbackNearbyTaxis = useQuery(
+    api.functions.routes.enhancedTaxiMatching.getNearbyTaxisForRouteRequest,
+    shouldUseOriginalQuery && currentLat && currentLng && destinationLat && destinationLng
+      ? {
+          passengerLat: parseFloat(currentLat),
+          passengerLng: parseFloat(currentLng),
+          passengerEndLat: parseFloat(destinationLat),
+          passengerEndLng: parseFloat(destinationLng),
+        }
+      : "skip"
+  );
 
-		const parsedDestination = {
-			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
-			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-			name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
-		};
+  // Use fallback data if no enhanced data was provided
+  useEffect(() => {
+    if (shouldUseOriginalQuery && fallbackNearbyTaxis) {
+      console.log('📱 Using fallback taxi query result');
+      setNearbyTaxis(fallbackNearbyTaxis);
+      setIsLoadingTaxis(false);
+    }
+  }, [fallbackNearbyTaxis, shouldUseOriginalQuery]);
 
-		setCurrentLocation(parsedCurrentLocation);
-		setDestination(parsedDestination);
-	}, [params.currentLat, params.currentLng, params.currentName, params.destinationLat, params.destinationLng, params.destinationName, setCurrentLocation, setDestination]);
+  // Animation for book button
+  useEffect(() => {
+    if (selectedTaxi) {
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      buttonOpacity.setValue(0);
+    }
+  }, [selectedTaxi]);
 
-	// Function to decode Google's polyline format
-	const decodePolyline = useCallback((encoded: string) => {
-		const points = [];
-		let index = 0;
-		const len = encoded.length;
-		let lat = 0;
-		let lng = 0;
+  // Handle taxi selection
+  const handleTaxiSelect = (taxi: any) => {
+    setSelectedTaxi(taxi);
+  };
 
-		while (index < len) {
-			let b, shift = 0, result = 0;
-			do {
-				b = encoded.charAt(index++).charCodeAt(0) - 63;
-				result |= (b & 0x1f) << shift;
-				shift += 5;
-			} while (b >= 0x20);
-			const dlat = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-			lat += dlat;
+  // Handle phone call
+  const handleCallDriver = (phoneNumber: string) => {
+    const phoneUrl = `tel:${phoneNumber}`;
+    Linking.canOpenURL(phoneUrl)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(phoneUrl);
+        } else {
+          Alert.alert('Error', 'Phone calls are not supported on this device');
+        }
+      })
+      .catch((err) => {
+        console.error('Error opening phone app:', err);
+        Alert.alert('Error', 'Could not open phone app');
+      });
+  };
 
-			shift = 0;
-			result = 0;
-			do {
-				b = encoded.charAt(index++).charCodeAt(0) - 63;
-				result |= (b & 0x1f) << shift;
-				shift += 5;
-			} while (b >= 0x20);
-			const dlng = ((result & 1) !== 0 ? ~(result >> 1) : (result >> 1));
-			lng += dlng;
+  // Handle ride booking using your existing requestRide function
+  const handleBookRide = async () => {
+    if (!selectedTaxi || !user?.id) {
+      Alert.alert('Error', 'Please select a taxi and ensure you are logged in');
+      return;
+    }
 
-			points.push({
-				latitude: lat / 1e5,
-				longitude: lng / 1e5,
-			});
-		}
-		return points;
-	}, []);
+    setIsBooking(true);
 
-	// Function to get route from Google Directions API - memoized with useCallback
-	const getRoute = useCallback(async (origin: { latitude: number; longitude: number; name: string }, dest: { latitude: number; longitude: number; name: string }) => {
-		// Validate coordinates
-		if (!origin || !dest) {
-			console.warn('Invalid coordinates provided to getRoute');
-			return;
-		}
-		
-		if (origin.latitude === 0 && origin.longitude === 0) {
-			console.warn('Origin coordinates are (0,0) - waiting for valid location');
-			return;
-		}
-		
-		if (dest.latitude === 0 && dest.longitude === 0) {
-			console.warn('Destination coordinates are (0,0) - invalid destination');
-			return;
-		}
+    try {
+      const rideData = {
+        passengerId: user.id as Id<"taxiTap_users">, // Cast to proper type
+        driverId: selectedTaxi.userId as Id<"taxiTap_users">, // Cast to proper type
+        startLocation: {
+          coordinates: {
+            latitude: parseFloat(currentLat),
+            longitude: parseFloat(currentLng),
+          },
+          address: currentName,
+        },
+        endLocation: {
+          coordinates: {
+            latitude: parseFloat(destinationLat),
+            longitude: parseFloat(destinationLng),
+          },
+          address: destinationName,
+        },
+        estimatedFare: selectedTaxi.routeInfo?.fare || 0,
+        estimatedDuration: typeof selectedTaxi.routeInfo?.estimatedDuration === 'string' 
+          ? parseInt(selectedTaxi.routeInfo.estimatedDuration) || 30
+          : selectedTaxi.routeInfo?.estimatedDuration || 30,
+      };
 
-		if (!GOOGLE_MAPS_API_KEY) {
-			console.error('Google Maps API key is not configured');
-			setRouteError('Google Maps API key is not configured');
-			return;
-		}
+      console.log('📝 Creating ride request:', rideData);
 
-		// Check cache first
-		const routeKey = createRouteKey(origin, dest);
-		const cachedRoute = getCachedRoute(routeKey);
-		
-		if (cachedRoute && cachedRoute.length > 0) {
-			console.log('Using cached route');
-			setRouteCoordinates(cachedRoute);
-			setRouteLoaded(true);
-			
-			// Fit the map to show the entire route
-			setTimeout(() => {
-				if (mapRef.current) {
-					const coordinates = [origin, dest, ...cachedRoute];
-					mapRef.current.fitToCoordinates(coordinates, {
-						edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-						animated: true,
-					});
-				}
-			}, 100);
-			return;
-		}
+      const result = await requestRide(rideData);
 
-		setIsLoadingRoute(true);
-		setRouteError(null);
-		setRouteLoaded(false);
-		
-		try {
-			const originStr = `${origin.latitude},${origin.longitude}`;
-			const destinationStr = `${dest.latitude},${dest.longitude}`;
-			
-			const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originStr}&destination=${destinationStr}&key=${GOOGLE_MAPS_API_KEY}`;
-			
-			console.log('Fetching route from:', url);
-			console.log('Platform:', Platform.OS);
-			
-			const response = await fetch(url);
-			
-			if (!response.ok) {
-				const errorText = await response.text();
-				console.error('HTTP Error Response:', response.status, errorText);
-				throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-			}
-			
-			const data = await response.json();
-			
-			console.log('Directions API response status:', data.status);
-			
-			if (data.status !== 'OK') {
-				console.error('Directions API Error:', data);
-				throw new Error(`Directions API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
-			}
-			
-			if (data.routes && data.routes.length > 0) {
-				const route = data.routes[0];
-				
-				if (!route.overview_polyline || !route.overview_polyline.points) {
-					throw new Error('No polyline data in route');
-				}
-				
-				const decodedCoords = decodePolyline(route.overview_polyline.points);
-				console.log('Decoded coordinates count:', decodedCoords.length);
-				
-				// Update context and cache
-				setRouteCoordinates(decodedCoords);
-				setCachedRoute(routeKey, decodedCoords);
-				setRouteLoaded(true);
-				
-				// Fit the map to show the entire route after a small delay
-				setTimeout(() => {
-					if (mapRef.current) {
-						const coordinates = [origin, dest, ...decodedCoords];
-						mapRef.current.fitToCoordinates(coordinates, {
-							edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-							animated: true,
-						});
-					}
-				}, 100);
-			} else {
-				throw new Error('No routes found');
-			}
-		} catch (error) {
-			console.error('Error fetching route:', error);
-			setRouteError(error instanceof Error ? error.message : 'Unknown error');
-			
-			// Just fit the map to show both points without any polyline
-			setTimeout(() => {
-				if (mapRef.current) {
-					const coordinates = [origin, dest];
-					mapRef.current.fitToCoordinates(coordinates, {
-						edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-						animated: true,
-					});
-				}
-			}, 100);
-		} finally {
-			setIsLoadingRoute(false);
-		}
-	}, [GOOGLE_MAPS_API_KEY, getCachedRoute, setRouteCoordinates, setRouteLoaded, setIsLoadingRoute, setCachedRoute, decodePolyline]);
+      if (result) {
+        Alert.alert(
+          'Ride Request Sent',
+          `Your ride request has been sent to ${selectedTaxi.name}. You will be notified when the driver responds.`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                router.push({
+                  pathname: './PassengerReservation',
+                  params: {
+                    currentLat,
+                    currentLng,
+                    currentName,
+                    destinationLat,
+                    destinationLng,
+                    destinationName,
+                    driverId: selectedTaxi.userId,
+                    driverName: selectedTaxi.name,
+                    fare: selectedTaxi.routeInfo?.fare?.toString() || '0',
+                    rideId: result.rideId,
+                  },
+                });
+              },
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error creating ride request:', error);
+      Alert.alert(
+        'Booking Error',
+        'Failed to send ride request. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
-	// Fetch route when locations are available
-	useEffect(() => {
-		if (currentLocation && destination) {
-			// Add a small delay to ensure the map is fully loaded
-			const timer = setTimeout(() => {
-				getRoute(currentLocation, destination);
-			}, 500);
-			
-			return () => clearTimeout(timer);
-		}
-	}, [currentLocation, destination, getRoute]);
+  // Enhanced taxi card rendering
+  const renderTaxiCard = (taxi: any, index: number) => {
+    const isEnhanced = taxi.routeInfo;
+    const isSelected = selectedTaxi?._id === taxi._id;
+    
+    return (
+      <TouchableOpacity
+        key={taxi._id || index}
+        style={[
+          dynamicStyles.taxiCard,
+          isSelected && dynamicStyles.selectedTaxiCard
+        ]}
+        onPress={() => handleTaxiSelect(taxi)}
+      >
+        <View style={dynamicStyles.taxiInfo}>
+          <View style={dynamicStyles.taxiHeader}>
+            <Text style={dynamicStyles.taxiName}>
+              {taxi.name || `Driver ${index + 1}`}
+            </Text>
+            {isEnhanced && (
+              <View style={dynamicStyles.distanceBadge}>
+                <Text style={dynamicStyles.distanceText}>
+                  {taxi.distanceToOrigin}km
+                </Text>
+              </View>
+            )}
+          </View>
+          
+          <View style={dynamicStyles.taxiDetails}>
+            <Text style={dynamicStyles.taxiDetailText}>
+              🚗 {taxi.vehicleModel || 'Vehicle info not available'}
+            </Text>
+            <Text style={dynamicStyles.taxiDetailText}>
+              📋 {taxi.vehicleRegistration || 'Registration not available'}
+            </Text>
+            
+            {isEnhanced && taxi.routeInfo && (
+              <>
+                <Text style={dynamicStyles.routeInfoText}>
+                  🛣️ Route: {taxi.routeInfo.routeName}
+                </Text>
+                <Text style={dynamicStyles.routeInfoText}>
+                  💰 Fare: R{taxi.routeInfo.fare}
+                </Text>
+                <Text style={dynamicStyles.routeInfoText}>
+                  ⏱️ Est. Duration: {taxi.routeInfo.estimatedDuration}
+                </Text>
+                
+                {taxi.routeInfo.closestStartStop && (
+                  <Text style={dynamicStyles.stopInfoText}>
+                    📍 Pickup near: {taxi.routeInfo.closestStartStop.name}
+                    ({taxi.routeInfo.closestStartStop.distanceFromOrigin}km)
+                  </Text>
+                )}
+                {taxi.routeInfo.closestEndStop && (
+                  <Text style={dynamicStyles.stopInfoText}>
+                    🏁 Drop-off near: {taxi.routeInfo.closestEndStop.name}
+                    ({taxi.routeInfo.closestEndStop.distanceFromDestination}km)
+                  </Text>
+                )}
+              </>
+            )}
+            
+            {taxi.phoneNumber && (
+              <TouchableOpacity
+                style={dynamicStyles.callButton}
+                onPress={() => handleCallDriver(taxi.phoneNumber)}
+              >
+                <Icon name="call" size={16} color="#4CAF50" />
+                <Text style={dynamicStyles.callButtonText}>Call Driver</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+        
+        <View style={dynamicStyles.taxiActions}>
+          <Text style={[
+            dynamicStyles.selectText,
+            isSelected && { color: theme.primary }
+          ]}>
+            {isSelected ? '✓ Selected' : 'Select'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
-	useEffect(() => {
-		const rideAccepted = notifications.find(
-			n => n.type === "ride_accepted" && !n.isRead
-		);
-		if (rideAccepted) {
-			Alert.alert(
-				"Ride Accepted",
-				rideAccepted.message,
-				[
-					{
-						text: "OK",
-						onPress: () => markAsRead(rideAccepted._id),
-						style: "default"
-					}
-				],
-				{ cancelable: false }
-			);
-		}
+  // Journey summary component
+  const renderJourneySummary = () => {
+    if (!routeMatchData || !selectedTaxi) return null;
+    
+    const selectedTaxiRoute = selectedTaxi.routeInfo;
+    
+    return (
+      <View style={dynamicStyles.journeySummaryCard}>
+        <Text style={dynamicStyles.journeySummaryTitle}>Journey Summary</Text>
+        
+        <View style={dynamicStyles.summaryRow}>
+          <Text style={dynamicStyles.summaryLabel}>Driver:</Text>
+          <Text style={dynamicStyles.summaryValue}>{selectedTaxi.name}</Text>
+        </View>
+        
+        <View style={dynamicStyles.summaryRow}>
+          <Text style={dynamicStyles.summaryLabel}>Vehicle:</Text>
+          <Text style={dynamicStyles.summaryValue}>{selectedTaxi.vehicleModel}</Text>
+        </View>
+        
+        {selectedTaxiRoute && (
+          <>
+            <View style={dynamicStyles.summaryRow}>
+              <Text style={dynamicStyles.summaryLabel}>Route:</Text>
+              <Text style={dynamicStyles.summaryValue}>{selectedTaxiRoute.routeName}</Text>
+            </View>
+            
+            <View style={dynamicStyles.summaryRow}>
+              <Text style={dynamicStyles.summaryLabel}>Taxi Association:</Text>
+              <Text style={dynamicStyles.summaryValue}>{selectedTaxiRoute.taxiAssociation}</Text>
+            </View>
+            
+            <View style={dynamicStyles.summaryRow}>
+              <Text style={dynamicStyles.summaryLabel}>Fare:</Text>
+              <Text style={[dynamicStyles.summaryValue, { color: theme.primary, fontWeight: 'bold' }]}>
+                R{selectedTaxiRoute.fare}
+              </Text>
+            </View>
+            
+            <View style={dynamicStyles.summaryRow}>
+              <Text style={dynamicStyles.summaryLabel}>Est. Duration:</Text>
+              <Text style={dynamicStyles.summaryValue}>{selectedTaxiRoute.estimatedDuration}</Text>
+            </View>
+          </>
+        )}
+        
+        <View style={dynamicStyles.summaryRow}>
+          <Text style={dynamicStyles.summaryLabel}>Driver Distance:</Text>
+          <Text style={dynamicStyles.summaryValue}>{selectedTaxi.distanceToOrigin}km away</Text>
+        </View>
+      </View>
+    );
+  };
 
-		const rideCancelled = notifications.find(
-			n => n.type === "ride_cancelled" && !n.isRead
-		);
-		if (rideCancelled) {
-			Alert.alert(
-				"Ride Cancelled",
-				rideCancelled.message,
-				[
-					{
-						text: "OK",
-						onPress: () => markAsRead(rideCancelled._id),
-						style: "default"
-					}
-				],
-				{ cancelable: false }
-			);
-		}
-	}, [notifications, markAsRead]);
+  const dynamicStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      padding: 20,
+      paddingTop: 60,
+      backgroundColor: theme.primary,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: theme.buttonText || '#FFFFFF',
+      marginBottom: 10,
+    },
+    headerSubtitle: {
+      fontSize: 16,
+      color: theme.buttonText || '#FFFFFF',
+      opacity: 0.9,
+    },
+    content: {
+      flex: 1,
+      padding: 20,
+    },
+    taxiList: {
+      flex: 1,
+    },
+    loadingContainer: {
+      padding: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    loadingText: {
+      fontSize: 16,
+      color: theme.textSecondary,
+      marginTop: 20,
+    },
+    matchSummaryCard: {
+      backgroundColor: isDark ? theme.surface : `${theme.primary}15`,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+      borderLeftWidth: 4,
+      borderLeftColor: theme.primary,
+    },
+    matchSummaryTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 4,
+    },
+    matchSummaryText: {
+      fontSize: 14,
+      color: theme.textSecondary,
+    },
+    taxiCard: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: isDark ? theme.border : 'transparent',
+      shadowColor: theme.shadow,
+      shadowOpacity: isDark ? 0.3 : 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      flexDirection: 'row',
+    },
+    selectedTaxiCard: {
+      borderColor: theme.primary,
+      borderWidth: 2,
+      backgroundColor: isDark ? theme.surface : `${theme.primary}10`,
+    },
+    taxiInfo: {
+      flex: 1,
+    },
+    taxiHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    taxiName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.text,
+      flex: 1,
+    },
+    distanceBadge: {
+      backgroundColor: theme.primary,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    distanceText: {
+      color: theme.buttonText || '#FFFFFF',
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
+    taxiDetails: {
+      marginTop: 8,
+    },
+    taxiDetailText: {
+      fontSize: 14,
+      color: theme.text,
+      marginBottom: 4,
+    },
+    routeInfoText: {
+      fontSize: 14,
+      color: theme.primary,
+      marginBottom: 2,
+      fontWeight: '500',
+    },
+    stopInfoText: {
+      fontSize: 12,
+      color: theme.textSecondary,
+      marginBottom: 2,
+      fontStyle: 'italic',
+    },
+    callButton: {
+      backgroundColor: isDark ? theme.surface : '#E8F5E8',
+      borderColor: '#4CAF50',
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      marginTop: 8,
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    callButtonText: {
+      color: '#4CAF50',
+      fontSize: 14,
+      fontWeight: '500',
+      marginLeft: 6,
+    },
+    taxiActions: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingLeft: 16,
+    },
+    selectText: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    journeySummaryCard: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 16,
+      marginTop: 16,
+      marginBottom: 20,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? theme.border : 'transparent',
+    },
+    journeySummaryTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 12,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    summaryLabel: {
+      fontSize: 14,
+      color: theme.textSecondary,
+      flex: 1,
+    },
+    summaryValue: {
+      fontSize: 14,
+      color: theme.text,
+      fontWeight: '500',
+      flex: 1,
+      textAlign: 'right',
+    },
+    noTaxisContainer: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 20,
+      alignItems: 'center',
+      marginTop: 20,
+    },
+    noTaxisTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.text,
+      marginBottom: 8,
+    },
+    noTaxisText: {
+      fontSize: 14,
+      color: theme.textSecondary,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    noTaxisSubtext: {
+      fontSize: 12,
+      color: theme.textSecondary,
+      textAlign: 'center',
+      fontStyle: 'italic',
+    },
+    bookButton: {
+      position: 'absolute',
+      bottom: 30,
+      left: 20,
+      right: 20,
+      backgroundColor: theme.primary,
+      borderRadius: 25,
+      paddingVertical: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: theme.shadow,
+      shadowOpacity: 0.3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    bookButtonText: {
+      color: theme.buttonText || '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    backButton: {
+      position: 'absolute',
+      top: 50,
+      left: 20,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1,
+    },
+  });
 
-	const handleTaxiSelect = (taxi: any) => {
-		setSelectedTaxi(taxi);
-	};
+  return (
+    <View style={dynamicStyles.container}>
+      {/* Back Button */}
+      <TouchableOpacity
+        style={dynamicStyles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Icon name="arrow-back" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
 
-	const handleChangeDestination = () => {
-		router.push('./HomeScreen');
-	};
+      {/* Header */}
+      <View style={dynamicStyles.header}>
+        <Text style={dynamicStyles.headerTitle}>Available Taxis</Text>
+        <Text style={dynamicStyles.headerSubtitle}>
+          From {currentName} to {destinationName}
+        </Text>
+      </View>
 
-	const handleReserveSeat = async () => {
-		if (!selectedTaxi) {
-			Alert.alert('Please select a taxi first!');
-			return;
-		}
-		if (!user) {
-			Alert.alert('Error', 'You must be logged in to request a ride.');
-			return;
-		}
-		if (!destination || !currentLocation) {
-			Alert.alert('Error', 'Start and end locations are not set.');
-			return;
-		}
+      {/* Content */}
+      <View style={dynamicStyles.content}>
+        <ScrollView style={dynamicStyles.taxiList} showsVerticalScrollIndicator={false}>
+          {isLoadingTaxis ? (
+            <View style={dynamicStyles.loadingContainer}>
+              <Image source={loading} style={{ width: 80, height: 80 }} resizeMode="contain" />
+              <Text style={dynamicStyles.loadingText}>Finding available taxis...</Text>
+            </View>
+          ) : nearbyTaxis.length > 0 ? (
+            <>
+              {/* Route match summary */}
+              {routeMatchData && (
+                <View style={dynamicStyles.matchSummaryCard}>
+                  <Text style={dynamicStyles.matchSummaryTitle}>
+                    Found {routeMatchData.availableTaxis.length} Available Taxis
+                  </Text>
+                  <Text style={dynamicStyles.matchSummaryText}>
+                    on {routeMatchData.matchingRoutes.length} matching routes
+                  </Text>
+                </View>
+              )}
+              
+              {/* Taxi cards */}
+              {nearbyTaxis.map((taxi, index) => renderTaxiCard(taxi, index))}
+              
+              {/* Journey summary */}
+              {renderJourneySummary()}
+              
+              {/* Bottom padding for button */}
+              <View style={{ height: 100 }} />
+            </>
+          ) : (
+            <View style={dynamicStyles.noTaxisContainer}>
+              <Text style={dynamicStyles.noTaxisTitle}>No Available Taxis</Text>
+              <Text style={dynamicStyles.noTaxisText}>
+                {routeMatchData?.message || 'No taxis found on routes connecting your origin and destination.'}
+              </Text>
+              <Text style={dynamicStyles.noTaxisSubtext}>
+                Try adjusting your pickup location or check again later.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
 
-		try {
-			await requestRide({
-				passengerId: user.id as Id<"taxiTap_users">,
-				driverId: selectedTaxi.userId,
-				startLocation: {
-					coordinates: {
-						latitude: currentLocation.latitude,
-						longitude: currentLocation.longitude,
-					},
-					address: currentLocation.name,
-				},
-				endLocation: {
-					coordinates: {
-						latitude: destination.latitude,
-						longitude: destination.longitude,
-					},
-					address: destination.name,
-				},
-				estimatedFare: selectedTaxi.fare, 
-			});
-
-			Alert.alert(
-				'Ride Requested',
-				'Your request has been sent to the driver. You will be notified of their response.',
-				[{ text: 'OK', onPress: () => router.push('/(tabs)/HomeScreen') }]
-			);
-
-		} catch (error) {
-			console.error('Failed to request ride:', error);
-			Alert.alert(
-				'Request Failed',
-				'Could not request the ride. Please try again.'
-			);
-		}
-	};
-
-	// Create dynamic styles based on theme
-	const dynamicStyles = StyleSheet.create({
-		container: {
-			flex: 1,
-			backgroundColor: theme.background,
-		},
-		scrollContainer: {
-			flex: 1,
-			backgroundColor: theme.background,
-		},
-		map: {
-			height: 300,
-		},
-		bottomSheet: {
-			alignItems: "center",
-			backgroundColor: theme.background,
-			borderRadius: 30,
-			paddingTop: 36,
-			paddingBottom: 40,
-			paddingHorizontal: 20,
-		},
-		changeDestinationButton: {
-			flexDirection: "row",
-			alignItems: "center",
-			marginBottom: 37,
-			alignSelf: 'flex-start',
-			paddingHorizontal: 12,
-		},
-		changeDestinationText: {
-			color: theme.textSecondary,
-			fontSize: 16,
-			fontWeight: "bold",
-		},
-		routeLoadingText: {
-			color: theme.textSecondary,
-			fontSize: 12,
-			fontStyle: 'italic',
-			marginBottom: 20,
-			alignSelf: 'flex-start',
-			paddingHorizontal: 12,
-		},
-		routeErrorText: {
-			color: '#FF6B6B',
-			fontSize: 12,
-			fontStyle: 'italic',
-			marginBottom: 20,
-			alignSelf: 'flex-start',
-			paddingHorizontal: 12,
-		},
-		taxiScrollContainer: {
-			marginBottom: 46,
-			marginLeft: 5,
-		},
-		taxiCard: {
-			alignItems: "center",
-			backgroundColor: theme.card,
-			borderColor: theme.primary,
-			borderRadius: 20,
-			borderWidth: 1,
-			paddingTop: 12,
-			paddingBottom: 26,
-			width: 180,
-			marginRight: 12,
-			shadowColor: theme.shadow,
-			shadowOpacity: isDark ? 0.3 : 0.05,
-			shadowRadius: 4,
-			elevation: 2,
-		},
-		taxiCardSelected: {
-			borderWidth: 3,
-			borderColor: theme.primary,
-		},
-		taxiCardUnselected: {
-			borderWidth: 1,
-			borderColor: isDark ? theme.border : "#E8E2E2",
-		},
-		selectionCircle: {
-			width: 20,
-			height: 20,
-			backgroundColor: theme.primary,
-			borderColor: isDark ? theme.border : "#E8E2E2",
-			borderRadius: 50,
-			borderWidth: 1,
-			marginBottom: 18,
-			justifyContent: "center",
-			alignItems: "center",
-		},
-		selectionCircleUnselected: {
-			backgroundColor: theme.card,
-		},
-		selectionCheck: {
-			color: isDark ? theme.background : "#FFFFFF",
-			fontSize: 12,
-			fontWeight: "bold"
-		},
-		taxiPlate: {
-			color: theme.text,
-			fontSize: 15,
-			fontWeight: "bold",
-			marginBottom: 11,
-			textAlign: "center",
-		},
-		taxiImage: {
-			width: 100,
-			height: 42,
-			marginBottom: 22,
-		},
-		taxiInfo: {
-			color: theme.textSecondary,
-			fontSize: 14,
-			marginTop: 8,
-			textAlign: "center",
-		},
-		taxiPrice: {
-			color: theme.primary,
-			fontSize: 16,
-			fontWeight: 'bold',
-			marginTop: 4,
-		},
-		reserveButton: {
-			alignItems: "center",
-			backgroundColor: theme.primary,
-			borderRadius: 30,
-			width: 330,
-			height: 60,
-			justifyContent: "center",
-		},
-		reserveButtonDisabled: {
-			backgroundColor: isDark ? "#444444" : "#CCCCCC",
-		},
-		reserveButtonText: {
-			color: isDark ? theme.background : "#232F3E",
-			fontSize: 20,
-			fontWeight: "bold",
-		},
-		reserveButtonTextDisabled: {
-			color: "#666666",
-		},
-	});
-
-	// Dark map style for better dark mode experience (same as HomeScreen)
-	const darkMapStyle = [
-		{
-			"elementType": "geometry",
-			"stylers": [
-				{
-					"color": "#212121"
-				}
-			]
-		},
-		{
-			"elementType": "labels.icon",
-			"stylers": [
-				{
-					"visibility": "off"
-				}
-			]
-		},
-		{
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#757575"
-				}
-			]
-		},
-		{
-			"elementType": "labels.text.stroke",
-			"stylers": [
-				{
-					"color": "#212121"
-				}
-			]
-		},
-		{
-			"featureType": "administrative",
-			"elementType": "geometry",
-			"stylers": [
-				{
-					"color": "#757575"
-				}
-			]
-		},
-		{
-			"featureType": "administrative.country",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#9e9e9e"
-				}
-			]
-		},
-		{
-			"featureType": "administrative.land_parcel",
-			"stylers": [
-				{
-					"visibility": "off"
-				}
-			]
-		},
-		{
-			"featureType": "administrative.locality",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#bdbdbd"
-				}
-			]
-		},
-		{
-			"featureType": "poi",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#757575"
-				}
-			]
-		},
-		{
-			"featureType": "poi.park",
-			"elementType": "geometry",
-			"stylers": [
-				{
-					"color": "#181818"
-				}
-			]
-		},
-		{
-			"featureType": "poi.park",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#616161"
-				}
-			]
-		},
-		{
-			"featureType": "poi.park",
-			"elementType": "labels.text.stroke",
-			"stylers": [
-				{
-					"color": "#1b1b1b"
-				}
-			]
-		},
-		{
-			"featureType": "road",
-			"elementType": "geometry.fill",
-			"stylers": [
-				{
-					"color": "#2c2c2c"
-				}
-			]
-		},
-		{
-			"featureType": "road",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#8a8a8a"
-				}
-			]
-		},
-		{
-			"featureType": "road.arterial",
-			"elementType": "geometry",
-			"stylers": [
-				{
-					"color": "#373737"
-				}
-			]
-		},
-		{
-			"featureType": "road.highway",
-			"elementType": "geometry",
-			"stylers": [
-				{
-					"color": "#3c3c3c"
-				}
-			]
-		},
-		{
-			"featureType": "road.highway.controlled_access",
-			"elementType": "geometry",
-			"stylers": [
-				{
-					"color": "#4e4e4e"
-				}
-			]
-		},
-		{
-			"featureType": "road.local",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#616161"
-				}
-			]
-		},
-		{
-			"featureType": "transit",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#757575"
-				}
-			]
-		},
-		{
-			"featureType": "water",
-			"elementType": "geometry",
-			"stylers": [
-				{
-					"color": "#000000"
-				}
-			]
-		},
-		{
-			"featureType": "water",
-			"elementType": "labels.text.fill",
-			"stylers": [
-				{
-					"color": "#3d3d3d"
-				}
-			]
-		}
-	];
-	
-	function getParamAsString(param: string | string[] | undefined, fallback: string = ''): string {
-		if (Array.isArray(param)) {
-			return param[0] || fallback;
-		}
-		return param || fallback;
-	}
-
-
-	if (availableTaxis === undefined) {
-		return (
-			<SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
-				<ActivityIndicator size="large" color={theme.primary} />
-				<Text style={{ color: theme.text, marginTop: 10 }}>Loading available taxis...</Text>
-			</SafeAreaView>
-		);
-	}
-
-	// Don't render if locations aren't loaded yet
-	if (!currentLocation || !destination) {
-		return (
-			<SafeAreaView style={dynamicStyles.container}>
-				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-					<Text style={{ color: theme.text }}>Loading...</Text>
-				</View>
-			</SafeAreaView>
-		);
-	}
-
-	// Don't render if locations aren't loaded yet
-	if (!currentLocation || !destination) {
-		return (
-			<SafeAreaView style={dynamicStyles.container}>
-				<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-					<Text style={{ color: theme.text }}>Loading...</Text>
-				</View>
-			</SafeAreaView>
-		);
-	}
-
-	return (
-		<SafeAreaView style={dynamicStyles.container}>
-			<ScrollView style={dynamicStyles.scrollContainer}>
-				<View>
-					{/* Map Section */}
-					<View style={dynamicStyles.map}>
-						<MapView
-							ref={mapRef}
-							style={{ flex: 1 }}
-							provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
-							initialRegion={{
-								latitude: (currentLocation.latitude + destination.latitude) / 2,
-								longitude: (currentLocation.longitude + destination.longitude) / 2,
-								latitudeDelta: Math.abs(currentLocation.latitude - destination.latitude) * 2 + 0.01,
-								longitudeDelta: Math.abs(currentLocation.longitude - destination.longitude) * 2 + 0.01,
-							}}
-							customMapStyle={isDark ? darkMapStyle : []}
-						>
-							<Marker
-								coordinate={currentLocation}
-								title="You are here"
-								pinColor="blue"
-							>
-							</Marker>
-							<Marker
-								coordinate={destination}
-								title={destination.name}
-								pinColor="orange"
-							>
-							</Marker>
-							{/* Only render the route polyline if we have valid route coordinates */}
-							{routeCoordinates.length > 0 && (
-								<Polyline
-									coordinates={routeCoordinates}
-									strokeColor={theme.primary}
-									strokeWidth={4}
-								/>
-							)}
-						</MapView>
-					</View>
-
-					<View style={dynamicStyles.bottomSheet}>
-						<TouchableOpacity 
-							onPress={handleChangeDestination}
-							style={dynamicStyles.changeDestinationButton}>
-							<Image
-								source = {{uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/qMlslhlkN1/cild5yyo_expires_30_days.png"}} 
-								resizeMode = {"stretch"}
-								style={{
-									width: 20,
-									height: 20,
-									marginRight: 3,
-								}}
-							/>
-							<Text style={dynamicStyles.changeDestinationText}>
-								{"Change Destination"}
-							</Text>
-						</TouchableOpacity>
-
-						{/* Show loading text when fetching route */}
-						{isLoadingRoute && (
-							<Text style={dynamicStyles.routeLoadingText}>
-								Loading route...
-							</Text>
-						)}
-
-						{/* Show error text if route loading failed */}
-						{routeError && !isLoadingRoute && (
-							<Text style={dynamicStyles.routeErrorText}>
-								Route loading failed. Showing map view only.
-							</Text>
-						)}
-						
-						{/* Horizontal ScrollView for taxi list */}
-						<ScrollView 
-							horizontal={true}
-							showsHorizontalScrollIndicator={false}
-							style={dynamicStyles.taxiScrollContainer}
-							contentContainerStyle={{
-								paddingHorizontal: 5,
-							}}>
-							
-							{availableTaxis.map((taxi) => (
-								<TouchableOpacity 
-									key={taxi.licensePlate}
-									style={[
-										dynamicStyles.taxiCard,
-										selectedTaxi?.licensePlate === taxi.licensePlate 
-											? dynamicStyles.taxiCardSelected 
-											: dynamicStyles.taxiCardUnselected
-									]} 
-									onPress={() => handleTaxiSelect(taxi)}>
-									
-									{/* Selection Circle */}
-									<View style={[
-										dynamicStyles.selectionCircle,
-										selectedTaxi?.licensePlate !== taxi.licensePlate && dynamicStyles.selectionCircleUnselected
-									]}>
-										{selectedTaxi?.licensePlate === taxi.licensePlate && (
-											<Text style={dynamicStyles.selectionCheck}>✓</Text>
-										)}
-									</View>
-									
-									{/* Taxi Plate */}
-									<Text style={dynamicStyles.taxiPlate}>
-										{taxi.licensePlate}
-									</Text>
-									
-									{/* Taxi Image */}
-									{taxi.image ? (
-										<Image
-											source={{ uri: taxi.image }}
-											resizeMode="contain"
-											style={dynamicStyles.taxiImage}
-										/>
-										) : (
-										<Text style={{ color: 'red' }}>No Image</Text>
-									)}
-									
-									{/* Time and Seats Info */}
-									<Text style={dynamicStyles.taxiInfo}>
-										{`${currentRoute?.estimatedDuration ? Math.round(currentRoute.estimatedDuration / 60) + ' min trip' : 'N/A'} | ${taxi.seats} seats available`}
-									</Text>
-									
-									{/* Price (if available) */}
-									<Text style={dynamicStyles.taxiPrice}>
-										{currentRoute?.fare != null ? `R ${Number(currentRoute.fare).toFixed(2)}` : 'N/A'}
-									</Text>
-
-								</TouchableOpacity>
-							))}
-
-						</ScrollView>
-
-						<View style={{ width: '100%', alignItems: 'center' }}>
-							<TouchableOpacity 
-								style={[
-									dynamicStyles.reserveButton,
-									!selectedTaxi && dynamicStyles.reserveButtonDisabled
-								]} 
-								onPress={handleReserveSeat}>
-								<Text style={[
-									dynamicStyles.reserveButtonText,
-									!selectedTaxi && dynamicStyles.reserveButtonTextDisabled
-								]}>
-									{"Reserve Seat"}
-								</Text>
-							</TouchableOpacity>
-						</View>
-					</View>
-				</View>
-			</ScrollView>
-		</SafeAreaView>
-	)
+      {/* Book Ride Button */}
+      {selectedTaxi && (
+        <Animated.View style={{ opacity: buttonOpacity }}>
+          <TouchableOpacity
+            style={dynamicStyles.bookButton}
+            onPress={handleBookRide}
+            disabled={isBooking}
+          >
+            <Text style={dynamicStyles.bookButtonText}>
+              {isBooking ? 'Booking Ride...' : `Book Ride with ${selectedTaxi.name}`}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+    </View>
+  );
 }

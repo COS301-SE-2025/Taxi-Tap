@@ -154,20 +154,21 @@ export default function DriverOnline({
   }, [onGoOffline, router]);
 
   useEffect(() => {
-    // console.log("DriverOnline: useEffect triggered");
-    // console.log("DriverOnline: user exists?", !!user);
-    // console.log("DriverOnline: notifications length", notifications?.length || 0);
+   // console.log("DriverOnline: useEffect triggered");
+   // console.log("DriverOnline: user exists?", !!user);
+   // console.log("DriverOnline: notifications length", notifications?.length || 0);
     if (!user) {
-      // console.log("DriverOnline: No user, returning early");
-      return;
+    //  console.log("DriverOnline: No user, returning early");
+      return; // Guard: only proceed if user is defined
     }
-    // console.log("DriverOnline: notifications", notifications);
+   // console.log("DriverOnline: notifications", notifications);
     const rideRequest = notifications.find(
       n => n.type === "ride_request" && !n.isRead
     );
-    // console.log("DriverOnline: found rideRequest", rideRequest);
+   // console.log("DriverOnline: found rideRequest", rideRequest);
     if (rideRequest) {
-      // console.log("DriverOnline: Showing Alert for ride request");
+   //   console.log("DriverOnline: Showing Alert for ride request");
+
       Alert.alert(
         "New Ride Request",
         rideRequest.message,
@@ -204,6 +205,46 @@ export default function DriverOnline({
       );
     }
   }, [notifications, user]);
+
+  useEffect(() => {
+    const rideCancelled = notifications.find(
+      n => n.type === 'ride_cancelled' && !n.isRead
+    );
+    if (rideCancelled) {
+      Alert.alert(
+        'Ride Cancelled',
+        rideCancelled.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => markAsRead(rideCancelled._id),
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
+
+  useEffect(() => {
+    const rideStarted = notifications.find(
+      n => n.type === 'ride_started' && !n.isRead
+    );
+    if (rideStarted) {
+      Alert.alert(
+        'Ride Started',
+        rideStarted.message,
+        [
+          {
+            text: 'OK',
+            onPress: () => markAsRead(rideStarted._id),
+            style: 'default',
+          },
+        ],
+        { cancelable: false }
+      );
+    }
+  }, [notifications, markAsRead]);
 
   const handleMenuPress = () => {
     setShowMenu(!showMenu);

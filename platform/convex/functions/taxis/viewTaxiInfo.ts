@@ -57,8 +57,10 @@ export async function viewTaxiInfoHandler(ctx: QueryCtx, args: { passengerId: Id
       name: driverUser?.name,
       phoneNumber: driverUser?.phoneNumber,
       rating: driverProfile.averageRating,
+      userId: driverUser?._id,
     },
-    rideId: ride._id,
+    rideId: ride.rideId,
+    rideDocId: ride._id,
     status: ride.status,
   };
 }
