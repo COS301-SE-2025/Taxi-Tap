@@ -17,6 +17,19 @@ const GOOGLE_MAPS_API_KEY = Platform.OS === 'ios'
   ? process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY
   : process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY;
 
+// Simple deep equality check for location objects
+function deepEqual(obj1: any, obj2: any): boolean {
+	if (obj1 === obj2) return true;
+	if (!obj1 || !obj2) return false;
+	const keys1 = Object.keys(obj1);
+	const keys2 = Object.keys(obj2);
+	if (keys1.length !== keys2.length) return false;
+	for (let key of keys1) {
+		if (obj1[key] !== obj2[key]) return false;
+	}
+	return true;
+}
+
 export default function SeatReserved() {
 	const params = useLocalSearchParams();
 	const navigation = useNavigation();
@@ -85,24 +98,16 @@ export default function SeatReserved() {
 		const newDestination = {
 			latitude: parseFloat(getParamAsString(params.destinationLat, "-25.7824")),
 			longitude: parseFloat(getParamAsString(params.destinationLng, "28.2753")),
-			name: getParamAsString(params.destinationName, "Menlyn Taxi Rank")
+			name: getParamAsString(params.destinationName, "")
 		};
 
-		// Only update context if locations have changed
-		if (!currentLocation || 
-			currentLocation.latitude !== newCurrentLocation.latitude || 
-			currentLocation.longitude !== newCurrentLocation.longitude ||
-			currentLocation.name !== newCurrentLocation.name) {
+		if (!deepEqual(currentLocation, newCurrentLocation)) {
 			setCurrentLocation(newCurrentLocation);
 		}
-
-		if (!destination || 
-			destination.latitude !== newDestination.latitude || 
-			destination.longitude !== newDestination.longitude ||
-			destination.name !== newDestination.name) {
+		if (!deepEqual(destination, newDestination)) {
 			setDestination(newDestination);
 		}
-	}, [params, currentLocation, destination, setCurrentLocation, setDestination]);
+	}, [params, setCurrentLocation, setDestination]);
 
 	const vehicleInfo = {
 		plate: getParamAsString(params.plate, "Unknown"),
