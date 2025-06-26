@@ -193,7 +193,7 @@ Receive Drop-Off Notification & As a driver, I should be notified when a passeng
 
 \subsection*{Location}
 
-\begin{enumerate}
+\begin{enumerate}    
   \item \textbf{getNearbyTaxis}
     \begin{itemize}
       \item Query (Read-only)
@@ -303,6 +303,389 @@ null
 \subsection*{Routes}
 
 \begin{enumerate}
+  \item \textbf{findBestMatchingRoutes}
+  \begin{itemize}
+    \item Query (Read-only)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  startLat: number,
+  startLon: number,
+  endLat: number,
+  endLon: number,
+  maxStartDistance?: number,
+  maxEndDistance?: number,
+  maxResults?: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "startLat": -25.75,
+  "startLon": 28.19,
+  "endLat": -25.76,
+  "endLon": 28.21
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  success: boolean,
+  matchingRoutes: Array<{
+    routeId: string,
+    routeName: string,
+    taxiAssociation: string,
+    fare: number,
+    estimatedDuration: number,
+    startProximity: number,
+    endProximity: number,
+    totalScore: number,
+    closestStartStop: {...} | null,
+    closestEndStop: {...} | null,
+    hasDirectRoute: boolean,
+    isRecommended: boolean,
+    totalStops: number,
+    isActive: boolean
+  }>,
+  totalRoutesChecked: number,
+  routesWithinRange: number,
+  searchCriteria: {...},
+  message: string
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Evaluates all active routes.
+      \item Finds closest stops to start and end locations.
+      \item Scores routes based on proximity and directionality.
+      \item Returns sorted and filtered list of best-matching routes.
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{getRouteWithStopsDetails}
+  \begin{itemize}
+    \item Query (Read-only)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  routeId: string,
+  userLat?: number,
+  userLon?: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "routeId": "route123",
+  "userLat": -25.75,
+  "userLon": 28.19
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  success: boolean,
+  route: {
+    routeId: string,
+    name: string,
+    taxiAssociation: string,
+    fare: number,
+    estimatedDuration: number,
+    isActive: boolean,
+    totalStops: number,
+    stops: Array<{
+      id: string,
+      name: string,
+      coordinates: [number, number],
+      order: number,
+      distanceFromUser?: number
+    }>
+  } | null,
+  message: string
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Returns full route details including all stops.
+      \item Includes distance to each stop from user location if provided.
+      \item Uses enriched stop data if available.
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{findNearbyStops}
+  \begin{itemize}
+    \item Query (Read-only)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  lat: number,
+  lon: number,
+  radiusKm?: number,
+  maxResults?: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "lat": -25.75,
+  "lon": 28.19,
+  "radiusKm": 2.5
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  success: boolean,
+  nearbyStops: Array<{
+    stop: {
+      id: string,
+      name: string,
+      coordinates: [number, number],
+      order: number
+    },
+    route: {
+      routeId: string,
+      name: string,
+      taxiAssociation: string,
+      fare: number
+    },
+    distance: number
+  }>,
+  searchLocation: {
+    latitude: number,
+    longitude: number
+  },
+  radiusKm: number,
+  totalFound: number,
+  message: string
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Finds and returns all stops within a specified radius of the user.
+      \item Returns details about both the stop and its associated route.
+      \item Results are sorted by proximity.
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{findAvailableTaxisForJourney}
+  \begin{itemize}
+    \item Query (Read-only)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  originLat: number,
+  originLng: number,
+  destinationLat: number,
+  destinationLng: number,
+  maxOriginDistance?: number,
+  maxDestinationDistance?: number,
+  maxTaxiDistance?: number,
+  maxResults?: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "originLat": -25.75,
+  "originLng": 28.19,
+  "destinationLat": -25.76,
+  "destinationLng": 28.21
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  success: boolean,
+  availableTaxis: Array<{
+    driverId: string,
+    userId: string,
+    name: string,
+    phoneNumber: string,
+    vehicleRegistration: string,
+    vehicleModel: string,
+    vehicleColor: string,
+    vehicleYear: number | null,
+    isAvailable: boolean,
+    numberOfRidesCompleted: number,
+    averageRating: number,
+    taxiAssociation: string,
+    currentLocation: {
+      latitude: number,
+      longitude: number,
+      lastUpdated: string
+    },
+    distanceToOrigin: number,
+    routeInfo: {
+      routeId: string,
+      routeName: string,
+      taxiAssociation: string,
+      fare: number,
+      estimatedDuration: number,
+      startProximity: number,
+      endProximity: number,
+      totalScore: number,
+      closestStartStop: {...} | null,
+      closestEndStop: {...} | null
+    }
+  }>,
+  matchingRoutes: Array<{
+    routeId: string,
+    routeName: string,
+    taxiAssociation: string,
+    fare: number,
+    availableDrivers: number,
+    startProximity: number,
+    endProximity: number,
+    totalScore: number
+  }>,
+  totalTaxisFound: number,
+  totalRoutesChecked: number,
+  validRoutesFound: number,
+  searchCriteria: {
+    origin: { latitude: number, longitude: number },
+    destination: { latitude: number, longitude: number },
+    maxOriginDistance: number,
+    maxDestinationDistance: number,
+    maxTaxiDistance: number,
+    maxResults: number
+  },
+  message: string
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Identifies valid taxi routes that pass near both origin and destination.
+      \item Scores routes based on proximity and directness.
+      \item Gathers nearby drivers assigned to valid routes.
+      \item Returns sorted list of available taxis and matching routes.
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{getNearbyTaxisForRouteRequest}
+  \begin{itemize}
+    \item Query (Read-only)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  passengerLat: number,
+  passengerLng: number,
+  passengerEndLat: number,
+  passengerEndLng: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "passengerLat": -25.7461,
+  "passengerLng": 28.1880,
+  "passengerEndLat": -25.7499,
+  "passengerEndLng": 28.2091
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+Array<{
+  userId: string,
+  latitude: number,
+  longitude: number,
+  role: "driver",
+  updatedAt: string,
+  _id: string,
+  name: string,
+  phoneNumber: string,
+  vehicleRegistration: string,
+  vehicleModel: string,
+  vehicleColor: string,
+  vehicleYear: number | null,
+  isAvailable: boolean,
+  numberOfRidesCompleted: number,
+  averageRating: number,
+  taxiAssociation: string,
+  distanceToOrigin: number,
+  routeInfo: {
+    routeId: string,
+    routeName: string,
+    taxiAssociation: string,
+    fare: number,
+    estimatedDuration: number,
+    startProximity: number,
+    endProximity: number,
+    totalScore: number,
+    closestStartStop: {...} | null,
+    closestEndStop: {...} | null
+  }
+}>
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Wrapper for \texttt{findAvailableTaxisForJourney} with fixed proximity thresholds.
+      \item Transforms results for backward compatibility with older client format.
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{\_findAvailableTaxisForJourney}
+  \begin{itemize}
+    \item Internal Query (Read-only)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  originLat: number,
+  originLng: number,
+  destinationLat: number,
+  destinationLng: number,
+  maxOriginDistance?: number,
+  maxDestinationDistance?: number,
+  maxTaxiDistance?: number,
+  maxResults?: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "originLat": -25.7501,
+  "originLng": 28.1888,
+  "destinationLat": -25.7623,
+  "destinationLng": 28.2010
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  success: boolean,
+  availableTaxis: Array<AvailableTaxi>,
+  matchingRoutes: Array<{
+    routeId: string,
+    routeName: string,
+    taxiAssociation: string,
+    fare: number,
+    availableDrivers: number,
+    startProximity: number,
+    endProximity: number,
+    totalScore: number
+  }>,
+  totalTaxisFound: number,
+  totalRoutesChecked: number,
+  validRoutesFound: number,
+  searchCriteria: {
+    origin: { latitude: number, longitude: number },
+    destination: { latitude: number, longitude: number },
+    maxOriginDistance: number,
+    maxDestinationDistance: number,
+    maxTaxiDistance: number,
+    maxResults: number
+  },
+  message: string
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Internally filters and scores routes based on distance and directionality between origin and destination.
+      \item Finds and filters nearby available drivers assigned to those routes.
+      \item Aggregates full driver, location, and vehicle metadata.
+    \end{itemize}
+  \end{itemize}
+
   \item \textbf{getEnrichedStopName}
     \begin{itemize}
       \item Action (Write operation)
@@ -954,6 +1337,48 @@ string
       \end{itemize}
     \end{itemize}
 
+\item \textbf{updateTaxiSeatAvailability}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  rideId: string,
+  action: "decrease" | "increase"
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "rideId": "ride_abc123",
+  "action": "decrease"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  success: true,
+  updatedSeats: number,
+  previousSeats: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "success": true,
+  "updatedSeats": 3,
+  "previousSeats": 4
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Finds the taxi associated with the driver of the given ride.
+      \item Increments or decrements the `capacity` (seats available) based on the action.
+      \item Ensures the value does not drop below zero when decreasing.
+      \item Updates the `updatedAt` timestamp for the taxi record.
+    \end{itemize}
+  \end{itemize}
+
 \item \textbf{updateTaxiInfo (Mutation)}
     \begin{itemize}
       \item Mutation (Modifies data)
@@ -1478,55 +1903,66 @@ string
 
 \subsection*{Notifications}
 
-\begin{enumerate}
-    \item \textbf{deactivatePushToken}
+\item \textbf{deactivatePushToken}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  token: string
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "token": "abc123def456"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  _id: string,
+  isActive: boolean,
+  updatedAt: number
+} \text{ or } null
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "_id": "pushToken_xyz789",
+  "isActive": false,
+  "updatedAt": 1687804800000
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
     \begin{itemize}
-        \item Mutation (Write operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    token: string
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "token": "ExponentPushToken[abc123xyz]"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-null
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Searches for an existing push token record by its token string.
-            \item If found, updates the record to mark it as inactive and updates its timestamp.
-            \item If no matching record is found, no changes are made.
-        \end{itemize}
+      \item Searches the \texttt{pushTokens} collection for a document matching the provided token.
+      \item If found, updates the document to set \texttt{isActive} to \texttt{false} and \texttt{updatedAt} to the current timestamp.
+      \item If no matching token is found, returns \texttt{null}.
     \end{itemize}
+  \end{itemize}
 
-    \item \textbf{getNotifications}
-    \begin{itemize}
-        \item Query (Read operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
+\item \textbf{getNotifications}
+  \begin{itemize}
+    \item Query (Read operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
 {
-    userId: string,
-    limit?: number,
-    unreadOnly?: boolean
+  userId: Id<"taxiTap_users">,
+  limit?: number,
+  unreadOnly?: boolean
 }
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
 {
-    "userId": "user_abc123",
-    "limit": 10,
-    "unreadOnly": true
+  "userId": "user_abc123",
+  "limit": 10,
+  "unreadOnly": true
 }
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
 [
   {
     _id: string,
@@ -1534,336 +1970,483 @@ null
     message: string,
     isRead: boolean,
     createdAt: number,
-    ...
+    // ...other notification fields
   },
   ...
 ]
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Retrieves notifications for the given user.
-            \item Optionally filters to unread notifications.
-            \item Optionally limits the number of returned results.
-            \item Results are ordered from most recent to oldest.
-        \end{itemize}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+[
+  {
+    "_id": "notif_001",
+    "userId": "user_abc123",
+    "message": "Your ride is arriving soon",
+    "isRead": false,
+    "createdAt": 1687804800000
+  },
+  {
+    "_id": "notif_002",
+    "userId": "user_abc123",
+    "message": "New promotional offer available",
+    "isRead": true,
+    "createdAt": 1687804700000
+  }
+]
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Retrieves notifications for the specified user from the database.
+      \item Can optionally filter to only unread notifications if \texttt{unreadOnly} is true.
+      \item Can optionally limit the number of notifications returned.
+      \item Notifications are ordered descending by creation time (most recent first).
     \end{itemize}
+  \end{itemize}
 
 \item \textbf{getUnreadCount}
-    \begin{itemize}
-        \item Query (Read operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
+  \begin{itemize}
+    \item Query (Read operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
 {
-    userId: string
+  userId: Id<"taxiTap_users">
 }
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
 {
-    "userId": "user_abc123"
+  "userId": "user_abc123"
 }
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-<number>
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Counts how many unread notifications the specified user has.
-        \end{itemize}
-    \end{itemize}
-
-    \item \textbf{getNotificationSettings}
-    \begin{itemize}
-        \item Query (Read operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    userId: string
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "userId": "user_abc123"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-{
-    rideUpdates: boolean,
-    promotionalOffers: boolean,
-    systemAlerts: boolean,
-    emergencyNotifications: boolean,
-    routeUpdates: boolean,
-    paymentNotifications: boolean,
-    ratingReminders: boolean,
-    soundEnabled: boolean,
-    vibrationEnabled: boolean,
-    quietHoursStart: string,
-    quietHoursEnd: string
-}
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Retrieves the user's notification settings.
-            \item If no settings exist for the user, returns default settings with all notifications enabled and default quiet hours set (22:00 - 07:00).
-        \end{itemize}
-    \end{itemize}
-
-    \item \textbf{markAllAsRead}
-    \begin{itemize}
-        \item Mutation (Write operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    userId: string
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "userId": "user_abc123"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
 number
-        \end{verbatim}
-        Example response:
-        \begin{verbatim}
-3
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Marks all unread notifications for the specified user as read.
-            \item Updates each notification's \texttt{isRead} field to \texttt{true} and sets \texttt{readAt} to the current timestamp.
-            \item Returns the number of notifications that were updated.
-        \end{itemize}
-    \end{itemize}
-
-    \item \textbf{markAsRead}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+5
+    \end{verbatim}
+    \item \textbf{Effect:}
     \begin{itemize}
-        \item Mutation (Write operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    notificationId: string
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "notificationId": "notification_abc123"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-null
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Marks a specific notification as read.
-            \item Updates the \texttt{isRead} field to \texttt{true} and sets \texttt{readAt} to the current timestamp for the specified notification.
-        \end{itemize}
+      \item Counts and returns the number of unread notifications for the specified user.
     \end{itemize}
+  \end{itemize}
 
-    \item \textbf{registerPushToken}
+\item \textbf{getNotificationSettings}
+  \begin{itemize}
+    \item Query (Read operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  userId: Id<"taxiTap_users">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "userId": "user_abc123"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  rideUpdates: boolean,
+  promotionalOffers: boolean,
+  systemAlerts: boolean,
+  emergencyNotifications: boolean,
+  routeUpdates: boolean,
+  paymentNotifications: boolean,
+  ratingReminders: boolean,
+  soundEnabled: boolean,
+  vibrationEnabled: boolean,
+  quietHoursStart: string,
+  quietHoursEnd: string
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "rideUpdates": true,
+  "promotionalOffers": true,
+  "systemAlerts": true,
+  "emergencyNotifications": true,
+  "routeUpdates": true,
+  "paymentNotifications": true,
+  "ratingReminders": true,
+  "soundEnabled": true,
+  "vibrationEnabled": true,
+  "quietHoursStart": "22:00",
+  "quietHoursEnd": "07:00"
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
     \begin{itemize}
-        \item Mutation (Write operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    userId: string,
-    token: string,
-    platform: "ios" | "android"
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "userId": "user_abc123",
-    "token": "expoPushToken[xyz123]",
-    "platform": "android"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-{
-    _id: string
-}
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Registers a push notification token for a specific user and device platform.
-            \item If the token already exists, it updates the existing record with the new user ID and marks it as active.
-            \item If the token is new, a new entry is created with timestamps and metadata.
-        \end{itemize}
+      \item Retrieves the user's notification settings from the database.
+      \item If no custom settings exist, returns a default notification preference object.
     \end{itemize}
+  \end{itemize}
 
-    \item \textbf{sendRideNotification}
+\item \textbf{markAllAsRead}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  userId: Id<"taxiTap_users">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "userId": "user_abc123"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+<number of notifications marked as read>
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+5
+    \end{verbatim}
+    \item \textbf{Effect:}
     \begin{itemize}
-        \item Internal Mutation (System-level write operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    rideId: string,
-    type: string,
-    passengerId?: string,
-    driverId?: string
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "rideId": "ride_abc123",
-    "type": "ride_completed",
-    "passengerId": "user_xyz",
-    "driverId": "user_def"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-null
-        \end{verbatim}
-        \item \textbf{Effect:}
+      \item Queries all unread notifications for the given user.
+      \item Updates each to mark them as read by setting:
         \begin{itemize}
-            \item Depending on the type of ride event, generates and dispatches notifications to involved users (passenger and/or driver).
-            \item Supported notification types include:
-            \begin{itemize}
-                \item \texttt{ride\_requested} — notify driver about new ride request.
-                \item \texttt{ride\_accepted} — notify passenger when ride is accepted.
-                \item \texttt{driver\_arrived} — notify passenger when driver arrives.
-                \item \texttt{ride\_started} — notify passenger when ride starts.
-                \item \texttt{ride\_completed} — notify passenger and driver when ride completes.
-                \item \texttt{ride\_cancelled} — notify counterpart user when ride is cancelled.
-            \end{itemize}
-            \item Delegates actual notification delivery to \texttt{sendNotificationInternal}.
+          \item \texttt{isRead} to \texttt{true}
+          \item \texttt{readAt} to the current timestamp
         \end{itemize}
+      \item Returns the count of notifications that were marked as read.
     \end{itemize}
+  \end{itemize}
 
-    \item \textbf{sendNotification}
+\item \textbf{markAsRead}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  notificationId: Id<"notifications">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "notificationId": "notif_456xyz"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  _id: "notif_456xyz",
+  isRead: true,
+  readAt: <timestamp>,
+  ... // other fields unchanged
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
     \begin{itemize}
-        \item Mutation (Write operation — external access)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    userId: string,
-    type: string,
-    title: string,
-    message: string,
-    priority: string,
-    metadata?: object,
-    scheduledFor?: number,
-    expiresAt?: number
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "userId": "user_abc123",
-    "type": "system_alert",
-    "title": "Platform Maintenance",
-    "message": "TaxiTap will be down from 02:00 to 04:00 for maintenance.",
-    "priority": "high"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-string (notification document ID)
-        \end{verbatim}
-        \item \textbf{Effect:}
+      \item Locates the notification with the given ID.
+      \item Updates the following fields:
         \begin{itemize}
-            \item Inserts a new notification into the database for the specified user.
-            \item Marks the notification as a push notification if the user has active push tokens.
-            \item Supports optional fields like metadata, scheduling, and expiry.
+          \item \texttt{isRead} $\rightarrow$ \texttt{true}
+          \item \texttt{readAt} $\rightarrow$ current timestamp
+        \end{itemize}
+      \item Returns the updated notification document.
+    \end{itemize}
+  \end{itemize}
+
+\item \textbf{registerPushToken}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  userId: Id<"taxiTap_users">,
+  token: string,
+  platform: "ios" | "android"
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  userId: "user_abc123",
+  token: "fcmToken1234567890",
+  platform: "android"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  _id: "pushToken_789xyz",
+  userId: "user_abc123",
+  token: "fcmToken1234567890",
+  platform: "android",
+  isActive: true,
+  createdAt: <timestamp>,
+  updatedAt: <timestamp>,
+  lastUsedAt: <timestamp>
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item If the token already exists:
+        \begin{itemize}
+          \item Updates the `userId`, `isActive`, `updatedAt`, and `lastUsedAt` fields.
+        \end{itemize}
+      \item If the token does not exist:
+        \begin{itemize}
+          \item Inserts a new push token document.
         \end{itemize}
     \end{itemize}
+  \end{itemize}
+
+\item \textbf{sendRideNotification}
+  \begin{itemize}
+    \item Internal Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  rideId: string,
+  type: string,
+  passengerId?: Id<"taxiTap_users">,
+  driverId?: Id<"taxiTap_users">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  rideId: "ride_12345",
+  type: "ride_completed",
+  driverId: "user_driver123"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+undefined
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Depending on the notification type, constructs and sends one or more ride-related notifications to passengers and/or drivers using:
+      \begin{verbatim}
+internal.functions.notifications.sendNotifications.sendNotificationInternal
+      \end{verbatim}
+      \item Notification types supported:
+        \begin{itemize}
+          \item \texttt{"ride_requested"}: Sent to driver
+          \item \texttt{"ride_accepted"}: Sent to passenger
+          \item \texttt{"driver_arrived"}: Sent to passenger
+          \item \texttt{"ride_started"}: Sent to passenger
+          \item \texttt{"ride_completed"}: Sent to both passenger and driver
+          \item \texttt{"ride_cancelled"}: Sent to the other party (driver or passenger)
+        \end{itemize}
+    \end{itemize}
+  \end{itemize}
+
+\item \textbf{sendRideNotification}
+  \begin{itemize}
+    \item Internal Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  rideId: string,
+  type: string,
+  passengerId?: Id<"taxiTap_users">,
+  driverId?: Id<"taxiTap_users">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "rideId": "ride_abc123",
+  "type": "ride_requested",
+  "passengerId": "user_xyz789",
+  "driverId": "user_def456"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+void (no direct response)
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Looks up the ride by the given \texttt{rideId}.
+      \item Depending on the \texttt{type} of notification, prepares one or more notification objects targeting the passenger and/or driver.
+      \item Notifications include type, title, message, priority, and metadata with relevant ride and user information.
+      \item Sends notifications internally by calling \texttt{sendNotificationInternal} mutation for each prepared notification.
+      \item If the ride is not found, no notifications are sent.
+    \end{itemize}
+  \end{itemize}
+
+\item \textbf{sendNotification}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  userId: Id<"taxiTap_users">,
+  type: string,
+  title: string,
+  message: string,
+  priority: string,
+  metadata?: any,
+  scheduledFor?: number,
+  expiresAt?: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "userId": "user_abc123",
+  "type": "ride_request",
+  "title": "New Ride Request",
+  "message": "You have a new ride request.",
+  "priority": "high",
+  "metadata": { "rideId": "ride_xyz789" },
+  "scheduledFor": 1687804800000,
+  "expiresAt": 1687891200000
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  _id: string,
+  notificationId: string,
+  userId: string,
+  type: string,
+  title: string,
+  message: string,
+  isRead: boolean,
+  isPush: boolean,
+  priority: string,
+  metadata?: any,
+  scheduledFor?: number,
+  expiresAt?: number,
+  createdAt: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "_id": "notif_doc123",
+  "notificationId": "notif_1687804800000_ab12cd34e",
+  "userId": "user_abc123",
+  "type": "ride_request",
+  "title": "New Ride Request",
+  "message": "You have a new ride request.",
+  "isRead": false,
+  "isPush": true,
+  "priority": "high",
+  "metadata": { "rideId": "ride_xyz789" },
+  "scheduledFor": 1687804800000,
+  "expiresAt": 1687891200000,
+  "createdAt": 1687804800000
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Inserts a new notification document into the \texttt{notifications} collection.
+      \item Automatically generates a unique \texttt{notificationId}.
+      \item Sets \texttt{isRead} to false by default and \texttt{isPush} to false initially.
+      \item Queries active push tokens for the user; if any exist, updates the notification to mark \texttt{isPush} as true.
+      \item Returns the created notification document.
+    \end{itemize}
+  \end{itemize}
 
 \item \textbf{sendNotificationInternal}
-    \begin{itemize}
-        \item Internal Mutation (Write operation — internal system use)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    userId: string,
-    type: string,
-    title: string,
-    message: string,
-    priority: string,
-    metadata?: object,
-    scheduledFor?: number,
-    expiresAt?: number
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "userId": "user_xyz456",
-    "type": "ride_started",
-    "title": "Your Ride Has Started",
-    "message": "Sit back and relax while we take you to your destination.",
-    "priority": "medium"
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-string (notification document ID)
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Internally creates a system-generated notification for the user.
-            \item Same logic as \texttt{sendNotification}, but only callable by internal code.
-            \item Useful for ride events and automated alerts.
-        \end{itemize}
-    \end{itemize}
+  \begin{itemize}
+    \item Internal Mutation (Write operation)
+    \item \textbf{Request:}
+    Same as \texttt{sendNotification}.
+    \item \textbf{Response:}
+    Same as \texttt{sendNotification}.
+    \item \textbf{Effect:}
+    Same as \texttt{sendNotification}, but intended for system-generated notifications.
+  \end{itemize}
 
-    \item \textbf{updateNotificationSettings}
+\item \textbf{updateNotificationSettings}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  userId: Id<"taxiTap_users">,
+  settings: {
+    rideUpdates?: boolean,
+    promotionalOffers?: boolean,
+    systemAlerts?: boolean,
+    emergencyNotifications?: boolean,
+    routeUpdates?: boolean,
+    paymentNotifications?: boolean,
+    ratingReminders?: boolean,
+    soundEnabled?: boolean,
+    vibrationEnabled?: boolean,
+    quietHoursStart?: string,
+    quietHoursEnd?: string
+  }
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "userId": "user_abc123",
+  "settings": {
+    "rideUpdates": false,
+    "promotionalOffers": true,
+    "quietHoursStart": "23:00",
+    "quietHoursEnd": "06:00"
+  }
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  _id: string,
+  userId: string,
+  rideUpdates: boolean,
+  promotionalOffers: boolean,
+  systemAlerts: boolean,
+  emergencyNotifications: boolean,
+  routeUpdates: boolean,
+  paymentNotifications: boolean,
+  ratingReminders: boolean,
+  soundEnabled: boolean,
+  vibrationEnabled: boolean,
+  quietHoursStart: string,
+  quietHoursEnd: string,
+  createdAt: number,
+  updatedAt: number
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "_id": "notifSettings_123xyz",
+  "userId": "user_abc123",
+  "rideUpdates": false,
+  "promotionalOffers": true,
+  "systemAlerts": true,
+  "emergencyNotifications": true,
+  "routeUpdates": true,
+  "paymentNotifications": true,
+  "ratingReminders": true,
+  "soundEnabled": true,
+  "vibrationEnabled": true,
+  "quietHoursStart": "23:00",
+  "quietHoursEnd": "06:00",
+  "createdAt": 1687804800000,
+  "updatedAt": 1687891200000
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
     \begin{itemize}
-        \item Mutation (Write operation)
-        \item \textbf{Request:}
-        \begin{verbatim}
-{
-    userId: string,
-    settings: {
-        rideUpdates?: boolean,
-        promotionalOffers?: boolean,
-        systemAlerts?: boolean,
-        emergencyNotifications?: boolean,
-        routeUpdates?: boolean,
-        paymentNotifications?: boolean,
-        ratingReminders?: boolean,
-        soundEnabled?: boolean,
-        vibrationEnabled?: boolean,
-        quietHoursStart?: string,   // Format: "HH:mm"
-        quietHoursEnd?: string      // Format: "HH:mm"
-    }
-}
-        \end{verbatim}
-        Example:
-        \begin{verbatim}
-{
-    "userId": "user_abc123",
-    "settings": {
-        "rideUpdates": false,
-        "soundEnabled": true,
-        "quietHoursStart": "23:00",
-        "quietHoursEnd": "06:00"
-    }
-}
-        \end{verbatim}
-        \item \textbf{Response:}
-        \begin{verbatim}
-null
-        \end{verbatim}
-        \item \textbf{Effect:}
-        \begin{itemize}
-            \item Updates the user's notification settings if they exist.
-            \item If no settings exist for the user, inserts default settings combined with any provided overrides.
-            \item Sets or updates the timestamp for the settings.
-        \end{itemize}
-    \end{itemize} 
-\end{enumerate}
+      \item Checks if notification settings for the user already exist.
+      \item If existing, updates only the provided settings fields and the \texttt{updatedAt} timestamp.
+      \item If not, creates a new settings document with provided values or defaults.
+      \item Defaults are mostly \texttt{true} for booleans, and \texttt{"22:00"} / \texttt{"07:00"} for quiet hours.
+    \end{itemize}
+  \end{itemize}
 
 \subsection*{Rides}
 
@@ -1969,6 +2552,47 @@ null
         \end{itemize}
     \end{itemize}
 
+\item \textbf{endRide}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  rideId: string,
+  userId: Id<"taxiTap_users">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "rideId": "ride_abc123",
+  "userId": "user_xyz789"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  // Response depends on the implementation in endRideHandler,
+  // typically a status object or updated ride info,
+  // or void if no response is returned.
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "status": "success",
+  "rideId": "ride_abc123",
+  "endedAt": 1687804800000
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Invokes the \texttt{endRideHandler} to mark the ride as ended.
+      \item Typically updates ride status and records the end timestamp.
+      \item May trigger related business logic like fare calculation, notifications, etc.
+    \end{itemize}
+  \end{itemize}
+
     \item \textbf{getRideById}
     \begin{itemize}
         \item Query (Read operation)
@@ -2062,14 +2686,96 @@ null
             \item Notifies the assigned driver of the new ride request via the internal notification system.
         \end{itemize}
     \end{itemize}
-     
+
+\item \textbf{startRide}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  rideId: string,
+  userId: Id<"taxiTap_users">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "rideId": "ride_xyz123",
+  "userId": "user_abc789"
+}
+    \end{verbatim}
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  _id: string,
+  message: string
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "_id": "ride_doc456",
+  "message": "Ride marked as started."
+}
+    \end{verbatim}
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Finds the ride by \texttt{rideId}.
+      \item Throws an error if the ride is not found.
+      \item Throws an error if the user is not the passenger of the ride.
+      \item Throws an error if the ride status is not "accepted".
+      \item Updates the ride status to "in_progress" and sets the \texttt{startedAt} timestamp.
+      \item Sends notifications to both the driver and passenger indicating the ride has started.
+    \end{itemize}
+  \end{itemize} 
+
+  \item \textbf{declineRide}
+  \begin{itemize}
+    \item Mutation (Write operation)
+    
+    \item \textbf{Request:}
+    \begin{verbatim}
+{
+  rideId: string,
+  driverId: Id<"taxiTap_users">
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "rideId": "ride_xyz123",
+  "driverId": "user_driver456"
+}
+    \end{verbatim}
+    
+    \item \textbf{Response:}
+    \begin{verbatim}
+{
+  message: string
+}
+    \end{verbatim}
+    Example:
+    \begin{verbatim}
+{
+  "message": "Ride declined by driver."
+}
+    \end{verbatim}
+    
+    \item \textbf{Effect:}
+    \begin{itemize}
+      \item Finds the ride by \texttt{rideId}.
+      \item Validates that the driverId belongs to the driver assigned or available for the ride.
+      \item Marks the ride as declined or removes the driver from the list of available candidates.
+      \item May trigger reassignment of the ride to another driver or notify the passenger.
+    \end{itemize}
+  \end{itemize}
 \end{enumerate}
 
 \section{Domain Model}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=1\textwidth]{Domain Model.jpg} 
+  \includegraphics[width=1\textwidth]{Domain_Model_TaxiTap-Page.png} 
 \end{figure}
 
 \section{Functional Requirements}
@@ -2332,7 +3038,7 @@ null
 
 \section{Architectural Requirements}
 
-\textbf{\href{run:./Architectural Requirements.pdf}{Architectural Requirements Document}}
+\textbf{\href{https://github.com/COS301-SE-2025/Taxi-Tap/blob/7a74ddb4e0d0e853188d32b984f07e9f6e0393c3/docs/Architectural\%20Requirements.pdf}{Architectural Requirements Document Here}}
 
 \subsection{Quality Requirements}
 Quality requirements determine the overall quality of Taxi Tap by specifying criteria that define how well the system performs and behaves.
