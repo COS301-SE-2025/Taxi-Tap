@@ -107,14 +107,22 @@ const createMockQueryCtx = (routes = mockRoutes, enrichedStops = mockEnrichedSto
         eq: jest.fn().mockReturnThis(),
         first: jest.fn().mockResolvedValue(null)
       };
+    } else if (table === "taxiTap_users") {
+      return {
+        filter: jest.fn(() => ({
+          first: jest.fn().mockResolvedValue({
+            _id: "user1",
+            accountType: "both",
+          }),
+        })),
+      };
     }
     return {
-      collect: jest.fn().mockResolvedValue([]),
-      filter: jest.fn().mockReturnThis(),
-      withIndex: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      first: jest.fn().mockResolvedValue(null),
-      unique: jest.fn().mockResolvedValue(null)
+      withIndex: jest.fn(() => ({
+        filter: jest.fn(() => ({
+          first: jest.fn().mockResolvedValue(null),
+        })),
+      })),
     };
   });
   
