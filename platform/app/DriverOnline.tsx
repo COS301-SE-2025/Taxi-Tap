@@ -54,7 +54,7 @@ export default function DriverOnline({
   todaysEarnings,
   currentRoute = "Not Set",
 }: DriverOnlineProps) {
-  console.log("DriverOnline: Function called");
+  // console.log("DriverOnline: Function called");
   const { width, height } = Dimensions.get('window');
 
   const updateTaxiSeatAvailability = useMutation(api.functions.taxis.updateAvailableSeats.updateTaxiSeatAvailability);
@@ -70,9 +70,9 @@ export default function DriverOnline({
   const [showSafetyMenu, setShowSafetyMenu] = useState(false);
   const mapRef = useRef<MapView | null>(null);
   
-  console.log("DriverOnline: About to call useNotifications");
+  // console.log("DriverOnline: About to call useNotifications");
   const { notifications, markAsRead } = useNotifications();
-  console.log("DriverOnline: useNotifications called");
+  // console.log("DriverOnline: useNotifications called");
   
   const taxiInfo = useQuery(
     api.functions.taxis.getTaxiForDriver.getTaxiForDriver,
@@ -82,10 +82,10 @@ export default function DriverOnline({
   const acceptRide = useMutation(api.functions.rides.acceptRide.acceptRide);
   const cancelRide = useMutation(api.functions.rides.cancelRide.cancelRide);
 
-  console.log("DriverOnline: Component mounted");
-  console.log("DriverOnline: user", user);
-  console.log("DriverOnline: userId", userId);
-  console.log("DriverOnline: notifications from hook", notifications);
+  // console.log("DriverOnline: Component mounted");
+  // console.log("DriverOnline: user", user);
+  // console.log("DriverOnline: userId", userId);
+  // console.log("DriverOnline: notifications from hook", notifications);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -154,11 +154,11 @@ export default function DriverOnline({
   }, [onGoOffline, router]);
 
   useEffect(() => {
-    console.log("DriverOnline: useEffect triggered");
-    console.log("DriverOnline: user exists?", !!user);
-    console.log("DriverOnline: notifications length", notifications?.length || 0);
+    // console.log("DriverOnline: useEffect triggered");
+    // console.log("DriverOnline: user exists?", !!user);
+    // console.log("DriverOnline: notifications length", notifications?.length || 0);
     if (!user) {
-      console.log("DriverOnline: No user, returning early");
+      // console.log("DriverOnline: No user, returning early");
       return;
     }
     // console.log("DriverOnline: notifications", notifications);
@@ -167,7 +167,7 @@ export default function DriverOnline({
     );
     // console.log("DriverOnline: found rideRequest", rideRequest);
     if (rideRequest) {
-      console.log("DriverOnline: Showing Alert for ride request");
+      // console.log("DriverOnline: Showing Alert for ride request");
       Alert.alert(
         "New Ride Request",
         rideRequest.message,
@@ -175,7 +175,7 @@ export default function DriverOnline({
           {
             text: "Decline",
             onPress: () => {
-              console.log("DriverOnline: Driver declined ride");
+              // console.log("DriverOnline: Driver declined ride");
               cancelRide({
                 rideId: rideRequest.metadata.rideId,
                 userId: user.id as Id<"taxiTap_users">,
