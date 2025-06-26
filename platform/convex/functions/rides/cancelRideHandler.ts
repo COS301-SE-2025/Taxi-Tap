@@ -26,7 +26,7 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
       require("../../_generated/api").internal.functions.notifications.rideNotifications.sendRideNotification,
       {
         rideId: args.rideId,
-        type: "ride_cancelled_by_passenger",
+        type: "ride_cancelled",
         driverId: ride.driverId,
         passengerId: ride.passengerId,
       }
@@ -37,7 +37,7 @@ export const cancelRideHandler = async (ctx: any, args: { rideId: string; userId
       require("../../_generated/api").internal.functions.notifications.rideNotifications.sendRideNotification,
       {
         rideId: args.rideId,
-        type: "ride_cancelled_by_driver",
+        type: "ride_declined",
         driverId: ride.driverId,
         passengerId: ride.passengerId,
       }

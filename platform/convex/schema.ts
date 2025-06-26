@@ -206,6 +206,7 @@ routes: defineTable({
     v.literal("ride_started"),
     v.literal("ride_completed"),
     v.literal("ride_cancelled"),
+    v.literal("ride_declined"),
     v.literal("driver_arrived"),
     v.literal("payment_received"),
     v.literal("rating_request"),

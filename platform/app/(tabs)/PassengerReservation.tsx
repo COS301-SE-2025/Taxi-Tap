@@ -56,6 +56,7 @@ export default function SeatReserved() {
 	const showStartRide = rideStatus === 'accepted';
 	const showEndRide = rideStatus === 'started' || rideStatus === 'in_progress';
 	const showCancel = rideStatus === 'requested' || rideStatus === 'accepted';
+	const updateTaxiSeatAvailability = useMutation(api.functions.taxis.updateAvailableSeats.updateTaxiSeatAvailability);
 
 	useLayoutEffect(() => {
 		navigation.setOptions({
@@ -342,13 +343,14 @@ export default function SeatReserved() {
 		}
 	};
 
-	const handleCancelRequest = async () => {
+	const handleCancelRequest = async () => { //this for when user wants to cancel the ride request
 		if (!taxiInfo?.rideId || !user?.id) {
 			Alert.alert('Error', 'No ride or user information available.');
 			return;
 		}
 		try {
 			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
+			await updateTaxiSeatAvailability({ rideId: taxiInfo.rideId, action: "increase" });
 			Alert.alert('Success', 'Ride cancelled.');
 			router.push('/HomeScreen');
 		} catch (error: any) {
