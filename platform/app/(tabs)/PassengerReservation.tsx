@@ -58,6 +58,9 @@ export default function SeatReserved() {
 	const showCancel = rideStatus === 'requested' || rideStatus === 'accepted';
 	const updateTaxiSeatAvailability = useMutation(api.functions.taxis.updateAvailableSeats.updateTaxiSeatAvailability);
 
+	const [hasFittedRoute, setHasFittedRoute] = useState(false);
+	const [isFollowing, setIsFollowing] = useState(true);
+
 	useLayoutEffect(() => {
 		navigation.setOptions({
 			headerShown: false
@@ -270,33 +273,61 @@ export default function SeatReserved() {
 		}
 	}, [currentLocation, destination, routeLoaded, isLoadingRoute]);
 
-	// Fit map to show route when coordinates are available
+	// Initial fit to route when route or destination changes
 	useEffect(() => {
-		if (routeCoordinates.length > 0 && currentLocation && destination && mapRef.current) {
-			const coordinates = [
-				{ latitude: currentLocation.latitude, longitude: currentLocation.longitude },
-				{ latitude: destination.latitude, longitude: destination.longitude },
-				...routeCoordinates
-			];
-			
-			// Small delay to ensure map is ready
-			setTimeout(() => {
-				mapRef.current?.fitToCoordinates(coordinates, {
+		if (
+			routeCoordinates.length > 0 &&
+			currentLocation &&
+			destination &&
+			mapRef.current &&
+			!hasFittedRoute
+		) {
+			mapRef.current.fitToCoordinates(
+				[
+					{ latitude: currentLocation.latitude, longitude: currentLocation.longitude },
+					{ latitude: destination.latitude, longitude: destination.longitude },
+					...routeCoordinates,
+				],
+				{
 					edgePadding: { top: 100, right: 50, bottom: 50, left: 50 },
 					animated: true,
-				});
-			}, 100);
+				}
+			);
+			setHasFittedRoute(true);
+			setIsFollowing(true);
 		}
-	}, [routeCoordinates, currentLocation, destination]);
+	}, [routeCoordinates, currentLocation, destination, hasFittedRoute]);
+
+	// Reset fit when route or destination changes
+	useEffect(() => {
+		setHasFittedRoute(false);
+	}, [destination, routeCoordinates]);
+
+	// Live tracking: follow user when ride is started/in_progress and isFollowing
+	useEffect(() => {
+		if (
+			(rideStatus === 'started' || rideStatus === 'in_progress') &&
+			isFollowing &&
+			mapRef.current &&
+			currentLocation
+		) {
+			mapRef.current.animateToRegion(
+				{
+					latitude: currentLocation.latitude,
+					longitude: currentLocation.longitude,
+					latitudeDelta: 0.01,
+					longitudeDelta: 0.01,
+				},
+				500
+			);
+		}
+	}, [currentLocation, rideStatus, isFollowing]);
 
 	// Handle notifications effect
 	useEffect(() => {
-		if (!currentLocation || !destination) return;
-		
 		const rideStarted = notifications.find(
 			n => n.type === 'ride_started' && !n.isRead
 		);
-		
 		if (rideStarted) {
 			Alert.alert(
 				'Ride Started',
@@ -313,8 +344,30 @@ export default function SeatReserved() {
 				],
 				{ cancelable: false }
 			);
+			return;
 		}
-	}, [notifications, markAsRead, currentLocation, destination]);
+
+		const rideDeclined = notifications.find(
+			n => n.type === 'ride_declined' && !n.isRead
+		);
+		if (rideDeclined) {
+			Alert.alert(
+				'Ride Declined',
+				rideDeclined.message || 'Your ride request was declined.',
+				[
+					{
+						text: 'OK',
+						onPress: () => {
+							markAsRead(rideDeclined._id);
+							router.push('/HomeScreen');
+						},
+						style: 'default',
+					},
+				],
+				{ cancelable: false }
+			);
+		}
+	}, [notifications, markAsRead, router]);
 
 	const handleStartRide = async () => {
 		if (!taxiInfo?.rideId || !user?.id) {
@@ -610,15 +663,16 @@ export default function SeatReserved() {
 						<MapView
 							ref={mapRef}
 							style={{ flex: 1 }}
-							provider={PROVIDER_GOOGLE} // Force Google Maps on all platforms
+							provider={PROVIDER_GOOGLE}
 							initialRegion={{
 								latitude: (currentLocation.latitude + destination.latitude) / 2,
 								longitude: (currentLocation.longitude + destination.longitude) / 2,
 								latitudeDelta: Math.abs(currentLocation.latitude - destination.latitude) * 2 + 0.01,
 								longitudeDelta: Math.abs(currentLocation.longitude - destination.longitude) * 2 + 0.01,
 							}}
-							// Use dark map style when in dark mode
 							customMapStyle={isDark ? darkMapStyle : []}
+							onPanDrag={() => setIsFollowing(false)}
+							onRegionChangeComplete={() => setIsFollowing(false)}
 						>
 							<Marker
 								coordinate={currentLocation}
@@ -758,6 +812,14 @@ export default function SeatReserved() {
 					</View>
 				</View>
 			</ScrollView>
+			{!isFollowing && (
+				<TouchableOpacity
+					style={{ position: 'absolute', bottom: 120, right: 30, backgroundColor: theme.primary, borderRadius: 25, padding: 12, zIndex: 10 }}
+					onPress={() => setIsFollowing(true)}
+				>
+					<Icon name="locate" size={24} color={isDark ? '#121212' : '#fff'} />
+				</TouchableOpacity>
+			)}
 		</SafeAreaView>
 	)
 }
