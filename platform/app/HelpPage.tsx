@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, SafeAreaView, Linking } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function HelpScreen() {
@@ -64,13 +64,15 @@ export default function HelpScreen() {
   return (
     <SafeAreaView style={dynamicStyles.safeArea}>
       <ScrollView contentContainerStyle={dynamicStyles.container}>
-        <Text style={dynamicStyles.sectionTitle}>User Manual</Text>
+          <Text style={dynamicStyles.sectionTitle}>User Manual</Text>
 
         <View style={dynamicStyles.card}>
           <Text style={dynamicStyles.question}>How to navigate the app?</Text>
-          <Text style={dynamicStyles.answer}>
-            Link to manual
-          </Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://raw.githubusercontent.com/COS301-SE-2025/Taxi-Tap/main/docs/Taxi%20Tap%20User%20Manual.pdf')}>
+            <Text style={dynamicStyles.answer}>
+              Link to manual
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={dynamicStyles.sectionTitle}>Frequently Asked Questions</Text>
