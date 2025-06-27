@@ -4,7 +4,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap/issues)
 [![codecov](https://codecov.io/gh/COS301-SE-2025/Taxi-Tap/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/Taxi-Tap)
 [![Dependencies](https://img.shields.io/librariesio/github/COS301-SE-2025/Taxi-Tap)](https://libraries.io/github/COS301-SE-2025/Taxi-Tap)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/COS301-SE-2025/Taxi-Tap/ci.yml?branch=main)](https://github.com/COS301-SE-2025/Taxi-Tap/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/COS301-SE-2025/Taxi-Tap/platform.yml?branch=main)](https://github.com/COS301-SE-2025/Taxi-Tap/actions)
 [![Languages](https://img.shields.io/github/languages/count/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
 [![Top Language](https://img.shields.io/github/languages/top/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
 [![Repo Size](https://img.shields.io/github/repo-size/COS301-SE-2025/Taxi-Tap)](https://github.com/COS301-SE-2025/Taxi-Tap)
@@ -29,7 +29,7 @@ The system connects passengers and taxi operators through a location-aware mobil
   </a>
 </p>
 
-- [Functional Requirements (SRS)](docs/SRS.pdf)
+- [Functional Requirements (SRS)](docs/SRS%20Demo%202.pdf)
 - [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/137/views/1)
 
 ## Demo 1
@@ -46,10 +46,22 @@ The system connects passengers and taxi operators through a location-aware mobil
 ## Demo 2
 
 ### Presentation:
+[Watch the Presentation Video](https://drive.google.com/file/d/1Drq_TwIEtVKRozfLV-BxJGurt6ZTwGnA/view?usp=sharing)
 
 ### Live Demo:
+[Watch the Live Demo Video](https://drive.google.com/file/d/11mDZAy1Mt7-55KsPhjvOCNG1LzdTNvwG/view?usp=sharing)
 
 ### SRS Document:
+[Functional Requirements (SRS)](docs/SRS%20Demo%202.pdf)
+
+### Architectural Requirements Document:
+[Architectural Requirements](docs/Architectural%20Requirements.pdf)
+
+### Coding Standards Document:
+[Coding Standards](docs/Coding%20Standards.pdf)
+
+### User Manual:
+[User Manual](docs/Taxi%20Tap%20User%20Manual.pdf)
 
 ## Technology Stack
 
@@ -92,7 +104,7 @@ The system connects passengers and taxi operators through a location-aware mobil
 | ![](assets/images/unathi.jpeg) | **Unathi Dlamini** | Backend Engineer | [GitHub](https://github.com/un4thi) | [LinkedIn](https://linkedin.com/unathi-dlamini-237007224/) | A third-year Computer Science student at the University of Pretoria with a strong passion for programming, web design, and continuous learning. I enjoy working in teams, tackling challenges collaboratively, and expanding my skill set through hands-on projects. Currently exploring areas like cybersecurity and software engineering, I'm always eager to take on new technologies and improve both my technical and problem-solving abilities. |
 | ![](assets/images/tebogo.jpg) | **Moyahabo Hamese** | Frontend Engineer | [GitHub](https://github.com/habohamese) | [LinkedIn](https://www.linkedin.com/in/moyahabo-hamese/) | I am a Computer Science student interested in front-end development and cybersecurity. I enjoy working in collaborative teams and solving real-world problems through thoughtful and practical solutions. My experiences include, but are not limited to: (1) contributing to a community sensor project for education, (2) engaging with the UP Consulting Society to tackle case-based challenges, and (3) designing applications that provide users with a positive and intuitive experience. Passionate about continuous learning and innovation, I bring a balance of technical skills, creativity, and a problem-solving mindset to every project. |
 | ![](assets/images/ati.jpeg) | **Atidaishe Mupanemunda** | Backend Engineer | [GitHub](https://github.com/WillyDoo428) | [LinkedIn](https://www.linkedin.com/in/atidaishe-mupanemunda-87ba721b7/) | Spiritually grounded, intellectually driven, and fiercely independent, Atidaishe brings a rare blend of emotional intelligence, technical clarity, and visionary leadership to every table he sits at. Whether he's architecting backends, mentoring peers, meditating, or reverse-engineering programming languages, he's always seeking growth—with intensity, intentionality, and heart. |
-| ![](assets/images/nev.jpg) | **Nevan Rahman** | Fullstack Engineer | [GitHub](https://github.com/rsnevan) | [LinkedIn](https://linkedin.com/in/nevanrahman) | As a final-year BSc Computer Science (with Data Science) student, I combine technical proficiency with strong leadership skills developed through my role as a Senior Team Lead in a university IT Lab. I excel in handling client issues while maintaining complex IT environments. My expertise spans Frontend Development, Backend Systems, API Integration, and Data Science with a focus on creating responsive web applications. I've collaborated on diverse projects that have sharpened my technical abilities across various development environments. I'm known for exceptional communication skills and a team-oriented work ethic, consistently putting in the necessary effort to achieve success. My passion lies in software architecture, full-stack development, database technologies, and machine learning applications.  |
+| ![](assets/images/nev.jpg) | **Nevan Rahman** | Fullstack/Data Engineer | [GitHub](https://github.com/rsnevan) | [LinkedIn](https://linkedin.com/in/nevanrahman) | As a final-year BSc Computer Science (with Data Science) student, I combine technical proficiency with strong leadership skills developed through my role as a Senior Team Lead in a university IT Lab. I excel in handling client issues while maintaining complex IT environments. My expertise spans Frontend Development, Backend Systems, API Integration, and Data Science with a focus on creating responsive web applications. I've collaborated on diverse projects that have sharpened my technical abilities across various development environments. I'm known for exceptional communication skills and a team-oriented work ethic, consistently putting in the necessary effort to achieve success. My passion lies in software architecture, full-stack development, database technologies, and machine learning applications.  |
 
 ## Features (Planned)
 - Real-time taxi tracking  
