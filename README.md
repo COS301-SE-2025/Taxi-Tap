@@ -29,7 +29,7 @@ The system connects passengers and taxi operators through a location-aware mobil
   </a>
 </p>
 
-- [Functional Requirements (SRS)](docs/SRS%20%Demo%20.pdf)
+- [Functional Requirements (SRS)](docs/SRS%20%Demo%202.pdf)
 - [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/137/views/1)
 
 ## Demo 1
@@ -52,7 +52,7 @@ The system connects passengers and taxi operators through a location-aware mobil
 [Watch the Live Demo Video](https://drive.google.com/file/d/11mDZAy1Mt7-55KsPhjvOCNG1LzdTNvwG/view?usp=sharing)
 
 ### SRS Document:
-[Functional Requirements (SRS)](docs/SRS%20%Demo%20.pdf)
+[Functional Requirements (SRS)](docs/SRS%20%Demo%202.pdf)
 
 ### Architectural Requirements Document:
 [Architectural Requirements](docs/Architectural%20Requirements.pdf)
