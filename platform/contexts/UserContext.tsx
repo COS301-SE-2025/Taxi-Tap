@@ -23,6 +23,7 @@ interface UserLoginData {
 interface UserContextType {
   user: User | null;
   loading: boolean;
+  isAuthenticated: boolean;
   login: (userData: UserLoginData) => Promise<void>;
   logout: () => Promise<void>;
   updateUserRole: (newRole: string | undefined) => Promise<void>;
@@ -49,44 +50,88 @@ export const useUser = (): UserContextType => {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
+    const loadUserFromStorage = async () => {
+      try {
+        const userData = await AsyncStorage.multiGet([
+          'userId',
+          'userName',
+          'userRole',
+          'userAccountType',
+          'userNumber',
+        ]);
+        const [userId, userName, userRole, userAccountType, userNumber] = userData.map(
+          ([, value]) => value
+        );
+
+        if (userId && userAccountType && userName && userNumber) {
+          setUser({
+            id: userId,
+            name: userName || '',
+            role: userRole || '',
+            accountType: userAccountType as "passenger" | "driver" | "both",
+            phoneNumber: userNumber || '',
+          });
+        } else {
+          setUser(null); // Explicitly clear user if invalid or incomplete
+        }
+      } catch (error) {
+        console.error('Error loading user from storage:', error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
     loadUserFromStorage();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const loadUserFromStorage = async (): Promise<void> => {
-    try {
-      const userData = await AsyncStorage.multiGet(['userId', 'userName', 'userRole', 'userAccountType', 'userNumber' ]);
-      const [userId, userName, userRole, userAccountType, userNumber] = userData.map(([key, value]) => value);
+  // const loadUserFromStorage = async (): Promise<void> => {
+  //   try {
+  //     const userData = await AsyncStorage.multiGet(['userId', 'userName', 'userRole', 'userAccountType', 'userNumber' ]);
+  //     const [userId, userName, userRole, userAccountType, userNumber] = userData.map(([key, value]) => value);
       
-      if (userId) {
-        setUser({
-          id: userId,
-          name: userName || '',
-          role: userRole || '',
-          accountType: userAccountType as "passenger" | "driver" | "both",
-          phoneNumber: userNumber || '',
-        });
-      }
-    } catch (error) {
-      console.error('Error loading user from storage:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (userId) {
+  //       setUser({
+  //         id: userId,
+  //         name: userName || '',
+  //         role: userRole || '',
+  //         accountType: userAccountType as "passenger" | "driver" | "both",
+  //         phoneNumber: userNumber || '',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading user from storage:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const login = async (userData: UserLoginData): Promise<void> => {
+    const id = userData._id || userData.id;
+    if (!id) {
+      console.warn("Login failed: missing user ID");
+      return;
+    }
+
     const userInfo: User = {
-      id: userData._id || userData.id || '',
+      id,
       name: userData.name,
       role: userData.currentActiveRole,
       accountType: userData.accountType,
       phoneNumber: userData.phoneNumber,
     };
-    
+
     setUser(userInfo);
-    
-    // Save to AsyncStorage
+    setIsAuthenticated(true);
+
     await AsyncStorage.multiSet([
       ['userId', userInfo.id],
       ['userName', userInfo.name],
@@ -98,6 +143,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     setUser(null);
+    setIsAuthenticated(false);
     await AsyncStorage.multiRemove(['userId', 'userName', 'userRole', 'userAccountType', 'userNumber' ]);
   };
 
@@ -146,6 +192,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     loading,
     login,
     logout,
+    isAuthenticated,
     updateUserRole,
     updateUserName,
     updateAccountType,
