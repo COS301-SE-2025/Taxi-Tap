@@ -15,7 +15,7 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { Dropdown } from 'react-native-element-dropdown';
-import { api } from "../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 import { useMutation } from 'convex/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -74,12 +74,12 @@ const handleSignup = async () => {
     console.log('🚀 Retrieved userId from storage:', userId);
 if (selectedRole === 'driver') {
   router.push({
-    pathname: '/DriverOffline',
+    pathname: '/(driverTabs)/DriverOffline',
     params: { userId: result.userId }
   });
 } else if (selectedRole === 'passenger') {
   router.push({
-    pathname: '/HomeScreen',
+    pathname: '/(tabs)/HomeScreen',
     params: { userId: result.userId }
   });
 }
@@ -105,7 +105,7 @@ if (selectedRole === 'driver') {
         >
           <View style={{ alignItems: 'center' }}>
             <Image
-              source={require('../assets/images/icon.png')}
+              source={require('../../assets/images/icon.png')}
               style={{ width: '100%', height: 200 }}
             />
           </View>
@@ -293,7 +293,7 @@ if (selectedRole === 'driver') {
             }}
           >
             <Image
-              source={require('../assets/images/google5.png')}
+              source={require('../../assets/images/google5.png')}
               style={{ width: 24, height: 24 }}
             />
           </Pressable>

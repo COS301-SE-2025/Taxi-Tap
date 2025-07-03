@@ -13,11 +13,11 @@ import { Ionicons } from '@expo/vector-icons';
 import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { useConvex } from "convex/react";
-import { api } from "../convex/_generated/api";
+import { api } from "../../convex/_generated/api";
 import { ConvexProvider } from 'convex/react';
-import { useUser } from '../contexts/UserContext';
-import icon from '../assets/images/icon.png';
-import google from '../assets/images/google5.png';
+import { useUser } from '../../contexts/UserContext';
+import icon from '../../assets/images/icon.png';
+import google from '../../assets/images/google5.png';
 
 export default function Login() {
   const [number, setNumber] = useState('');
@@ -48,12 +48,12 @@ export default function Login() {
       
       if (result.currentActiveRole === 'driver') {
         router.push({
-        pathname: '/DriverOffline',
+        pathname: '/(driverTabs)/DriverOffline',
         params: { userId: result.id.toString() }
       });
       } else if (result.currentActiveRole === 'passenger') {
         router.push({
-        pathname: '/HomeScreen',
+        pathname: '/(tabs)/HomeScreen',
         params: { userId: result.id.toString() }
       });
       }
