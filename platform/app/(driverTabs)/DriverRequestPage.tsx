@@ -3,11 +3,11 @@ import { SafeAreaView, View, ScrollView, Text, TouchableOpacity, StyleSheet, Ale
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useLocalSearchParams, useNavigation, router } from 'expo-router';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { useUser } from '../contexts/UserContext';
-import { Id } from "../convex/_generated/dataModel";
+import { api } from '../../convex/_generated/api';
+import { useUser } from '../../contexts/UserContext';
+import { Id } from "../../convex/_generated/dataModel";
 
 export default () => {
     const params = useLocalSearchParams();

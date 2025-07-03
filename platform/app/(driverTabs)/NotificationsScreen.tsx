@@ -8,8 +8,8 @@ import {
   RefreshControl,
   ListRenderItem
 } from 'react-native';
-import { useNotifications } from '../contexts/NotificationContext';
-import { Id } from '../convex/_generated/dataModel';
+import { useNotifications } from '../../contexts/NotificationContext';
+import { Id } from '../../convex/_generated/dataModel';
 
 interface Notification {
   _id: Id<"notifications">;

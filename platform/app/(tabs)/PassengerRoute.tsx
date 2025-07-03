@@ -240,7 +240,7 @@ export default function RouteSelectionScreen() {
     }
 
     router.push({
-      pathname: '../TaxiInformation',
+      pathname: '../(tabs)/TaxiInformation',
       params: {
         destinationName: route.destination,
         destinationLat: route.destinationCoords.latitude.toString(),

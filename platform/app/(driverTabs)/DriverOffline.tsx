@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRouter,useLocalSearchParams } from 'expo-router';
-import { useTheme } from '../contexts/ThemeContext';
-import { useRouteContext } from '../contexts/RouteContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useRouteContext } from '../../contexts/RouteContext';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
@@ -22,13 +22,6 @@ import { useUser } from '@/contexts/UserContext';
 interface DriverOfflineProps {
   onGoOnline: () => void;
   todaysEarnings: number;
-}
-
-interface MenuItemType {
-  icon: string;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
 }
 
 interface QuickActionType {
@@ -69,23 +62,18 @@ export default function DriverOffline({
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: false,
-      tabBarStyle: { display: 'none' },
     });
   }, [navigation]);
 
   useEffect(() => {
     // Redirect if accessed directly (not via DriverHomeScreen)
     if (typeof onGoOnline !== 'function') {
-      router.replace('/DriverHomeScreen');
+      router.replace('/(driverTabs)/DriverHomeScreen');
     }
   }, [onGoOnline, router]);
 
   const handleSetRoute = () => {
-    router.push('/SetRoute');
-  };
-
-  const handleMenuPress = () => {
-    setShowMenu(!showMenu);
+    router.push('/(driverTabs)/SetRoute');
   };
 
   const handleSafetyPress = () => {
@@ -113,41 +101,8 @@ export default function DriverOffline({
 
   const handleEarningsPress = () => {
     // Type-safe navigation
-    router.push('/EarningsPage');
+    router.push('/(driverTabs)/EarningsPage');
   };
-
-  const menuItems: MenuItemType[] = [
-    {
-      icon: 'person-outline',
-      title: 'My Profile',
-      subtitle: 'Driver details & documents',
-      onPress: () => router.push('/DriverProfile'),
-    },
-    {
-      icon: 'car-outline',
-      title: 'My Taxi & Route',
-      subtitle: 'Vehicle info & route settings',
-      onPress: () => router.push('/DriverRequestPage'),
-    },
-    {
-      icon: 'time-outline',
-      title: 'Trip History',
-      subtitle: 'Past rides & routes',
-      onPress: () => router.push('/EarningsPage'),
-    },
-    {
-      icon: 'settings-outline',
-      title: 'Toggle Theme',
-      subtitle: 'Switch between light and dark mode',
-      onPress: handleToggleTheme,
-    },
-    { 
-      icon: "settings-outline", 
-      title: "Help", 
-      subtitle: "App information",
-      onPress: () => navigation.navigate('HelpPage' as never)
-    },
-  ];
 
   const quickActions: QuickActionType[] = [
     {
@@ -156,7 +111,7 @@ export default function DriverOffline({
       value: (currentRoute || "Not Set") as string,
       subtitle: "Tap to set route",
       color: (currentRoute || "Not Set") === "Not Set" ? "#FF9900" : "#00A591",
-      onPress: () => router.push('/SetRoute'),
+      onPress: () => router.push('/(driverTabs)/SetRoute'),
     },
     {
       icon: "car-outline",
@@ -186,7 +141,6 @@ export default function DriverOffline({
     container: {
       flex: 1,
       backgroundColor: theme.background,
-      paddingTop: 20,
     },
     safeArea: {
       flex: 1,
@@ -207,15 +161,6 @@ export default function DriverOffline({
     headerLeft: {
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    menuButton: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: isDark ? theme.primary : "#f5f5f5",
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 12,
     },
     headerTitle: {
       fontSize: 18,
@@ -253,20 +198,6 @@ export default function DriverOffline({
       flex: 1,
       paddingHorizontal: 20,
       paddingTop: 20,
-    },
-    earningsCard: {
-      backgroundColor: theme.surface,
-      borderRadius: 30,
-      padding: 24,
-      marginBottom: 20,
-      alignItems: "center",
-      shadowColor: theme.shadow,
-      shadowOpacity: isDark ? 0.3 : 0.15,
-      shadowOffset: { width: 0, height: 4 },
-      shadowRadius: 4,
-      elevation: 4,
-      borderLeftWidth: 4,
-      borderLeftColor: theme.primary,
     },
     earningsAmount: {
       color: theme.primary,
@@ -526,13 +457,6 @@ export default function DriverOffline({
       <View style={dynamicStyles.container}>
         <View style={dynamicStyles.header}>
           <View style={dynamicStyles.headerLeft}>
-            <TouchableOpacity 
-              style={dynamicStyles.menuButton}
-              onPress={handleMenuPress}
-              accessibilityLabel="Open menu"
-            >
-              <Icon name="menu" size={24} color={isDark ? "#121212" : "#FF9900"} />
-            </TouchableOpacity>
             <Text style={dynamicStyles.headerTitle}>My Dashboard</Text>
           </View>
           
@@ -572,7 +496,7 @@ export default function DriverOffline({
               borderLeftColor: theme.primary,
               elevation: 4,
             }}
-            onPress={() => router.push('/EarningsPage')}
+            onPress={() => router.push('/(driverTabs)/EarningsPage')}
           >
             <Text style={dynamicStyles.earningsAmount}>
               R{(todaysEarnings ?? 0).toFixed(2)}
@@ -647,44 +571,6 @@ export default function DriverOffline({
         >
           <Icon name="shield-checkmark" size={28} color="#FFFFFF" />
         </TouchableOpacity>
-
-        <Modal
-          visible={showMenu}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setShowMenu(false)}
-        >
-          <TouchableOpacity 
-            style={dynamicStyles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowMenu(false)}
-          >
-            <View style={dynamicStyles.menuModal}>
-              <View style={dynamicStyles.menuModalHeader}>
-                <Text style={dynamicStyles.menuModalHeaderText}>Menu</Text>
-              </View>
-              {menuItems.map((item, index) => (
-                <TouchableOpacity 
-                  key={index}
-                  style={dynamicStyles.menuModalItem}
-                  onPress={() => {
-                    item.onPress();
-                    setShowMenu(false);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <View style={dynamicStyles.menuModalItemIcon}>
-                    <Icon name={item.icon} size={20} color={isDark ? "#121212" : "#FF9900"} />
-                  </View>
-                  <View style={dynamicStyles.menuModalItemContent}>
-                    <Text style={dynamicStyles.menuModalItemTitle}>{item.title}</Text>
-                    <Text style={dynamicStyles.menuModalItemSubtitle}>{item.subtitle}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </TouchableOpacity>
-        </Modal>
 
         {showSafetyMenu && (
           <TouchableOpacity 

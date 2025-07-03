@@ -3,12 +3,12 @@ import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet, SafeAr
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { useUser } from '../contexts/UserContext';
-import { Id } from '../convex/_generated/dataModel';
-import { useTheme } from '../contexts/ThemeContext';
+import { api } from '../../convex/_generated/api';
+import { useUser } from '../../contexts/UserContext';
+import { Id } from '../../convex/_generated/dataModel';
+import { useTheme } from '../../contexts/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 export default function DriverProfile() {
     const { userId } = useLocalSearchParams<{ userId: string }>();
@@ -58,7 +58,7 @@ export default function DriverProfile() {
     const switchActiveRole = useMutation(api.functions.users.UserManagement.switchActiveRole.switchActiveRole);;
 
     const handleVehicle = () => {
-        router.push('../VehicleDriver');
+        router.push('../(driverTabs)/VehicleDriver');
     };
 
     const handleDocs = () => {
@@ -66,16 +66,16 @@ export default function DriverProfile() {
     };
 
     const handleEarnings = () => {
-        router.push('../EarningsPage');
+        router.push('../(driverTabs)/EarningsPage');
     };
 
     const handleRoutes = () => {
-        //router.push('../Routes'); ->change to real name
+        //router.push('../(driverTabs)/Routes'); ->change to real name
     };
 
     const handleSignout = async () => {
         await logout();
-        router.push('../LandingPage');
+        router.push('../(driverTabs)/LandingPage');
     };
 
     const handleNameChange = (newName: string) => {
@@ -121,7 +121,7 @@ export default function DriverProfile() {
                                 await updateUserRole('passenger');
                                 
                                 console.log('Success', 'Successfully switched to passenger mode!');
-                                router.push('../HomeScreen');
+                                router.push('../(tabs)/HomeScreen');
                             } catch (error: any) {
                                 console.error('Switch to passenger error (first time):', error);
                                 console.log('Error', error.message || 'Failed to switch to passenger mode');
@@ -158,7 +158,7 @@ export default function DriverProfile() {
                                 
                                 console.log('Context updated, showing success alert...');
                                 console.log('Success', 'Switched to passenger mode!');
-                                router.push('../HomeScreen');
+                                router.push('../(tabs)/HomeScreen');
                                 
                             } catch (error: any) {
                                 console.error('Switch to passenger error (both account):', error);

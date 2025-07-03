@@ -339,7 +339,7 @@ export default function HomeScreen() {
     }
 
     router.push({
-      pathname: './TaxiInformation',
+      pathname: './(tabs)/TaxiInformation',
       params: {
         destinationName: destination.name,
         destinationLat: destination.latitude.toString(),
@@ -668,7 +668,7 @@ export default function HomeScreen() {
     //         onPress: () => {
     //           markAsRead(rideAccepted._id);
     //           router.push({
-    //             pathname: './PassengerReservation',
+    //             pathname: './(tabs)/PassengerReservation',
     //             params: currentLocation && destination ? {
     //               currentLat: currentLocation.latitude.toString(),
     //               currentLng: currentLocation.longitude.toString(),

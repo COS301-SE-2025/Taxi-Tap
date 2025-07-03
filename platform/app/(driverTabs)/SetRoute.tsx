@@ -21,12 +21,12 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from 'expo-router';
-import { useTheme } from '../contexts/ThemeContext';
-import { useRouteContext } from '../contexts/RouteContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useRouteContext } from '../../contexts/RouteContext';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { useUser } from '../contexts/UserContext';
-import { Id } from '../convex/_generated/dataModel';
+import { api } from '../../convex/_generated/api';
+import { useUser } from '../../contexts/UserContext';
+import { Id } from '../../convex/_generated/dataModel';
 
 // ============================================================================
 // TYPE DEFINITIONS

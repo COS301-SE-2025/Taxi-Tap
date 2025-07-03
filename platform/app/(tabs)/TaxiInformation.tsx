@@ -211,7 +211,7 @@ export default function TaxiInformation() {
               text: 'OK',
               onPress: () => {
                 router.push({
-                  pathname: './PassengerReservation',
+                  pathname: './(tabs)/PassengerReservation',
                   params: {
                     currentLat,
                     currentLng,

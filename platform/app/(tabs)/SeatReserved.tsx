@@ -307,7 +307,7 @@ export default function SeatReserved() {
 		try {
 			await cancelRide({ rideId: taxiInfo.rideId, userId: user.id as Id<'taxiTap_users'> });
 			alert('Ride cancelled.');
-			router.push('/HomeScreen');
+			router.push('/(tabs)/HomeScreen');
 		} catch (error: any) {
 			alert(error?.message || 'Failed to cancel ride.');
 		}
@@ -617,7 +617,7 @@ export default function SeatReserved() {
 								<Text style={dynamicStyles.driverVehicle}>
 									{taxiInfo?.taxi?.model || "Hiace-Sesfikile"}
 								</Text>
-								<TouchableOpacity onPress={() => router.push({pathname: '/TaxiInfoPage', params: { userId: vehicleInfo.userId }})}>
+								<TouchableOpacity onPress={() => router.push({pathname: '/(tabs)/TaxiInfoPage', params: { userId: vehicleInfo.userId }})}>
 									<Icon name="information-circle" size={30} color={isDark ? "#121212" : "#FF9900"} />
 								</TouchableOpacity>
 							</View>

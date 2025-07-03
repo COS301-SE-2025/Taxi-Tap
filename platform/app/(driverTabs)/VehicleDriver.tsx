@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, Image, ScrollView, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { useUser } from '../contexts/UserContext';
-import { Id } from '../convex/_generated/dataModel';
+import { api } from '../../convex/_generated/api';
+import { useUser } from '../../contexts/UserContext';
+import { Id } from '../../convex/_generated/dataModel';
 
 export default function VehicleDriver() {
     const { user } = useUser();
@@ -15,7 +15,7 @@ export default function VehicleDriver() {
     const [color, setColor] = useState('');
     const [year, setYear] = useState('');
 
-    // Use 'skip' instead of undefined to avoid type error, and cast user.id to Id<"taxiTap_users"> for Convex
+    // Use 'skip' instead of undefined to avoid type error, and cast user.id to Id<".pngTap_users"> for Convex
     const taxiData = useQuery(
         api.functions.taxis.getTaxiForDriver.getTaxiForDriver,
         user ? { userId: user.id as Id<"taxiTap_users"> } : "skip"
@@ -183,7 +183,7 @@ export default function VehicleDriver() {
                             source={
                             imageUri
                                 ? { uri: imageUri }
-                                : require('../assets/images/taxi.png')
+                                : require('../../assets/images/taxi.png')
                             }
                             resizeMode="contain"
                             style={{ width: '100%', height: 200, borderRadius: 10 }}

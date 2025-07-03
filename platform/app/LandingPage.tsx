@@ -1,6 +1,9 @@
 import React from "react";
 import { SafeAreaView, View, ScrollView, Image, Text, TouchableOpacity, } from "react-native";
 import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
+
+const router = useRouter();
 
 export default () => {
 	const navigation = useNavigation<any>();
@@ -98,7 +101,7 @@ export default () => {
 							minHeight: 48,
 							justifyContent: "center",
 						}} 
-						onPress={() => navigation.navigate('SignUp')}
+						onPress={() => navigation.navigate("(auth)/SignUp")}
 						accessible={true}
 						accessibilityLabel="Get started with Taxi Tap"
 						accessibilityRole="button">
@@ -119,7 +122,7 @@ export default () => {
 						marginBottom: 34,
 					}}>
 					<TouchableOpacity
-						onPress={() => navigation.navigate('Login')}
+						onPress={() => navigation.navigate("(auth)/Login")}
 						accessible={true}
 						accessibilityLabel="Sign in to existing account"
 						accessibilityRole="button">

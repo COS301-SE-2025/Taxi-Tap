@@ -14,13 +14,13 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { useNavigation, useRouter } from 'expo-router';
-import { useTheme } from '../contexts/ThemeContext';
-import { useLocationSystem } from '../hooks/useLocationSystem';
-import { useUser } from '../contexts/UserContext';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLocationSystem } from '../../hooks/useLocationSystem';
+import { useUser } from '../../contexts/UserContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { Id } from '../convex/_generated/dataModel';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 
 interface DriverOnlineProps {
   onGoOffline: () => void;
@@ -90,7 +90,6 @@ export default function DriverOnline({
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: false,
-      tabBarStyle: { display: 'none' },
     });
   });
 
@@ -149,7 +148,7 @@ export default function DriverOnline({
   useEffect(() => {
     // Redirect if accessed directly (not via DriverHomeScreen)
     if (typeof onGoOffline !== 'function') {
-      router.replace('/DriverHomeScreen');
+      router.replace('/(driverTabs)/DriverHomeScreen');
     }
   }, [onGoOffline, router]);
 
@@ -286,7 +285,7 @@ export default function DriverOnline({
       subtitle: "Driver details & documents",
       onPress: () => {
         setShowMenu(false);
-        router.push('/DriverProfile');
+        router.push('/(driverTabs)/DriverProfile');
       }
     },
     { 
@@ -295,7 +294,7 @@ export default function DriverOnline({
       subtitle: "Vehicle info & route settings",
       onPress: () => {
         setShowMenu(false);
-        router.push('/DriverRequestPage');
+        router.push('/(driverTabs)/DriverRequestPage');
       }
     },
     { 
@@ -304,7 +303,7 @@ export default function DriverOnline({
       subtitle: "Past rides & routes",
       onPress: () => {
         setShowMenu(false);
-        router.push('/EarningsPage');
+        router.push('/(driverTabs)/EarningsPage');
       }
     },
     { 
@@ -320,7 +319,7 @@ export default function DriverOnline({
       icon: "settings-outline", 
       title: "Help", 
       subtitle: "App information",
-      onPress: () => navigation.navigate('HelpPage' as never)
+      onPress: () => navigation.navigate('(driverTabs)/HelpPage' as never)
     },
   ];
 

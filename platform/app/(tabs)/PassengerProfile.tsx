@@ -101,7 +101,7 @@ export default function PassengerProfile() {
                                     await updateUserRole('driver');
                                     
                                     console.log('Success', 'Successfully switched to driver mode!');
-                                    router.push('../DriverOffline');
+                                    router.push('../(driverTabs)/DriverOffline');
                                 } catch (error: any) {
                                     console.log('Error', error.message || 'Failed to switch to driver mode');
                                 }
@@ -131,7 +131,7 @@ export default function PassengerProfile() {
                                     await updateUserRole('driver');
                                     
                                     console.log('Success', 'Switched to driver mode!');
-                                    router.push('../DriverOffline');
+                                    router.push('../(driverTabs)/DriverOffline');
                                 } catch (error: any) {
                                     console.log('Error', error.message || 'Failed to switch to driver mode');
                                 }
