@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import EarningsPage from '../../../app/EarningsPage';
+import EarningsPage from '../../../app/(driverTabs)/EarningsPage';
 
 // Mock dependencies
 const mockGoBack = jest.fn();

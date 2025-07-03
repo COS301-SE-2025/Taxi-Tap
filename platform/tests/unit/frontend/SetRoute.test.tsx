@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import SetRoute from '../../../app/SetRoute';
+import SetRoute from '../../../app/(driverTabs)/SetRoute';
 
 // Mock dependencies
 const mockGoBack = jest.fn();

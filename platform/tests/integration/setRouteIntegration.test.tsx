@@ -10,7 +10,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import SetRoute from '../../app/SetRoute';
+import SetRoute from '../../app/(driverTabs)/SetRoute';
 import { useQuery, useMutation } from 'convex/react';
 import { useNavigation } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
